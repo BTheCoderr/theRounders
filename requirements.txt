@@ -1,26 +1,48 @@
-scikit-learn>=1.0.0
+# Core dependencies
 numpy>=1.23.5
 pandas<2.0.0,>=1.0.0
-"ray[default]>=2.7.0"
-plotly>=5.18.0
+scikit-learn>=1.0.0
+tensorflow>=2.10.0
 xgboost>=2.0.0
 lightgbm>=4.0.0
-aiohttp>=3.8.0
+
+# API and web framework
+fastapi>=0.68.0
+uvicorn>=0.15.0
+streamlit>=1.29.0
 requests>=2.31.0
-optuna>=3.4.0
-websockets>=11.0.3
-h5py>=3.8.0
-pytest>=8.3.3
-python-weather>=1.0.0
+aiohttp>=3.8.0
 python-dotenv>=1.0.0
-tqdm>=4.65.0
-PyYAML>=6.0.1
+
+# Data visualization
+plotly>=5.18.0
 matplotlib>=3.7.0
 seaborn>=0.12.0
-jupyter>=1.0.0
-nfl-data-py==0.3.3
-loguru>=0.7.2
-pybaseball>=2.2.5
+
+# Machine learning and optimization
+optuna>=3.4.0
 bayesian-optimization>=1.4.0
-ray>=2.7.0
-streamlit==1.29.0
+torch>=2.0.0
+transformers>=4.30.0
+
+# Sports data APIs
+nfl-data-py>=0.3.3
+pybaseball>=2.2.5
+nba_api>=1.2.1
+
+# Database
+sqlalchemy>=1.4.0
+psycopg2-binary>=2.9.0
+pymongo>=4.0.0
+
+# Utilities
+tqdm>=4.65.0
+loguru>=0.7.2
+pytest>=8.3.3
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# Monitoring and logging
+prometheus-client>=0.17.0
+python-json-logger>=2.0.0

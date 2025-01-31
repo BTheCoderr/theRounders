@@ -1,166 +1,102 @@
-from typing import Dict, List
-import asyncio
-from loguru import logger
 import streamlit as st
+import pandas as pd
 from datetime import datetime
 
-# Import all our components
-from sports_betting.analysis.advanced_betting_patterns import AdvancedBettingPatterns
-from sports_betting.analysis.advanced_ml_execution import AdvancedMLExecution
-from sports_betting.analysis.advanced_monitoring import AdvancedMonitoringSystem
-from sports_betting.analysis.sophisticated_execution import SophisticatedExecutionSystem
-from sports_betting.analysis.sharp_betting_analytics import SharpBettingAnalytics
+# Configure the app
+st.set_page_config(
+    page_title="Sports Betting Analytics",
+    page_icon="🎯",
+    layout="wide"
+)
 
-class SportsBettingDashboard:
+# Simple in-memory storage for testing
+class SimpleStorage:
     def __init__(self):
-        self.systems = {
-            'betting_patterns': AdvancedBettingPatterns(),
-            'ml_execution': AdvancedMLExecution(),
-            'monitoring': AdvancedMonitoringSystem(),
-            'execution': SophisticatedExecutionSystem(),
-            'sharp_analytics': SharpBettingAnalytics()
-        }
+        self.bets = []
         
-    def run_dashboard(self):
-        st.title("Sports Betting Analytics Dashboard")
+    def add_bet(self, bet_data):
+        self.bets.append(bet_data)
         
-        # Sidebar navigation
-        page = st.sidebar.selectbox(
-            "Select System",
-            ["Betting Patterns", "ML Execution", "Monitoring", "Sharp Analytics", "Settings"]
-        )
-        
-        if page == "Betting Patterns":
-            self.show_betting_patterns()
-        elif page == "ML Execution":
-            self.show_ml_execution()
-        elif page == "Monitoring":
-            self.show_monitoring()
-        elif page == "Sharp Analytics":
-            self.show_sharp_analytics()
-        elif page == "Settings":
-            self.show_settings()
+    def get_bets(self):
+        return pd.DataFrame(self.bets) if self.bets else pd.DataFrame()
 
-    def show_betting_patterns(self):
-        st.header("Betting Patterns Analysis")
+# Initialize storage
+if 'storage' not in st.session_state:
+    st.session_state.storage = SimpleStorage()
+
+# Sidebar navigation
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Select a page", ["Dashboard", "Place Bet", "View Bets"])
+
+if page == "Dashboard":
+    st.title("Sports Betting Dashboard")
+    
+    # Simple metrics
+    bets_df = st.session_state.storage.get_bets()
+    if not bets_df.empty:
+        col1, col2, col3 = st.columns(3)
         
-        # Pattern detection options
-        st.subheader("Pattern Detection")
-        pattern_types = st.multiselect(
-            "Select Pattern Types",
-            ["Steam Moves", "Sharp Money", "Line Movements", "Public Betting"]
-        )
+        # Total bets
+        col1.metric("Total Bets", len(bets_df))
         
-        if st.button("Analyze Patterns"):
-            patterns = asyncio.run(self.systems['betting_patterns'].analyze_patterns({
-                'types': pattern_types,
-                'timestamp': datetime.now()
-            }))
+        # Win rate
+        if 'result' in bets_df.columns:
+            win_rate = (bets_df['result'] == 'Won').mean() * 100
+            col2.metric("Win Rate", f"{win_rate:.1f}%")
+        
+        # Total profit/loss
+        if 'profit_loss' in bets_df.columns:
+            total_pl = bets_df['profit_loss'].sum()
+            col3.metric("Total P/L", f"${total_pl:.2f}")
+    
+elif page == "Place Bet":
+    st.title("Place New Bet")
+    
+    with st.form("new_bet"):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            sport = st.selectbox("Sport", ["NBA", "NFL", "MLB", "NHL"])
+            game = st.text_input("Game (e.g., Lakers vs Warriors)")
+            bet_type = st.selectbox("Bet Type", ["Spread", "Moneyline", "Over/Under"])
             
-            # Display results
-            self.display_pattern_results(patterns)
-
-    def show_ml_execution(self):
-        st.header("ML-Based Execution")
+        with col2:
+            odds = st.number_input("Odds", min_value=-10000, max_value=10000)
+            stake = st.number_input("Stake ($)", min_value=1.0, step=1.0)
+            confidence = st.slider("Confidence", 1, 100, 50)
         
-        # Order input
-        st.subheader("New Order")
-        asset = st.text_input("Asset (e.g., NFL_SPREAD)")
-        size = st.number_input("Size", min_value=1)
-        side = st.selectbox("Side", ["BUY", "SELL"])
-        order_type = st.selectbox("Type", ["MARKET", "LIMIT"])
+        notes = st.text_area("Notes")
         
-        if st.button("Execute Order"):
-            order = {
-                'asset': asset,
-                'size': size,
-                'side': side,
-                'type': order_type,
-                'timestamp': datetime.now()
+        if st.form_submit_button("Place Bet"):
+            bet_data = {
+                'date': datetime.now().strftime("%Y-%m-%d"),
+                'sport': sport,
+                'game': game,
+                'bet_type': bet_type,
+                'odds': odds,
+                'stake': stake,
+                'confidence': confidence,
+                'notes': notes,
+                'status': 'Pending'
             }
             
-            result = asyncio.run(self.systems['ml_execution'].execute_with_ml([order]))
-            self.display_execution_results(result)
+            st.session_state.storage.add_bet(bet_data)
+            st.success("Bet recorded successfully!")
 
-    def show_monitoring(self):
-        st.header("Real-Time Monitoring")
+elif page == "View Bets":
+    st.title("Betting History")
+    
+    bets_df = st.session_state.storage.get_bets()
+    if not bets_df.empty:
+        st.dataframe(bets_df)
         
-        # Monitoring options
-        metrics = st.multiselect(
-            "Select Metrics to Monitor",
-            ["Execution Quality", "Risk Metrics", "Market Impact", "Performance"]
+        # Download button
+        csv = bets_df.to_csv(index=False)
+        st.download_button(
+            label="Download Betting History",
+            data=csv,
+            file_name="betting_history.csv",
+            mime="text/csv"
         )
-        
-        if st.button("Start Monitoring"):
-            monitoring_data = asyncio.Queue()
-            asyncio.run(self.systems['monitoring'].monitor(monitoring_data))
-            
-    def show_sharp_analytics(self):
-        st.header("Sharp Betting Analytics")
-        
-        # Analytics options
-        st.subheader("Analysis Options")
-        lookback = st.slider("Lookback Period (days)", 1, 30, 7)
-        min_confidence = st.slider("Minimum Confidence", 0.0, 1.0, 0.7)
-        
-        if st.button("Run Analysis"):
-            analysis = self.systems['sharp_analytics'].analyze({
-                'lookback': lookback,
-                'min_confidence': min_confidence
-            })
-            
-            self.display_sharp_analysis(analysis)
-
-    def show_settings(self):
-        st.header("System Settings")
-        
-        # Alert settings
-        st.subheader("Alert Settings")
-        alert_types = st.multiselect(
-            "Enable Alerts",
-            ["Email", "Telegram", "SMS", "Dashboard"]
-        )
-        
-        # Risk thresholds
-        st.subheader("Risk Thresholds")
-        max_risk = st.slider("Maximum Risk Level", 0.0, 1.0, 0.5)
-        
-        if st.button("Save Settings"):
-            self.save_settings({
-                'alerts': alert_types,
-                'max_risk': max_risk
-            })
-
-    def display_pattern_results(self, patterns: Dict):
-        st.subheader("Pattern Analysis Results")
-        
-        for pattern_type, results in patterns.items():
-            st.write(f"\n{pattern_type} Patterns:")
-            st.write(f"Confidence: {results['confidence']:.2%}")
-            st.write(f"Impact: {results['impact']:.4f}")
-
-    def display_execution_results(self, results: Dict):
-        st.subheader("Execution Results")
-        
-        for order_id, result in results['execution_results'].items():
-            st.write(f"\nOrder {order_id}:")
-            st.write(f"Average Price: {result['avg_price']}")
-            st.write(f"Market Impact: {result['impact']:.4f}")
-            st.write(f"Quality Score: {result['quality_score']:.2f}")
-
-    def display_sharp_analysis(self, analysis: Dict):
-        st.subheader("Sharp Betting Analysis")
-        
-        st.write("Top Opportunities:")
-        for opp in analysis['opportunities']:
-            st.write(f"\n{opp['description']}")
-            st.write(f"Confidence: {opp['confidence']:.2%}")
-            st.write(f"Expected Value: {opp['ev']:.2f}")
-
-    def save_settings(self, settings: Dict):
-        st.success("Settings saved successfully!")
-        logger.info(f"Updated settings: {settings}")
-
-if __name__ == "__main__":
-    dashboard = SportsBettingDashboard()
-    dashboard.run_dashboard()
+    else:
+        st.info("No bets recorded yet. Head to the 'Place Bet' page to add some!")
