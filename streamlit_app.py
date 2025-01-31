@@ -18,7 +18,7 @@ class DatabaseManager:
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         
-        # Create bets table
+        # Create bets table with additional sharp betting fields
         c.execute('''
             CREATE TABLE IF NOT EXISTS bets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,6 +36,10 @@ class DatabaseManager:
                 profit_loss REAL,
                 closing_line REAL,
                 steam_move BOOLEAN,
+                reverse_line_movement BOOLEAN,
+                sharp_confidence REAL,
+                public_percentage REAL,
+                opening_line REAL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -48,9 +52,35 @@ class DatabaseManager:
                 timestamp TIMESTAMP,
                 odds REAL,
                 book TEXT,
+                volume REAL,
+                is_sharp BOOLEAN,
                 FOREIGN KEY (bet_id) REFERENCES bets (id)
             )
         ''')
+        
+        # Create books table for line shopping
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS books (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE,
+                api_name TEXT,
+                is_active BOOLEAN
+            )
+        ''')
+        
+        # Insert default sportsbooks
+        default_books = [
+            ('DraftKings', 'draftkings', 1),
+            ('FanDuel', 'fanduel', 1),
+            ('BetMGM', 'betmgm', 1),
+            ('Caesars', 'caesars', 1),
+            ('PointsBet', 'pointsbet', 1)
+        ]
+        
+        c.executemany(
+            'INSERT OR IGNORE INTO books (name, api_name, is_active) VALUES (?, ?, ?)',
+            default_books
+        )
         
         conn.commit()
         conn.close()
@@ -194,6 +224,95 @@ class DatabaseManager:
         conn.close()
         return analytics
 
+    def add_line_movement(self, bet_id, odds, book, volume=None, is_sharp=False):
+        """Record a line movement for a bet."""
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        
+        c.execute('''
+            INSERT INTO line_movements (bet_id, timestamp, odds, book, volume, is_sharp)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (bet_id, datetime.now(), odds, book, volume, is_sharp))
+        
+        conn.commit()
+        conn.close()
+        return True
+    
+    def get_line_movements(self, bet_id=None, minutes=60):
+        """Get line movements for analysis."""
+        conn = sqlite3.connect(self.db_path)
+        
+        query = """
+            SELECT * FROM line_movements 
+            WHERE timestamp >= datetime('now', ?) 
+        """
+        params = [f'-{minutes} minutes']
+        
+        if bet_id:
+            query += " AND bet_id = ?"
+            params.append(bet_id)
+            
+        df = pd.read_sql_query(query, conn, params=params)
+        conn.close()
+        return df
+    
+    def get_sharp_analytics(self):
+        """Get analytics focused on sharp betting patterns."""
+        conn = sqlite3.connect(self.db_path)
+        
+        # Get all completed bets with sharp indicators
+        df = pd.read_sql_query("""
+            SELECT 
+                b.*,
+                COUNT(lm.id) as line_movement_count,
+                AVG(CASE WHEN lm.is_sharp THEN 1 ELSE 0 END) as sharp_movement_ratio
+            FROM bets b
+            LEFT JOIN line_movements lm ON b.id = lm.bet_id
+            WHERE b.result IS NOT NULL
+            GROUP BY b.id
+        """, conn)
+        
+        if df.empty:
+            conn.close()
+            return {"error": "No completed bets found"}
+        
+        # Calculate CLV performance
+        df['clv'] = df.apply(
+            lambda x: x['closing_line'] - x['odds'] if x['result'] == 'Won'
+            else x['odds'] - x['closing_line'],
+            axis=1
+        )
+        
+        # Steam move performance
+        steam_performance = df.groupby('steam_move').agg({
+            'id': 'count',
+            'result': lambda x: (x == 'Won').mean(),
+            'profit_loss': 'sum',
+            'clv': 'mean'
+        }).reset_index()
+        
+        # RLM performance
+        rlm_performance = df.groupby('reverse_line_movement').agg({
+            'id': 'count',
+            'result': lambda x: (x == 'Won').mean(),
+            'profit_loss': 'sum',
+            'clv': 'mean'
+        }).reset_index()
+        
+        # Sharp confidence correlation
+        sharp_corr = df['sharp_confidence'].corr(df['profit_loss'])
+        
+        analytics = {
+            'steam_moves': steam_performance.to_dict('records'),
+            'reverse_line_movement': rlm_performance.to_dict('records'),
+            'sharp_confidence_correlation': sharp_corr,
+            'avg_clv': df['clv'].mean(),
+            'clv_by_confidence': df.groupby(pd.qcut(df['sharp_confidence'], 4))['clv'].mean().to_dict()
+        }
+        
+        conn.close()
+        return analytics
+
 # Configure the app
 st.set_page_config(
     page_title="The Rounders - Sports Betting Analytics",
@@ -232,7 +351,7 @@ st.sidebar.info(f"Currently in {'Paper Trading' if st.session_state.betting_mode
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Select a page",
-    ["Dashboard", "Place Bet", "View Bets", "Analytics", "Kelly Calculator"]
+    ["Dashboard", "Place Bet", "View Bets", "Analytics", "Sharp Tools", "Kelly Calculator"]
 )
 
 if page == "Dashboard":
@@ -447,6 +566,122 @@ elif page == "Analytics":
                 title="Performance of Steam Move Bets"
             )
             st.plotly_chart(fig, use_container_width=True)
+
+elif page == "Sharp Tools":
+    st.title("Sharp Betting Tools")
+    
+    # Initialize SharpTools
+    from sharp_tools import SharpTools
+    sharp_tools = SharpTools(st.secrets.get("ODDS_API_KEY"))
+    
+    # Tabs for different tools
+    tab1, tab2, tab3 = st.tabs(["Line Shopping", "Sharp Movement", "CLV Analysis"])
+    
+    with tab1:
+        st.subheader("Live Line Shopping")
+        sport = st.selectbox(
+            "Select Sport",
+            ["NBA", "NFL", "MLB", "NHL"],
+            key="line_shopping_sport"
+        )
+        
+        # Fetch current odds
+        odds_data = sharp_tools.fetch_odds(sport.lower())
+        if "error" not in odds_data:
+            for game in odds_data:
+                st.write(f"### {game['home_team']} vs {game['away_team']}")
+                
+                # Create odds comparison table
+                odds_df = pd.DataFrame([
+                    {
+                        'Book': book['title'],
+                        'Home ML': book['markets']['h2h']['home'],
+                        'Away ML': book['markets']['h2h']['away'],
+                        'Spread': f"{book['markets']['spreads']['points']} ({book['markets']['spreads']['odds']})"
+                    }
+                    for book in game['bookmakers']
+                ])
+                st.dataframe(odds_df)
+                
+                # Highlight best odds
+                best_home = odds_df['Home ML'].max()
+                best_away = odds_df['Away ML'].max()
+                st.info(f"Best odds: Home {best_home} | Away {best_away}")
+        else:
+            st.warning("Please add your Odds API key in Streamlit secrets")
+    
+    with tab2:
+        st.subheader("Sharp Movement Detection")
+        
+        # Get recent line movements
+        movements = st.session_state.db.get_line_movements(minutes=30)
+        if not movements.empty:
+            # Check for steam moves
+            steam_detected = sharp_tools.detect_steam_move(movements)
+            if steam_detected:
+                st.warning("🚨 STEAM MOVE DETECTED! Significant line movement in the last 30 minutes.")
+            
+            # Show line movement chart
+            fig = px.line(
+                movements,
+                x='timestamp',
+                y='odds',
+                color='book',
+                title="Line Movement Over Time"
+            )
+            st.plotly_chart(fig)
+            
+            # Show reverse line movement alerts
+            if 'public_percentage' in movements.columns:
+                rlm = sharp_tools.detect_reverse_line_movement(
+                    movements['public_percentage'].iloc[-1],
+                    movements['odds'].iloc[0],
+                    movements['odds'].iloc[-1]
+                )
+                if rlm:
+                    st.warning("🔄 Reverse Line Movement Detected!")
+        else:
+            st.info("No recent line movements detected")
+    
+    with tab3:
+        st.subheader("Closing Line Value (CLV) Analysis")
+        
+        # Get sharp analytics
+        sharp_analytics = st.session_state.db.get_sharp_analytics()
+        if 'error' not in sharp_analytics:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.metric("Average CLV", f"{sharp_analytics['avg_clv']:.2f}")
+                
+            with col2:
+                st.metric(
+                    "Sharp Confidence Correlation",
+                    f"{sharp_analytics['sharp_confidence_correlation']:.2f}"
+                )
+            
+            # CLV by confidence level
+            st.write("CLV by Sharp Confidence Level")
+            clv_df = pd.DataFrame(
+                sharp_analytics['clv_by_confidence'].items(),
+                columns=['Confidence Level', 'Average CLV']
+            )
+            st.dataframe(clv_df)
+            
+            # Steam move performance
+            st.write("Steam Move Performance")
+            steam_df = pd.DataFrame(sharp_analytics['steam_moves'])
+            if not steam_df.empty:
+                fig = px.bar(
+                    steam_df,
+                    x='steam_move',
+                    y=['result', 'profit_loss', 'clv'],
+                    barmode='group',
+                    title="Performance of Steam Move Bets"
+                )
+                st.plotly_chart(fig)
+        else:
+            st.info("Add some bets to see CLV analysis")
 
 elif page == "Kelly Calculator":
     st.title("Kelly Criterion Calculator")
