@@ -20,74 +20,138 @@ class WaltersSimulator:
         self.max_bet_size = 0.05   # Maximum 5% of bankroll per bet
         
     def _initialize_rules(self) -> List[WaltersRule]:
-        """Initialize Walters' betting rules."""
+        """Initialize Walters' betting rules with advanced edge detection."""
         return [
+            # Core Walters Rules
             WaltersRule(
                 name="CLV Edge",
                 condition="expected_clv",
                 threshold=0.07,  # 7% CLV edge
-                weight=0.35,
+                weight=0.25,
                 description="Bet when expected CLV exceeds 7%"
             ),
             WaltersRule(
                 name="Reverse Line Movement",
                 condition="rlm_strength",
                 threshold=0.15,  # 15% RLM threshold
-                weight=0.25,
+                weight=0.20,
                 description="Bet when line moves against >15% public money"
             ),
             WaltersRule(
                 name="Steam Move",
                 condition="steam_strength",
                 threshold=0.02,  # 2% line movement in 5 minutes
-                weight=0.20,
+                weight=0.15,
                 description="Bet on steam moves >2% in 5 minutes"
             ),
             WaltersRule(
                 name="Sharp Money",
                 condition="sharp_ratio",
                 threshold=0.80,  # 80% sharp money
-                weight=0.20,
+                weight=0.15,
                 description="Bet when >80% of money is sharp"
+            ),
+            
+            # Advanced Market Analysis
+            WaltersRule(
+                name="Book Disagreement",
+                condition="book_disagreement",
+                threshold=0.15,  # 15% odds difference
+                weight=0.10,
+                description="Bet when sharp books disagree with public books"
+            ),
+            WaltersRule(
+                name="Line Efficiency",
+                condition="line_efficiency",
+                threshold=0.85,  # 85% efficiency
+                weight=0.05,
+                description="Bet when market is inefficiently pricing factors"
+            ),
+            
+            # Hidden Edges
+            WaltersRule(
+                name="Situational Advantage",
+                condition="situation_edge",
+                threshold=0.20,  # 20% edge
+                weight=0.05,
+                description="Bet when situational factors provide edge"
+            ),
+            WaltersRule(
+                name="Information Edge",
+                condition="info_advantage",
+                threshold=0.25,  # 25% information advantage
+                weight=0.05,
+                description="Bet when you have superior information"
             )
         ]
     
     def analyze_bet(self, bet_data: Dict, bankroll: float, daily_risk: float) -> Dict:
-        """Analyze a bet using Walters' criteria."""
-        # Calculate rule scores
+        """Analyze a bet using enhanced Walters' criteria."""
+        # Calculate rule scores with context
         rule_scores = {}
         total_score = 0
+        context_multiplier = 1.0
+        
+        # Analyze market context
+        market_state = self._analyze_market_state(bet_data)
+        if market_state["is_efficient"]:
+            context_multiplier *= 0.8  # Reduce edge in efficient markets
+        
+        # Check for correlated factors
+        correlated_edges = self._find_correlated_edges(bet_data)
+        if correlated_edges:
+            context_multiplier *= 1.2  # Increase edge when factors align
         
         for rule in self.rules:
             if rule.condition in bet_data:
                 value = bet_data[rule.condition]
-                score = self._calculate_rule_score(value, rule)
+                base_score = self._calculate_rule_score(value, rule)
+                
+                # Apply context-specific adjustments
+                adjusted_score = base_score * self._get_context_multiplier(
+                    rule.name,
+                    bet_data,
+                    market_state
+                )
+                
                 rule_scores[rule.name] = {
-                    "score": score,
+                    "score": adjusted_score,
                     "weight": rule.weight,
-                    "status": "Pass" if score >= rule.threshold else "Fail",
-                    "details": f"{value:.2f} vs threshold {rule.threshold:.2f}"
+                    "status": "Pass" if adjusted_score >= rule.threshold else "Fail",
+                    "details": f"{value:.2f} vs threshold {rule.threshold:.2f}",
+                    "context_adjustment": f"{adjusted_score/base_score:.2f}x"
                 }
-                total_score += score * rule.weight
+                total_score += adjusted_score * rule.weight
         
-        # Calculate confidence and edge
-        confidence = total_score * 100
-        edge = self._calculate_edge(bet_data, rule_scores)
+        # Apply overall context multiplier
+        confidence = total_score * 100 * context_multiplier
+        edge = self._calculate_edge(bet_data, rule_scores) * context_multiplier
         
-        # Calculate optimal bet size
-        max_bet = bankroll * self.max_bet_size
+        # Enhanced bet sizing
+        max_bet = self._calculate_optimal_bet_size(
+            bankroll,
+            confidence,
+            edge,
+            market_state
+        )
         remaining_risk = (bankroll * self.max_daily_risk) - daily_risk
         
-        if remaining_risk <= 0:
+        # Risk management checks
+        risk_assessment = self._assess_risk(
+            confidence,
+            edge,
+            daily_risk,
+            bankroll,
+            bet_data
+        )
+        
+        if risk_assessment["status"] == "reject":
             recommended_size = 0
-            status = "Reject - Daily risk limit exceeded"
-        elif confidence < self.min_confidence:
-            recommended_size = 0
-            status = "Reject - Insufficient confidence"
+            status = f"Reject - {risk_assessment['reason']}"
         else:
-            # Scale bet size by confidence and edge
+            # Scale bet size by confidence, edge, and context
             base_size = min(max_bet, remaining_risk)
-            recommended_size = base_size * (confidence/100) * (edge/100)
+            recommended_size = base_size * (confidence/100) * (edge/100) * risk_assessment["multiplier"]
             status = "Accept"
         
         return {
@@ -99,7 +163,10 @@ class WaltersSimulator:
             "analysis": {
                 "max_bet": max_bet,
                 "remaining_risk": remaining_risk,
-                "bankroll_impact": recommended_size / bankroll * 100
+                "bankroll_impact": recommended_size / bankroll * 100,
+                "market_state": market_state,
+                "risk_assessment": risk_assessment,
+                "correlated_edges": correlated_edges
             }
         }
     
@@ -180,15 +247,130 @@ class WaltersSimulator:
             'bet_count': len(results)
         }
     
+    def _analyze_market_state(self, bet_data: Dict) -> Dict:
+        """Analyze current market state and efficiency."""
+        return {
+            "is_efficient": self._check_market_efficiency(bet_data),
+            "liquidity": self._assess_liquidity(bet_data),
+            "volatility": self._calculate_volatility(bet_data),
+            "sharp_activity": self._measure_sharp_activity(bet_data)
+        }
+    
+    def _find_correlated_edges(self, bet_data: Dict) -> List[Dict]:
+        """Find edges that reinforce each other."""
+        edges = []
+        
+        # Check for steam move + RLM correlation
+        if (bet_data.get("steam_strength", 0) > 0.02 and 
+            bet_data.get("rlm_strength", 0) > 0.15):
+            edges.append({
+                "type": "steam_rlm_correlation",
+                "strength": min(bet_data["steam_strength"], bet_data["rlm_strength"]),
+                "description": "Steam move aligned with RLM"
+            })
+        
+        # Check for sharp money + CLV correlation
+        if (bet_data.get("sharp_ratio", 0) > 0.8 and 
+            bet_data.get("expected_clv", 0) > 0.07):
+            edges.append({
+                "type": "sharp_clv_correlation",
+                "strength": bet_data["sharp_ratio"] * bet_data["expected_clv"],
+                "description": "Sharp money aligned with expected CLV"
+            })
+        
+        return edges
+    
+    def _get_context_multiplier(self, rule_name: str, bet_data: Dict, market_state: Dict) -> float:
+        """Get context-specific multiplier for rule scores."""
+        multiplier = 1.0
+        
+        # Adjust for market state
+        if not market_state["is_efficient"]:
+            multiplier *= 1.2
+        
+        # Adjust for liquidity
+        if market_state["liquidity"] < 0.5:
+            multiplier *= 0.8
+        
+        # Rule-specific adjustments
+        if rule_name == "Steam Move" and market_state["volatility"] > 0.8:
+            multiplier *= 1.3
+        elif rule_name == "CLV Edge" and market_state["sharp_activity"] > 0.7:
+            multiplier *= 1.2
+        
+        return multiplier
+    
+    def _assess_risk(self, confidence: float, edge: float, daily_risk: float, 
+                    bankroll: float, bet_data: Dict) -> Dict:
+        """Enhanced risk assessment."""
+        assessment = {
+            "status": "accept",
+            "multiplier": 1.0,
+            "reason": None
+        }
+        
+        # Check for overexposure
+        if daily_risk > bankroll * 0.12:  # Getting close to daily limit
+            assessment["multiplier"] *= 0.7
+        
+        # Check for correlation risk
+        if bet_data.get("correlation_risk", 0) > 0.7:
+            assessment["multiplier"] *= 0.8
+        
+        # Check for market volatility risk
+        if bet_data.get("market_volatility", 0) > 0.8:
+            assessment["multiplier"] *= 0.9
+        
+        # Reject if too many risk factors
+        if (assessment["multiplier"] < 0.6 or 
+            daily_risk > bankroll * 0.15 or
+            confidence < self.min_confidence):
+            assessment["status"] = "reject"
+            assessment["reason"] = "Multiple risk factors present"
+        
+        return assessment
+    
+    def _calculate_optimal_bet_size(self, bankroll: float, confidence: float,
+                                  edge: float, market_state: Dict) -> float:
+        """Calculate optimal bet size considering market conditions."""
+        # Start with standard Kelly
+        base_size = bankroll * self.max_bet_size
+        
+        # Adjust for market state
+        if not market_state["is_efficient"]:
+            base_size *= 1.2
+        
+        # Adjust for liquidity
+        if market_state["liquidity"] < 0.5:
+            base_size *= 0.8
+        
+        # Cap at maximum allowed
+        return min(base_size, bankroll * self.max_bet_size)
+    
     def get_strategy_rules(self) -> List[Dict]:
-        """Get detailed explanation of Walters strategy rules."""
+        """Get detailed explanation of enhanced Walters strategy rules."""
         return [
             {
                 "name": rule.name,
                 "description": rule.description,
                 "threshold": rule.threshold,
                 "weight": rule.weight,
-                "importance": "High" if rule.weight >= 0.3 else "Medium"
+                "importance": "High" if rule.weight >= 0.2 else "Medium",
+                "category": self._get_rule_category(rule.name)
             }
             for rule in self.rules
-        ] 
+        ]
+    
+    def _get_rule_category(self, rule_name: str) -> str:
+        """Categorize rules by type."""
+        categories = {
+            "CLV Edge": "Market Efficiency",
+            "Reverse Line Movement": "Sharp Action",
+            "Steam Move": "Market Movement",
+            "Sharp Money": "Smart Money",
+            "Book Disagreement": "Market Inefficiency",
+            "Line Efficiency": "Market Analysis",
+            "Situational Advantage": "Hidden Edge",
+            "Information Edge": "Information Advantage"
+        }
+        return categories.get(rule_name, "Other") 
