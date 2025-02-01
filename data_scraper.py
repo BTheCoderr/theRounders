@@ -9,6 +9,7 @@ import aiohttp
 import asyncio
 from fake_useragent import UserAgent
 from api_config import APIConfig
+import numpy as np
 
 class DataScraper:
     def __init__(self):
@@ -255,4 +256,76 @@ class DataScraper:
             match_id: result
             for match_id, result in zip(match_ids, results)
             if result is not None
-        } 
+        }
+    
+    def transform_margin_of_victory(self, margin: float) -> float:
+        """
+        Transform margin of victory using diminishing returns as per Massey's method.
+        Converts raw margin to a number between 0 and 1.
+        """
+        # Use sigmoid function with scaling
+        return 2 / (1 + np.exp(-margin/10)) - 1
+    
+    def calculate_home_advantage(self, home_team: str, away_team: str, 
+                               historical_games: List[Dict]) -> float:
+        """
+        Calculate home field advantage factor based on historical matchups.
+        """
+        home_wins = 0
+        total_games = 0
+        
+        for game in historical_games:
+            if (game['home_team'] == home_team and game['away_team'] == away_team) or \
+               (game['home_team'] == away_team and game['away_team'] == home_team):
+                total_games += 1
+                if game['home_team_score'] > game['away_team_score']:
+                    home_wins += 1
+        
+        return (home_wins / total_games) if total_games > 0 else 0.6  # Default to 60% if no history
+    
+    async def fetch_historical_matchups(self, team_a: str, team_b: str, 
+                                     seasons: Optional[List[int]] = None) -> List[Dict]:
+        """
+        Fetch historical matchups between two teams across specified seasons.
+        """
+        if not seasons:
+            current_year = datetime.now().year
+            seasons = list(range(current_year-5, current_year+1))
+            
+        matchups = []
+        for season in seasons:
+            await self._handle_rate_limit('espn')
+            # Fetch from ESPN API
+            url = f"{self.config.get_api_url('espn')}/teams/{team_a}/matchups"
+            params = {
+                'season': season,
+                'opponent': team_b
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, headers=self._get_headers()) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        matchups.extend(self._parse_matchup_data(data))
+                        
+        return matchups
+    
+    def _parse_matchup_data(self, data: Dict) -> List[Dict]:
+        """Parse matchup data from ESPN API response."""
+        games = []
+        for event in data.get('events', []):
+            try:
+                game = {
+                    'date': event['date'],
+                    'home_team': event['competitions'][0]['competitors'][0]['team']['name'],
+                    'away_team': event['competitions'][0]['competitors'][1]['team']['name'],
+                    'home_team_score': int(event['competitions'][0]['competitors'][0]['score']),
+                    'away_team_score': int(event['competitions'][0]['competitors'][1]['score']),
+                    'neutral_site': event['competitions'][0].get('neutralSite', False)
+                }
+                games.append(game)
+            except (KeyError, ValueError) as e:
+                self.logger.warning(f"Error parsing game data: {e}")
+                continue
+                
+        return games 
