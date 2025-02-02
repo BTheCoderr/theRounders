@@ -1,37 +1,16 @@
-# The Rounders Sports Betting Analytics Platform 🎯
+# The Rounders - Sports Betting Analytics Platform
 
-A comprehensive sports betting analytics platform that provides advanced statistics, predictions, and tracking for NBA, NFL, NHL, and MLB betting. Built with Bill Walters' principles in mind, focusing on data-driven decisions, line shopping, and proper bankroll management.
+A comprehensive sports betting analytics platform built with Streamlit, providing tools for line shopping, sharp movement tracking, power rankings, analytics, and bet tracking.
 
-## Features 🌟
+## Features
 
-### Core Analytics
-- Real-time odds collection from multiple sportsbooks
-- Advanced statistical analysis and predictions
-- Power rankings and team strength metrics
-- Line movement tracking and steam move detection
-- Arbitrage opportunity detection
-- Kelly Criterion-based bankroll management
+- **Line Shopping**: Compare odds across different sportsbooks and find the best lines
+- **Sharp Movement Tracker**: Track sharp money movements and line changes
+- **Power Rankings**: View comprehensive team ratings and matchup predictions
+- **Analytics**: Analyze betting performance with detailed metrics and visualizations
+- **Bet Tracking**: Log and track bets with detailed record keeping
 
-### Sports Coverage
-- NBA: Spreads, moneylines, totals, player props
-- NFL: Game lines, player props, team totals
-- MLB: Moneylines, run lines, player props
-- NHL: Puck lines, moneylines, totals
-
-### AI/ML Integration
-- LSTM models for player prop predictions
-- Ensemble models for game predictions
-- Power rankings based on multiple factors
-- Bayesian optimization for model tuning
-
-### Betting Strategy Tools
-- Kelly Criterion calculator
-- Hedging calculator
-- Arbitrage finder
-- Line movement alerts
-- Best odds comparison
-
-## Installation 🚀
+## Installation
 
 1. Clone the repository:
 ```bash
@@ -39,7 +18,7 @@ git clone https://github.com/yourusername/theRounders.git
 cd theRounders
 ```
 
-2. Create and activate a virtual environment:
+2. Create a virtual environment and activate it:
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -52,105 +31,61 @@ pip install -r requirements.txt
 
 4. Set up environment variables:
 ```bash
-cp .env.example .env
-# Edit .env with your API keys and configuration
+cp .env.template .env
 ```
+Edit `.env` with your API keys and configuration.
 
-## Configuration ⚙️
+## Configuration
 
-1. Add your API keys to `.env`:
-```
-ODDS_API_KEY=your_key_here
-SPORTSDATA_API_KEY=your_key_here
-BETFAIR_API_KEY=your_key_here
-```
+The application requires the following environment variables:
 
-2. Configure supported sportsbooks in `sports_betting/config/settings.py`
+- `ODDS_API_KEY`: Your API key for odds data
+- `SPORTS_API_KEY`: Your API key for sports data
+- `DB_PATH`: Path to the SQLite database file
+- `PAPER_TRADING`: Set to true for paper trading mode
+- `DEFAULT_STAKE`: Default stake amount for bets
+- `UPDATE_INTERVAL`: Data update interval in seconds
+- `ENABLED_BOOKS`: List of enabled sportsbooks
 
-3. Adjust model parameters and betting strategies in the configuration files
+## Usage
 
-## Usage 📊
-
-### Starting the API Server
+1. Start the Streamlit application:
 ```bash
-uvicorn sports_betting.web_interface.app:app --reload
+streamlit run streamlit_app.py
 ```
 
-### Starting the Web Interface
-```bash
-streamlit run sports_betting.web_interface.streamlit_app.py
+2. Open your browser and navigate to `http://localhost:8501`
+
+## Project Structure
+
+```
+theRounders/
+├── streamlit_app.py        # Main application file
+├── pages/                  # Streamlit pages
+│   ├── 1_📊_Line_Shopping.py
+│   ├── 2_📈_Sharp_Movement.py
+│   ├── 3_🏆_Power_Rankings.py
+│   ├── 4_📊_Analytics.py
+│   └── 5_📝_Bet_Tracking.py
+├── data/                   # Data directory
+│   └── betting.db         # SQLite database
+├── requirements.txt        # Python dependencies
+├── .env                   # Environment variables
+└── README.md              # Project documentation
 ```
 
-### Running Tests
-```bash
-pytest tests/
-```
-
-## Features in Detail 📈
-
-### Odds Collection
-- Real-time odds from multiple sportsbooks
-- Line movement tracking
-- Steam move detection
-- Best odds comparison
-
-### Predictions
-- Game predictions with confidence levels
-- Player prop predictions using LSTM
-- Power rankings and team strength metrics
-- Weather impact analysis
-
-### Bet Tracking
-- Detailed bet history
-- Performance analytics
-- ROI tracking
-- Confidence level analysis
-- Time-based performance analysis
-
-### Risk Management
-- Kelly Criterion implementation
-- Bankroll management
-- Hedging calculator
-- Risk exposure analysis
-
-## API Documentation 📚
-
-The API documentation is available at `http://localhost:8000/docs` when running the server.
-
-### Key Endpoints
-- `/api/odds/{sport}`: Get current odds
-- `/api/predictions/game`: Get game predictions
-- `/api/predictions/props`: Get player prop predictions
-- `/api/arbitrage/{sport}`: Get arbitrage opportunities
-- `/api/bets/analytics`: Get betting analytics
-
-## Web Interface 🖥️
-
-The Streamlit interface provides:
-1. Dashboard with key metrics
-2. Live odds monitoring
-3. Prediction interface
-4. Bet tracking and analysis
-5. Settings management
-
-## Contributing 🤝
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a new branch for your feature
 3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+4. Push to your branch
+5. Create a pull request
 
-## License 📝
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgments 🙏
+## Disclaimer
 
-- Built with principles from professional sports bettors
-- Inspired by Bill Walters' systematic approach
-- Uses various open-source sports data APIs
-
-## Disclaimer ⚠️
-
-This software is for educational purposes only. Please be aware of and comply with your local laws and regulations regarding sports betting.
+This application is for educational and entertainment purposes only. Please gamble responsibly and be aware of the laws and regulations in your jurisdiction regarding sports betting.

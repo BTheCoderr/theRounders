@@ -19,7 +19,8 @@ class OddsAPI:
         
         # Validate API key
         if not self.config.ODDS_API_KEY:
-            raise ValueError("Odds API key not found in environment variables")
+            self.logger.warning("Odds API key not found. Some features will be limited.")
+            # Don't raise an error, just log a warning
     
     def _handle_rate_limit(self):
         """Ensure we don't exceed API rate limits."""

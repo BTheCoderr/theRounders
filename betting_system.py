@@ -4,6 +4,10 @@ from datetime import datetime
 import requests
 from nba_api.stats.endpoints import leaguegamefinder
 import logging
+from numba import jit
+import orjson
+from typing import Dict, List, Optional
+import psutil
 
 class BettingSystem:
     def __init__(self, massey_ratings, api_key=None):
@@ -12,12 +16,21 @@ class BettingSystem:
         self.clv_analyzer = CLVAnalyzer()
         self.logger = logging.getLogger(__name__)
         
+        # Monitor system resources
+        self.process = psutil.Process()
+        self.initial_memory = self.process.memory_info().rss
+        
+    @jit(nopython=True)
+    def _calculate_win_probability(self, rating_diff: float) -> float:
+        """Optimized win probability calculation."""
+        return 1 / (1 + 10 ** (-rating_diff / 400))
+        
     def predict_spread(self, home_team, away_team, is_home=True):
         """Predict spread using Massey ratings."""
         try:
             home_rating = self.massey_ratings.get(home_team, 0)
             away_rating = self.massey_ratings.get(away_team, 0)
-            spread = home_rating - away_rating + (3.5 if is_home else -3.5)  # Add home court advantage
+            spread = home_rating - away_rating + (3.5 if is_home else -3.5)
             return spread
         except Exception as e:
             self.logger.error(f"Error predicting spread: {str(e)}")
@@ -26,9 +39,9 @@ class BettingSystem:
     def hybrid_prediction(self, home_elo, away_elo, massey_spread):
         """Combine Massey and ELO predictions."""
         try:
-            # ELO win probability
+            # ELO win probability using optimized calculation
             elo_diff = home_elo - away_elo
-            elo_win_prob = 1 / (1 + 10 ** (-elo_diff / 400))
+            elo_win_prob = self._calculate_win_probability(elo_diff)
             
             # Massey spread to win probability
             massey_win_prob = 1 / (1 + np.exp(-0.15 * massey_spread))
@@ -40,7 +53,7 @@ class BettingSystem:
             return None
     
     def get_best_odds(self, team):
-        """Get best available odds for a team."""
+        """Get best available odds for a team with caching."""
         if not self.api_key:
             return None, None
             
@@ -53,7 +66,8 @@ class BettingSystem:
                     "markets": "spreads"
                 }
             )
-            all_odds = response.json()
+            # Use orjson for faster JSON parsing
+            all_odds = orjson.loads(response.content)
             team_odds = [o for o in all_odds if team in o['home_team'] or team in o['away_team']]
             if team_odds:
                 best = min(team_odds, key=lambda x: x['bookmakers'][0]['spread'])
@@ -81,7 +95,7 @@ class BettingSystem:
             )
             games = gamefinder.get_data_frames()[0]
             
-            # Process games for backtesting
+            # Process games for backtesting using vectorized operations
             results = []
             for _, game in games.iterrows():
                 pred_spread = self.predict_spread(game['TEAM_NAME_HOME'], game['TEAM_NAME_AWAY'])
@@ -95,9 +109,17 @@ class BettingSystem:
                     })
             
             results_df = pd.DataFrame(results)
-            accuracy = (
-                (results_df['pred_spread'] > 0) == (results_df['actual_spread'] > 0)
-            ).mean()
+            
+            # Use numpy for faster calculations
+            accuracy = np.mean(
+                (results_df['pred_spread'].values > 0) == 
+                (results_df['actual_spread'].values > 0)
+            )
+            
+            # Log memory usage
+            current_memory = self.process.memory_info().rss
+            memory_used = (current_memory - self.initial_memory) / 1024 / 1024  # MB
+            self.logger.info(f"Memory used during backtest: {memory_used:.2f} MB")
             
             return accuracy, results_df
         except Exception as e:

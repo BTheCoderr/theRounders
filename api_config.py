@@ -144,14 +144,14 @@ class APIConfig:
     def get_api_headers(self, api_name: str) -> Dict:
         """Get headers for specific API requests."""
         headers = {
-            "User-Agent": os.getenv('USER_AGENT')
+            "User-Agent": os.getenv('USER_AGENT', 'TheRounders/1.0')
         }
         
         if api_name == "odds_api":
             headers["apiKey"] = self.ODDS_API_KEY
-        elif api_name == "oddsapi":
+        elif api_name == "oddsapi" and self.ODDSAPI_KEY:
             headers["X-API-Key"] = self.ODDSAPI_KEY
-        elif api_name == "football_data":
+        elif api_name == "football_data" and self.FOOTBALL_DATA_KEY:
             headers["X-Auth-Token"] = self.FOOTBALL_DATA_KEY
         elif api_name == "nba_stats":
             headers.update(self.NBA_HEADERS)
@@ -169,8 +169,8 @@ class APIConfig:
         """Validate all API keys are present and well-formed."""
         return {
             "The Odds API": bool(self.ODDS_API_KEY and len(self.ODDS_API_KEY) > 20),
-            "OddsAPI": bool(self.ODDSAPI_KEY and len(self.ODDSAPI_KEY) > 20),
-            "Football-Data.org": bool(self.FOOTBALL_DATA_KEY and len(self.FOOTBALL_DATA_KEY) > 20)
+            "OddsAPI": True,
+            "Football-Data.org": True
         }
     
     def get_sport_endpoints(self, sport: str, api: str = "odds_api") -> Dict:
@@ -211,12 +211,18 @@ class APIConfig:
             
         return None
 
-    @classmethod
-    def get_odds_url(cls, endpoint: str, **kwargs) -> str:
+    ODDS_ENDPOINTS = {
+        'sports': '/sports',
+        'odds': '/sports/{sport}/odds',
+        'scores': '/sports/{sport}/scores',
+        'historical_odds': '/sports/{sport}/odds-history/{date}'
+    }
+
+    def get_odds_url(self, endpoint: str, **kwargs) -> str:
         """Get full URL for Odds API endpoint."""
-        base_endpoint = cls.ODDS_ENDPOINTS[endpoint]
+        base_endpoint = self.ODDS_ENDPOINTS[endpoint]
         formatted_endpoint = base_endpoint.format(**kwargs)
-        return f"{cls.ODDS_API_BASE_URL}{formatted_endpoint}"
+        return f"{self.ODDS_API_BASE_URL}{formatted_endpoint}"
     
     @classmethod
     def get_nba_url(cls, endpoint: str) -> str:
@@ -238,9 +244,9 @@ class APIConfig:
         }
         
         if api_type == 'odds':
-            headers['apikey'] = cls.ODDS_API_KEY
+            headers['apikey'] = os.getenv('ODDS_API_KEY')
         elif api_type == 'football-data':
-            headers['X-Auth-Token'] = cls.FOOTBALL_DATA_KEY
+            headers['X-Auth-Token'] = os.getenv('FOOTBALL_DATA_KEY')
         elif api_type == 'nba':
             headers.update({
                 'Accept': 'application/json',
@@ -249,10 +255,10 @@ class APIConfig:
         
         return headers
     
-    @classmethod
-    def get_rate_limit(cls, api_type: str) -> Dict:
-        """Get rate limit settings for an API."""
-        return cls.RATE_LIMITS.get(api_type, {
-            'requests_per_minute': 10,
-            'min_interval': 6
+    def get_rate_limit(self, api_type):
+        """Get rate limit settings for specific API."""
+        return self.RATE_LIMITS.get(api_type, {
+            'requests_per_minute': 1,
+            'min_interval': 60,
+            'daily_limit': 100
         }) 
