@@ -1,70 +1,48 @@
 # Core requirements
-streamlit>=1.31.0
-pandas>=2.2.0
-numpy>=1.26.0
+streamlit>=1.30.0
+pandas>=2.0.0
+numpy>=1.24.0
 python-dotenv>=1.0.0
 requests>=2.31.0
 
-# Performance optimization
-numba>=0.58.0
-pyarrow>=14.0.1
-ujson>=5.8.0
-orjson>=3.9.10
-cython>=3.0.6
+# API Clients
+nba_api>=1.4.1
+espn_api>=0.8.0
+pinnacle-api>=3.0.0
+betmgm-api>=1.0.0
+draftkings-api>=1.0.0
 
-# Data visualization
-plotly>=5.18.0
-
-# Web scraping and API
+# Web Scraping
 beautifulsoup4>=4.12.3
 lxml>=4.9.3
-aiohttp>=3.9.0
-fake-useragent>=1.4.0
+selenium>=4.16.0
+webdriver_manager>=4.0.1
 
-# Date handling
-python-dateutil>=2.8.2
-pytz>=2023.3
+# Data Processing
+scipy>=1.12.0
+scikit-learn>=1.3.0
+statsmodels>=0.14.1
 
 # Database
 SQLAlchemy>=2.0.0
 aiosqlite>=0.19.0
 
-# Stats and ML
-scipy>=1.12.0
-scikit-learn>=1.4.0
+# Async Support
+aiohttp>=3.9.0
+asyncio>=3.4.3
+
+# Visualization
+plotly>=5.18.0
+matplotlib>=3.8.0
 
 # Utilities
-tenacity>=8.2.3  # For retrying API calls
-httpx>=0.26.0    # Modern HTTP client
-nba_api>=1.4.1
+tenacity>=8.2.3
+httpx>=0.26.0
+tqdm>=4.66.2
+joblib>=1.3.0
+watchdog>=3.0.0
 
 # Testing
 pytest>=8.0.0
 pytest-asyncio>=0.23.3
 pytest-cov>=4.1.0
-
-# Memory management
-memory_profiler>=0.61.0
-psutil>=5.9.0
-
-# Additional requirements
-watchdog>=6.0.0
-
-# Web scraping
-requests>=2.32.3
-beautifulsoup4==4.12.3
-lxml==5.1.0
-
-# Data analysis
-pandas>=2.2.3
-numpy==1.26.4
-matplotlib==3.9.4
-plotly==6.0.0
-
-# Web app
-streamlit==1.41.1
-
-# Utilities
-python-dotenv==1.0.1
-tqdm==4.66.2
-aiohttp==3.9.3

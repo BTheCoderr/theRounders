@@ -1,14 +1,51 @@
 # The Rounders - Sports Betting Analytics Platform
 
-A comprehensive sports betting analytics platform built with Streamlit, providing tools for line shopping, sharp movement tracking, power rankings, analytics, and bet tracking.
+A comprehensive sports betting analytics platform inspired by Bill Walters' systematic approach to sports betting. Built with Python and Streamlit, this platform combines advanced statistical analysis, real-time odds tracking, and professional betting principles to provide a powerful toolkit for data-driven sports betting.
 
-## Features
+## Key Features
 
-- **Line Shopping**: Compare odds across different sportsbooks and find the best lines
-- **Sharp Movement Tracker**: Track sharp money movements and line changes
-- **Power Rankings**: View comprehensive team ratings and matchup predictions
-- **Analytics**: Analyze betting performance with detailed metrics and visualizations
-- **Bet Tracking**: Log and track bets with detailed record keeping
+### 📊 Line Shopping
+- Real-time odds comparison across major sportsbooks
+- Automated arbitrage opportunity detection
+- Line movement tracking and visualization
+- Steam move alerts and sharp money indicators
+- Best line recommendations with calculated edges
+
+### 📈 Sharp Movement Tracker
+- Track professional betting patterns and steam moves
+- Reverse line movement detection
+- Sharp money percentage analysis
+- Real-time alerts for significant line movements
+- Historical sharp action analysis
+
+### 🏆 Power Rankings
+- Advanced team rating systems (Massey, Elo, custom algorithms)
+- Predictive modeling for game outcomes
+- Strength of schedule analysis
+- Home/away performance adjustments
+- Conference and division strength metrics
+
+### 📊 Analytics Dashboard
+- Comprehensive betting performance metrics
+- ROI analysis by sport and bet type
+- Closing line value (CLV) tracking
+- Bankroll management tools
+- Advanced visualization of betting patterns
+
+### 📝 Bet Tracking
+- Detailed bet logging and management
+- Performance analytics and trend analysis
+- Kelly Criterion-based bet sizing
+- Automated record keeping
+- Historical performance review
+
+## Technology Stack
+
+- **Frontend**: Streamlit
+- **Backend**: Python, SQLite
+- **Data Analysis**: Pandas, NumPy, Plotly
+- **APIs**: The Odds API, Sports Data APIs
+- **ML/Stats**: Scikit-learn, SciPy
 
 ## Installation
 
@@ -74,6 +111,43 @@ theRounders/
 └── README.md              # Project documentation
 ```
 
+## Features in Detail
+
+### Line Shopping
+- Real-time odds tracking from multiple sportsbooks
+- Automated arbitrage detection
+- Line movement visualization
+- Best line recommendations
+- Sharp money tracking
+
+### Sharp Movement Tracker
+- Professional betting pattern analysis
+- Steam move detection
+- Reverse line movement alerts
+- Sharp money percentage tracking
+- Historical sharp action analysis
+
+### Power Rankings
+- Multiple rating systems
+- Predictive modeling
+- Strength of schedule analysis
+- Team performance metrics
+- Conference strength analysis
+
+### Analytics
+- Comprehensive performance tracking
+- ROI analysis
+- CLV monitoring
+- Bankroll management
+- Advanced visualizations
+
+### Bet Tracking
+- Detailed record keeping
+- Performance analytics
+- Kelly Criterion calculator
+- Historical analysis
+- Trend visualization
+
 ## Contributing
 
 1. Fork the repository
@@ -89,3 +163,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Disclaimer
 
 This application is for educational and entertainment purposes only. Please gamble responsibly and be aware of the laws and regulations in your jurisdiction regarding sports betting.
+
+## Acknowledgments
+
+- Inspired by Bill Walters' systematic approach to sports betting
+- Built with principles from professional sports bettors
+- Uses various open-source sports data APIs
+- Community contributions and feedback
