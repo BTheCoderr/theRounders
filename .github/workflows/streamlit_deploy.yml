@@ -1,0 +1,72 @@
+name: Deploy Streamlit App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Verify Secrets
+      run: |
+        if [ -z "${{ secrets.ODDS_API_KEY }}" ]; then
+          echo "Error: ODDS_API_KEY is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.SPORTSDATA_API_KEY }}" ]; then
+          echo "Error: SPORTSDATA_API_KEY is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.FOOTBALL_DATA_KEY }}" ]; then
+          echo "Error: FOOTBALL_DATA_KEY is not set"
+          exit 1
+        fi
+        if [ -z "${{ secrets.STREAMLIT_API_KEY }}" ]; then
+          echo "Error: STREAMLIT_API_KEY is not set"
+          exit 1
+        fi
+
+    - name: Create .env file
+      run: |
+        cat << EOF > .env
+        ODDS_API_KEY=${{ secrets.ODDS_API_KEY }}
+        SPORTSDATA_API_KEY=${{ secrets.SPORTSDATA_API_KEY }}
+        FOOTBALL_DATA_KEY=${{ secrets.FOOTBALL_DATA_KEY }}
+        STREAMLIT_API_KEY=${{ secrets.STREAMLIT_API_KEY }}
+        
+        # Database Configuration
+        DB_PATH=data/betting.db
+        
+        # Application Settings
+        PAPER_TRADING=true
+        DEFAULT_STAKE=100
+        UPDATE_INTERVAL=60
+        
+        # Sportsbook Settings
+        ENABLED_BOOKS=["DraftKings", "FanDuel", "BetMGM", "Caesars", "PointsBet"]
+        EOF
+
+    - name: Deploy to Streamlit
+      env:
+        ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        SPORTSDATA_API_KEY: ${{ secrets.SPORTSDATA_API_KEY }}
+        FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
+        STREAMLIT_API_KEY: ${{ secrets.STREAMLIT_API_KEY }}
+      run: |
+        streamlit run app.py 
