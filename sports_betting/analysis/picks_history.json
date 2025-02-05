@@ -1,0 +1,2037 @@
+[
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Kansas Jayhawks @ Baylor Bears",
+        "pick_type": "Spread",
+        "pick": "Baylor Bears",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Kansas Jayhawks @ Baylor Bears",
+        "pick_type": "Total",
+        "pick": "UNDER 62.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Kansas Jayhawks @ Baylor Bears",
+        "pick_type": "Moneyline",
+        "pick": "Kansas Jayhawks",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "South Carolina Gamecocks @ Clemson Tigers",
+        "pick_type": "Spread",
+        "pick": "Clemson Tigers",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "South Carolina Gamecocks @ Clemson Tigers",
+        "pick_type": "Total",
+        "pick": "OVER 49.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "South Carolina Gamecocks @ Clemson Tigers",
+        "pick_type": "Moneyline",
+        "pick": "South Carolina Gamecocks",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Duke Blue Devils @ Wake Forest Demon Deacons",
+        "pick_type": "Spread",
+        "pick": "Wake Forest Demon Deacons",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Duke Blue Devils @ Wake Forest Demon Deacons",
+        "pick_type": "Total",
+        "pick": "OVER 53.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Duke Blue Devils @ Wake Forest Demon Deacons",
+        "pick_type": "Moneyline",
+        "pick": "Duke Blue Devils",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Florida Gators @ Florida State Seminoles",
+        "pick_type": "Spread",
+        "pick": "Florida State Seminoles",
+        "confidence": 53,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Florida Gators @ Florida State Seminoles",
+        "pick_type": "Total",
+        "pick": "OVER 45.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Florida Gators @ Florida State Seminoles",
+        "pick_type": "Moneyline",
+        "pick": "Florida Gators",
+        "confidence": 45,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Louisville Cardinals @ Kentucky Wildcats",
+        "pick_type": "Spread",
+        "pick": "Louisville Cardinals",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Louisville Cardinals @ Kentucky Wildcats",
+        "pick_type": "Total",
+        "pick": "OVER 49.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Louisville Cardinals @ Kentucky Wildcats",
+        "pick_type": "Moneyline",
+        "pick": "Kentucky Wildcats",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Michigan Wolverines @ Ohio State Buckeyes",
+        "pick_type": "Spread",
+        "pick": "Michigan Wolverines",
+        "confidence": 50,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Michigan Wolverines @ Ohio State Buckeyes",
+        "pick_type": "Total",
+        "pick": "OVER 41.5",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Michigan Wolverines @ Ohio State Buckeyes",
+        "pick_type": "Moneyline",
+        "pick": "Ohio State Buckeyes",
+        "confidence": 48,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Washington Huskies @ Oregon Ducks",
+        "pick_type": "Spread",
+        "pick": "Oregon Ducks",
+        "confidence": 53,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Washington Huskies @ Oregon Ducks",
+        "pick_type": "Total",
+        "pick": "OVER 51.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Washington Huskies @ Oregon Ducks",
+        "pick_type": "Moneyline",
+        "pick": "Washington Huskies",
+        "confidence": 45,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Tennessee Volunteers @ Vanderbilt Commodores",
+        "pick_type": "Spread",
+        "pick": "Vanderbilt Commodores",
+        "confidence": 63,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Tennessee Volunteers @ Vanderbilt Commodores",
+        "pick_type": "Total",
+        "pick": "OVER 46.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Tennessee Volunteers @ Vanderbilt Commodores",
+        "pick_type": "Moneyline",
+        "pick": "Tennessee Volunteers",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "West Virginia Mountaineers @ Texas Tech Red Raiders",
+        "pick_type": "Spread",
+        "pick": "Texas Tech Red Raiders",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "West Virginia Mountaineers @ Texas Tech Red Raiders",
+        "pick_type": "Total",
+        "pick": "UNDER 63.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "West Virginia Mountaineers @ Texas Tech Red Raiders",
+        "pick_type": "Moneyline",
+        "pick": "West Virginia Mountaineers",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UTSA Roadrunners @ Army Black Knights",
+        "pick_type": "Spread",
+        "pick": "Army Black Knights",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UTSA Roadrunners @ Army Black Knights",
+        "pick_type": "Total",
+        "pick": "OVER 52.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UTSA Roadrunners @ Army Black Knights",
+        "pick_type": "Moneyline",
+        "pick": "UTSA Roadrunners",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Illinois Fighting Illini @ Northwestern Wildcats",
+        "pick_type": "Spread",
+        "pick": "Northwestern Wildcats",
+        "confidence": 63,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Illinois Fighting Illini @ Northwestern Wildcats",
+        "pick_type": "Total",
+        "pick": "OVER 43.5",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Illinois Fighting Illini @ Northwestern Wildcats",
+        "pick_type": "Moneyline",
+        "pick": "Illinois Fighting Illini",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Louisiana Ragin Cajuns @ UL Monroe Warhawks",
+        "pick_type": "Spread",
+        "pick": "UL Monroe Warhawks",
+        "confidence": 63,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Louisiana Ragin Cajuns @ UL Monroe Warhawks",
+        "pick_type": "Total",
+        "pick": "OVER 50.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Louisiana Ragin Cajuns @ UL Monroe Warhawks",
+        "pick_type": "Moneyline",
+        "pick": "Louisiana Ragin Cajuns",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "North Texas Mean Green @ Temple Owls",
+        "pick_type": "Spread",
+        "pick": "Temple Owls",
+        "confidence": 63,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "North Texas Mean Green @ Temple Owls",
+        "pick_type": "Total",
+        "pick": "UNDER 63.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "North Texas Mean Green @ Temple Owls",
+        "pick_type": "Moneyline",
+        "pick": "North Texas Mean Green",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UConn Huskies @ UMass Minutemen",
+        "pick_type": "Spread",
+        "pick": "UMass Minutemen",
+        "confidence": 63,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UConn Huskies @ UMass Minutemen",
+        "pick_type": "Total",
+        "pick": "OVER 49.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UConn Huskies @ UMass Minutemen",
+        "pick_type": "Moneyline",
+        "pick": "UConn Huskies",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Eastern Michigan Eagles @ Western Michigan Broncos",
+        "pick_type": "Spread",
+        "pick": "Eastern Michigan Eagles",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Eastern Michigan Eagles @ Western Michigan Broncos",
+        "pick_type": "Total",
+        "pick": "UNDER 55.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Eastern Michigan Eagles @ Western Michigan Broncos",
+        "pick_type": "Moneyline",
+        "pick": "Western Michigan Broncos",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Coastal Carolina Chanticleers @ Georgia State Panthers",
+        "pick_type": "Spread",
+        "pick": "Coastal Carolina Chanticleers",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Coastal Carolina Chanticleers @ Georgia State Panthers",
+        "pick_type": "Total",
+        "pick": "OVER 54.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Coastal Carolina Chanticleers @ Georgia State Panthers",
+        "pick_type": "Moneyline",
+        "pick": "Georgia State Panthers",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Middle Tennessee Blue Raiders @ Florida International Panthers",
+        "pick_type": "Spread",
+        "pick": "Florida International Panthers",
+        "confidence": 63,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Middle Tennessee Blue Raiders @ Florida International Panthers",
+        "pick_type": "Total",
+        "pick": "OVER 51.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Middle Tennessee Blue Raiders @ Florida International Panthers",
+        "pick_type": "Moneyline",
+        "pick": "Middle Tennessee Blue Raiders",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "South Florida Bulls @ Rice Owls",
+        "pick_type": "Spread",
+        "pick": "South Florida Bulls",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "South Florida Bulls @ Rice Owls",
+        "pick_type": "Total",
+        "pick": "OVER 54.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "South Florida Bulls @ Rice Owls",
+        "pick_type": "Moneyline",
+        "pick": "Rice Owls",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Southern Mississippi Golden Eagles @ Troy Trojans",
+        "pick_type": "Spread",
+        "pick": "Southern Mississippi Golden Eagles",
+        "confidence": 50,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Southern Mississippi Golden Eagles @ Troy Trojans",
+        "pick_type": "Total",
+        "pick": "OVER 49.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Southern Mississippi Golden Eagles @ Troy Trojans",
+        "pick_type": "Moneyline",
+        "pick": "Troy Trojans",
+        "confidence": 48,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Old Dominion Monarchs @ Arkansas State Red Wolves",
+        "pick_type": "Spread",
+        "pick": "Old Dominion Monarchs",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Old Dominion Monarchs @ Arkansas State Red Wolves",
+        "pick_type": "Total",
+        "pick": "UNDER 59.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Old Dominion Monarchs @ Arkansas State Red Wolves",
+        "pick_type": "Moneyline",
+        "pick": "Arkansas State Red Wolves",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Pittsburgh Panthers @ Boston College Eagles",
+        "pick_type": "Spread",
+        "pick": "Boston College Eagles",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Pittsburgh Panthers @ Boston College Eagles",
+        "pick_type": "Total",
+        "pick": "OVER 50.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Pittsburgh Panthers @ Boston College Eagles",
+        "pick_type": "Moneyline",
+        "pick": "Pittsburgh Panthers",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Auburn Tigers @ Alabama Crimson Tide",
+        "pick_type": "Spread",
+        "pick": "Alabama Crimson Tide",
+        "confidence": 63,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Auburn Tigers @ Alabama Crimson Tide",
+        "pick_type": "Total",
+        "pick": "OVER 52.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Auburn Tigers @ Alabama Crimson Tide",
+        "pick_type": "Moneyline",
+        "pick": "Auburn Tigers",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Arizona State Sun Devils @ Arizona Wildcats",
+        "pick_type": "Spread",
+        "pick": "Arizona Wildcats",
+        "confidence": 63,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Arizona State Sun Devils @ Arizona Wildcats",
+        "pick_type": "Total",
+        "pick": "OVER 54.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Arizona State Sun Devils @ Arizona Wildcats",
+        "pick_type": "Moneyline",
+        "pick": "Arizona State Sun Devils",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Arkansas Razorbacks @ Missouri Tigers",
+        "pick_type": "Spread",
+        "pick": "Arkansas Razorbacks",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Arkansas Razorbacks @ Missouri Tigers",
+        "pick_type": "Total",
+        "pick": "OVER 51.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Arkansas Razorbacks @ Missouri Tigers",
+        "pick_type": "Moneyline",
+        "pick": "Missouri Tigers",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "California Golden Bears @ SMU Mustangs",
+        "pick_type": "Spread",
+        "pick": "California Golden Bears",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "California Golden Bears @ SMU Mustangs",
+        "pick_type": "Total",
+        "pick": "UNDER 55.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "California Golden Bears @ SMU Mustangs",
+        "pick_type": "Moneyline",
+        "pick": "SMU Mustangs",
+        "confidence": 58,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Central Michigan Chippewas @ Northern Illinois Huskies",
+        "pick_type": "Spread",
+        "pick": "Central Michigan Chippewas",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Central Michigan Chippewas @ Northern Illinois Huskies",
+        "pick_type": "Total",
+        "pick": "OVER 40.5",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Central Michigan Chippewas @ Northern Illinois Huskies",
+        "pick_type": "Moneyline",
+        "pick": "Northern Illinois Huskies",
+        "confidence": 58,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UAB Blazers @ Charlotte 49ers",
+        "pick_type": "Spread",
+        "pick": "Charlotte 49ers",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UAB Blazers @ Charlotte 49ers",
+        "pick_type": "Total",
+        "pick": "UNDER 61.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UAB Blazers @ Charlotte 49ers",
+        "pick_type": "Moneyline",
+        "pick": "UAB Blazers",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Florida Atlantic Owls @ Tulsa Golden Hurricane",
+        "pick_type": "Spread",
+        "pick": "Florida Atlantic Owls",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Florida Atlantic Owls @ Tulsa Golden Hurricane",
+        "pick_type": "Total",
+        "pick": "UNDER 57.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Florida Atlantic Owls @ Tulsa Golden Hurricane",
+        "pick_type": "Moneyline",
+        "pick": "Tulsa Golden Hurricane",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Fresno State Bulldogs @ UCLA Bruins",
+        "pick_type": "Spread",
+        "pick": "Fresno State Bulldogs",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Fresno State Bulldogs @ UCLA Bruins",
+        "pick_type": "Total",
+        "pick": "OVER 46.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Fresno State Bulldogs @ UCLA Bruins",
+        "pick_type": "Moneyline",
+        "pick": "UCLA Bruins",
+        "confidence": 58,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Maryland Terrapins @ Penn State Nittany Lions",
+        "pick_type": "Spread",
+        "pick": "Maryland Terrapins",
+        "confidence": 50,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Maryland Terrapins @ Penn State Nittany Lions",
+        "pick_type": "Total",
+        "pick": "OVER 50.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Maryland Terrapins @ Penn State Nittany Lions",
+        "pick_type": "Moneyline",
+        "pick": "Penn State Nittany Lions",
+        "confidence": 48,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Miami Hurricanes @ Syracuse Orange",
+        "pick_type": "Spread",
+        "pick": "Syracuse Orange",
+        "confidence": 63,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Miami Hurricanes @ Syracuse Orange",
+        "pick_type": "Total",
+        "pick": "UNDER 67.5",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Miami Hurricanes @ Syracuse Orange",
+        "pick_type": "Moneyline",
+        "pick": "Miami Hurricanes",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Rutgers Scarlet Knights @ Michigan State Spartans",
+        "pick_type": "Spread",
+        "pick": "Michigan State Spartans",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Rutgers Scarlet Knights @ Michigan State Spartans",
+        "pick_type": "Total",
+        "pick": "OVER 47.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Rutgers Scarlet Knights @ Michigan State Spartans",
+        "pick_type": "Moneyline",
+        "pick": "Rutgers Scarlet Knights",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "NC State Wolfpack @ North Carolina Tar Heels",
+        "pick_type": "Spread",
+        "pick": "NC State Wolfpack",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "NC State Wolfpack @ North Carolina Tar Heels",
+        "pick_type": "Total",
+        "pick": "OVER 54.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "NC State Wolfpack @ North Carolina Tar Heels",
+        "pick_type": "Moneyline",
+        "pick": "North Carolina Tar Heels",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Notre Dame Fighting Irish @ USC Trojans",
+        "pick_type": "Spread",
+        "pick": "USC Trojans",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Notre Dame Fighting Irish @ USC Trojans",
+        "pick_type": "Total",
+        "pick": "OVER 53.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Notre Dame Fighting Irish @ USC Trojans",
+        "pick_type": "Moneyline",
+        "pick": "Notre Dame Fighting Irish",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Texas Longhorns @ Texas A&M Aggies",
+        "pick_type": "Spread",
+        "pick": "Texas Longhorns",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Texas Longhorns @ Texas A&M Aggies",
+        "pick_type": "Total",
+        "pick": "OVER 48.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Texas Longhorns @ Texas A&M Aggies",
+        "pick_type": "Moneyline",
+        "pick": "Texas A&M Aggies",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Jacksonville State Gamecocks @ Western Kentucky Hilltoppers",
+        "pick_type": "Spread",
+        "pick": "Jacksonville State Gamecocks",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Jacksonville State Gamecocks @ Western Kentucky Hilltoppers",
+        "pick_type": "Total",
+        "pick": "UNDER 62.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Jacksonville State Gamecocks @ Western Kentucky Hilltoppers",
+        "pick_type": "Moneyline",
+        "pick": "Western Kentucky Hilltoppers",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Kennesaw State Owls @ Louisiana Tech Bulldogs",
+        "pick_type": "Spread",
+        "pick": "Kennesaw State Owls",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Kennesaw State Owls @ Louisiana Tech Bulldogs",
+        "pick_type": "Total",
+        "pick": "OVER 41.5",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Kennesaw State Owls @ Louisiana Tech Bulldogs",
+        "pick_type": "Moneyline",
+        "pick": "Louisiana Tech Bulldogs",
+        "confidence": 58,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UTEP Miners @ New Mexico State Aggies",
+        "pick_type": "Spread",
+        "pick": "New Mexico State Aggies",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UTEP Miners @ New Mexico State Aggies",
+        "pick_type": "Total",
+        "pick": "OVER 51.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "UTEP Miners @ New Mexico State Aggies",
+        "pick_type": "Moneyline",
+        "pick": "UTEP Miners",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Appalachian State Mountaineers @ Georgia Southern Eagles",
+        "pick_type": "Spread",
+        "pick": "Appalachian State Mountaineers",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Appalachian State Mountaineers @ Georgia Southern Eagles",
+        "pick_type": "Total",
+        "pick": "UNDER 61.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Appalachian State Mountaineers @ Georgia Southern Eagles",
+        "pick_type": "Moneyline",
+        "pick": "Georgia Southern Eagles",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "TCU Horned Frogs @ Cincinnati Bearcats",
+        "pick_type": "Spread",
+        "pick": "TCU Horned Frogs",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "TCU Horned Frogs @ Cincinnati Bearcats",
+        "pick_type": "Total",
+        "pick": "UNDER 58.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "TCU Horned Frogs @ Cincinnati Bearcats",
+        "pick_type": "Moneyline",
+        "pick": "Cincinnati Bearcats",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Wyoming Cowboys @ Washington State Cougars",
+        "pick_type": "Spread",
+        "pick": "Washington State Cougars",
+        "confidence": 53,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Wyoming Cowboys @ Washington State Cougars",
+        "pick_type": "Total",
+        "pick": "UNDER 55.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Wyoming Cowboys @ Washington State Cougars",
+        "pick_type": "Moneyline",
+        "pick": "Wyoming Cowboys",
+        "confidence": 45,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Purdue Boilermakers @ Indiana Hoosiers",
+        "pick_type": "Spread",
+        "pick": "Indiana Hoosiers",
+        "confidence": 53,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Purdue Boilermakers @ Indiana Hoosiers",
+        "pick_type": "Total",
+        "pick": "UNDER 56.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Purdue Boilermakers @ Indiana Hoosiers",
+        "pick_type": "Moneyline",
+        "pick": "Purdue Boilermakers",
+        "confidence": 45,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Oklahoma Sooners @ LSU Tigers",
+        "pick_type": "Spread",
+        "pick": "LSU Tigers",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Oklahoma Sooners @ LSU Tigers",
+        "pick_type": "Total",
+        "pick": "OVER 47.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Oklahoma Sooners @ LSU Tigers",
+        "pick_type": "Moneyline",
+        "pick": "Oklahoma Sooners",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Kansas State Wildcats @ Iowa State Cyclones",
+        "pick_type": "Spread",
+        "pick": "Iowa State Cyclones",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Kansas State Wildcats @ Iowa State Cyclones",
+        "pick_type": "Total",
+        "pick": "OVER 51.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Kansas State Wildcats @ Iowa State Cyclones",
+        "pick_type": "Moneyline",
+        "pick": "Kansas State Wildcats",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Marshall Thundering Herd @ James Madison Dukes",
+        "pick_type": "Spread",
+        "pick": "James Madison Dukes",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Marshall Thundering Herd @ James Madison Dukes",
+        "pick_type": "Total",
+        "pick": "OVER 52.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Marshall Thundering Herd @ James Madison Dukes",
+        "pick_type": "Moneyline",
+        "pick": "Marshall Thundering Herd",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Nevada Wolf Pack @ UNLV Rebels",
+        "pick_type": "Spread",
+        "pick": "Nevada Wolf Pack",
+        "confidence": 50,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Nevada Wolf Pack @ UNLV Rebels",
+        "pick_type": "Total",
+        "pick": "UNDER 55.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Nevada Wolf Pack @ UNLV Rebels",
+        "pick_type": "Moneyline",
+        "pick": "UNLV Rebels",
+        "confidence": 48,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Virginia Cavaliers @ Virginia Tech Hokies",
+        "pick_type": "Spread",
+        "pick": "Virginia Cavaliers",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Virginia Cavaliers @ Virginia Tech Hokies",
+        "pick_type": "Total",
+        "pick": "OVER 47.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Virginia Cavaliers @ Virginia Tech Hokies",
+        "pick_type": "Moneyline",
+        "pick": "Virginia Tech Hokies",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Houston Cougars @ BYU Cougars",
+        "pick_type": "Spread",
+        "pick": "BYU Cougars",
+        "confidence": 63,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Houston Cougars @ BYU Cougars",
+        "pick_type": "Total",
+        "pick": "OVER 40.5",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Houston Cougars @ BYU Cougars",
+        "pick_type": "Moneyline",
+        "pick": "Houston Cougars",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Air Force Falcons @ San Diego State Aztecs",
+        "pick_type": "Spread",
+        "pick": "San Diego State Aztecs",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Air Force Falcons @ San Diego State Aztecs",
+        "pick_type": "Total",
+        "pick": "OVER 43.5",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Air Force Falcons @ San Diego State Aztecs",
+        "pick_type": "Moneyline",
+        "pick": "Air Force Falcons",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "New Mexico Lobos @ Hawaii Rainbow Warriors",
+        "pick_type": "Spread",
+        "pick": "New Mexico Lobos",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "New Mexico Lobos @ Hawaii Rainbow Warriors",
+        "pick_type": "Total",
+        "pick": "UNDER 61.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "New Mexico Lobos @ Hawaii Rainbow Warriors",
+        "pick_type": "Moneyline",
+        "pick": "Hawaii Rainbow Warriors",
+        "confidence": 68,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Texas A&M Aggies @ Georgia Bulldogs",
+        "pick_type": "Spread",
+        "pick": "Georgia Bulldogs",
+        "confidence": 63,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Texas A&M Aggies @ Georgia Bulldogs",
+        "pick_type": "Total",
+        "pick": "OVER 49.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Texas A&M Aggies @ Georgia Bulldogs",
+        "pick_type": "Moneyline",
+        "pick": "Texas A&M Aggies",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Georgia Bulldogs @ Texas Longhorns",
+        "pick_type": "Spread",
+        "pick": "Texas Longhorns",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Georgia Bulldogs @ Texas Longhorns",
+        "pick_type": "Total",
+        "pick": "OVER 52.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Georgia Bulldogs @ Texas Longhorns",
+        "pick_type": "Moneyline",
+        "pick": "Georgia Bulldogs",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Clemson Tigers @ SMU Mustangs",
+        "pick_type": "Spread",
+        "pick": "SMU Mustangs",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Clemson Tigers @ SMU Mustangs",
+        "pick_type": "Total",
+        "pick": "UNDER 57.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Clemson Tigers @ SMU Mustangs",
+        "pick_type": "Moneyline",
+        "pick": "Clemson Tigers",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Ohio Bobcats @ Miami (OH) RedHawks",
+        "pick_type": "Spread",
+        "pick": "Ohio Bobcats",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Ohio Bobcats @ Miami (OH) RedHawks",
+        "pick_type": "Total",
+        "pick": "OVER 45.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Ohio Bobcats @ Miami (OH) RedHawks",
+        "pick_type": "Moneyline",
+        "pick": "Ohio Bobcats",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Miami Hurricanes @ SMU Mustangs",
+        "pick_type": "Spread",
+        "pick": "SMU Mustangs",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Miami Hurricanes @ SMU Mustangs",
+        "pick_type": "Total",
+        "pick": "UNDER 63.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Miami Hurricanes @ SMU Mustangs",
+        "pick_type": "Moneyline",
+        "pick": "Miami Hurricanes",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Ohio State Buckeyes @ Oregon Ducks",
+        "pick_type": "Spread",
+        "pick": "Oregon Ducks",
+        "confidence": 73,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Ohio State Buckeyes @ Oregon Ducks",
+        "pick_type": "Total",
+        "pick": "OVER 52.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAF",
+        "game": "Ohio State Buckeyes @ Oregon Ducks",
+        "pick_type": "Moneyline",
+        "pick": "Ohio State Buckeyes",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Southern Jaguars @ Louisiana Tech Bulldogs",
+        "pick_type": "Spread",
+        "pick": "Louisiana Tech Bulldogs",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Southern Jaguars @ Louisiana Tech Bulldogs",
+        "pick_type": "Total",
+        "pick": "OVER 138.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Southern Jaguars @ Louisiana Tech Bulldogs",
+        "pick_type": "Moneyline",
+        "pick": "Southern Jaguars",
+        "confidence": 50,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Colgate Raiders @ Sam Houston St Bearkats",
+        "pick_type": "Spread",
+        "pick": "Colgate Raiders",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Colgate Raiders @ Sam Houston St Bearkats",
+        "pick_type": "Total",
+        "pick": "OVER 136.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Colgate Raiders @ Sam Houston St Bearkats",
+        "pick_type": "Moneyline",
+        "pick": "Sam Houston St Bearkats",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Monmouth Hawks @ Seton Hall Pirates",
+        "pick_type": "Spread",
+        "pick": "Monmouth Hawks",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Monmouth Hawks @ Seton Hall Pirates",
+        "pick_type": "Total",
+        "pick": "OVER 128.5",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Monmouth Hawks @ Seton Hall Pirates",
+        "pick_type": "Moneyline",
+        "pick": "Seton Hall Pirates",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Campbell Fighting Camels @ Green Bay Phoenix",
+        "pick_type": "Spread",
+        "pick": "Campbell Fighting Camels",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Campbell Fighting Camels @ Green Bay Phoenix",
+        "pick_type": "Total",
+        "pick": "UNDER 151.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Campbell Fighting Camels @ Green Bay Phoenix",
+        "pick_type": "Moneyline",
+        "pick": "Green Bay Phoenix",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Central Arkansas Bears @ Georgia Tech Yellow Jackets",
+        "pick_type": "Spread",
+        "pick": "Central Arkansas Bears",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Central Arkansas Bears @ Georgia Tech Yellow Jackets",
+        "pick_type": "Total",
+        "pick": "UNDER 150.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Central Arkansas Bears @ Georgia Tech Yellow Jackets",
+        "pick_type": "Moneyline",
+        "pick": "Georgia Tech Yellow Jackets",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Chicago St Cougars @ Wisconsin Badgers",
+        "pick_type": "Spread",
+        "pick": "Chicago St Cougars",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Chicago St Cougars @ Wisconsin Badgers",
+        "pick_type": "Total",
+        "pick": "UNDER 149.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Creighton Bluejays @ Notre Dame Fighting Irish",
+        "pick_type": "Spread",
+        "pick": "Notre Dame Fighting Irish",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Creighton Bluejays @ Notre Dame Fighting Irish",
+        "pick_type": "Total",
+        "pick": "UNDER 143.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Creighton Bluejays @ Notre Dame Fighting Irish",
+        "pick_type": "Moneyline",
+        "pick": "Creighton Bluejays",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Northeastern Huskies @ Vermont Catamounts",
+        "pick_type": "Spread",
+        "pick": "Northeastern Huskies",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Northeastern Huskies @ Vermont Catamounts",
+        "pick_type": "Total",
+        "pick": "OVER 129.5",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Northeastern Huskies @ Vermont Catamounts",
+        "pick_type": "Moneyline",
+        "pick": "Vermont Catamounts",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "LIU Sharks @ Binghamton Bearcats",
+        "pick_type": "Spread",
+        "pick": "LIU Sharks",
+        "confidence": 75,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "LIU Sharks @ Binghamton Bearcats",
+        "pick_type": "Total",
+        "pick": "OVER 135.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "LIU Sharks @ Binghamton Bearcats",
+        "pick_type": "Moneyline",
+        "pick": "Binghamton Bearcats",
+        "confidence": 75,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "New Mexico St Aggies @ Bowling Green Falcons",
+        "pick_type": "Spread",
+        "pick": "New Mexico St Aggies",
+        "confidence": 75,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "New Mexico St Aggies @ Bowling Green Falcons",
+        "pick_type": "Total",
+        "pick": "UNDER 146.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "New Mexico St Aggies @ Bowling Green Falcons",
+        "pick_type": "Moneyline",
+        "pick": "Bowling Green Falcons",
+        "confidence": 75,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Charleston Southern Buccaneers @ Miami Hurricanes",
+        "pick_type": "Spread",
+        "pick": "Charleston Southern Buccaneers",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Charleston Southern Buccaneers @ Miami Hurricanes",
+        "pick_type": "Total",
+        "pick": "UNDER 150.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Charleston Southern Buccaneers @ Miami Hurricanes",
+        "pick_type": "Moneyline",
+        "pick": "Miami Hurricanes",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "South Carolina Upstate Spartans @ Coastal Carolina Chanticleers",
+        "pick_type": "Spread",
+        "pick": "Coastal Carolina Chanticleers",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "South Carolina Upstate Spartans @ Coastal Carolina Chanticleers",
+        "pick_type": "Total",
+        "pick": "UNDER 147.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "South Carolina Upstate Spartans @ Coastal Carolina Chanticleers",
+        "pick_type": "Moneyline",
+        "pick": "South Carolina Upstate Spartans",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Delaware Blue Hens @ Rider Broncs",
+        "pick_type": "Spread",
+        "pick": "Rider Broncs",
+        "confidence": 80,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Delaware Blue Hens @ Rider Broncs",
+        "pick_type": "Total",
+        "pick": "UNDER 144.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Delaware Blue Hens @ Rider Broncs",
+        "pick_type": "Moneyline",
+        "pick": "Delaware Blue Hens",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Navy Midshipmen @ Elon Phoenix",
+        "pick_type": "Spread",
+        "pick": "Elon Phoenix",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Navy Midshipmen @ Elon Phoenix",
+        "pick_type": "Total",
+        "pick": "UNDER 143.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Navy Midshipmen @ Elon Phoenix",
+        "pick_type": "Moneyline",
+        "pick": "Navy Midshipmen",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Fort Wayne Mastodons @ Texas A&M-Commerce Lions",
+        "pick_type": "Spread",
+        "pick": "Texas A&M-Commerce Lions",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Fort Wayne Mastodons @ Texas A&M-Commerce Lions",
+        "pick_type": "Total",
+        "pick": "UNDER 148.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Fort Wayne Mastodons @ Texas A&M-Commerce Lions",
+        "pick_type": "Moneyline",
+        "pick": "Fort Wayne Mastodons",
+        "confidence": 50,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Mt. St. Mary's Mountaineers @ Howard Bison",
+        "pick_type": "Spread",
+        "pick": "Howard Bison",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Mt. St. Mary's Mountaineers @ Howard Bison",
+        "pick_type": "Total",
+        "pick": "OVER 139.5",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Mt. St. Mary's Mountaineers @ Howard Bison",
+        "pick_type": "Moneyline",
+        "pick": "Mt. St. Mary's Mountaineers",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Indiana St Sycamores @ Iona Gaels",
+        "pick_type": "Spread",
+        "pick": "Iona Gaels",
+        "confidence": 80,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Indiana St Sycamores @ Iona Gaels",
+        "pick_type": "Total",
+        "pick": "UNDER 152.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Indiana St Sycamores @ Iona Gaels",
+        "pick_type": "Moneyline",
+        "pick": "Indiana St Sycamores",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Western Carolina Catamounts @ Marquette Golden Eagles",
+        "pick_type": "Spread",
+        "pick": "Marquette Golden Eagles",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Western Carolina Catamounts @ Marquette Golden Eagles",
+        "pick_type": "Total",
+        "pick": "UNDER 151.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Milwaukee Panthers @ Southern Miss Golden Eagles",
+        "pick_type": "Spread",
+        "pick": "Southern Miss Golden Eagles",
+        "confidence": 80,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Milwaukee Panthers @ Southern Miss Golden Eagles",
+        "pick_type": "Total",
+        "pick": "UNDER 158.5",
+        "confidence": 65,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Milwaukee Panthers @ Southern Miss Golden Eagles",
+        "pick_type": "Moneyline",
+        "pick": "Milwaukee Panthers",
+        "confidence": 70,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Robert Morris Colonials @ Ohio Bobcats",
+        "pick_type": "Spread",
+        "pick": "Ohio Bobcats",
+        "confidence": 60,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Robert Morris Colonials @ Ohio Bobcats",
+        "pick_type": "Total",
+        "pick": "UNDER 146.0",
+        "confidence": 55,
+        "result": "Pending"
+    },
+    {
+        "date": "2023-11-25",
+        "sport": "NCAAB",
+        "game": "Robert Morris Colonials @ Ohio Bobcats",
+        "pick_type": "Moneyline",
+        "pick": "Robert Morris Colonials",
+        "confidence": 50,
+        "result": "Pending"
+    }
+]
+     
