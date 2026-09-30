@@ -1,5 +1,11 @@
 # The Rounders Sports Betting Analytics Platform 🎯
 
+<!-- repo-intro:start -->
+**Project snapshot:** A sports analytics research platform exploring odds aggregation, statistical modeling, line movement, bankroll math, and multi-sport data workflows.
+
+**What it demonstrates:** Python · data analysis · predictive-model concepts · API integration · analytical dashboards.
+<!-- repo-intro:end -->
+
 A comprehensive sports betting analytics platform that provides advanced statistics, predictions, and tracking for NBA, NFL, NHL, and MLB betting. Built with Bill Walters' principles in mind, focusing on data-driven decisions, line shopping, and proper bankroll management.
 
 ## Features 🌟
