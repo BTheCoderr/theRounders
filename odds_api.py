@@ -17,9 +17,9 @@ class OddsAPI:
         )
         self.logger = logging.getLogger(__name__)
         
-        # Validate API key
+        # Missing API keys are handled gracefully so the app can still load.
         if not self.config.ODDS_API_KEY:
-            raise ValueError("Odds API key not found in environment variables")
+            self.logger.warning("ODDS_API_KEY is not configured; live odds will be unavailable.")
     
     def _handle_rate_limit(self):
         """Ensure we don't exceed API rate limits."""
@@ -37,10 +37,18 @@ class OddsAPI:
         try:
             self._handle_rate_limit()
             
-            url = self.config.get_odds_url(endpoint, **kwargs)
-            headers = self.config.get_headers('odds')
+            sport = kwargs.pop("sport", None)
+            if not self.config.ODDS_API_KEY or not sport:
+                return None
+            endpoints = self.config.get_sport_endpoints(sport, "odds_api")
+            if not endpoints or endpoint not in endpoints:
+                self.logger.warning("Unsupported sport/endpoint: %s/%s", sport, endpoint)
+                return None
+            url = endpoints[endpoint]
+            params = dict(kwargs)
+            params["apiKey"] = self.config.ODDS_API_KEY
             
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, params=params, timeout=15)
             response.raise_for_status()
             
             return response.json()
