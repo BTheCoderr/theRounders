@@ -1,2 +1,5 @@
 import type {OddsProvider} from "./types";
-export const mockProvider:OddsProvider={name:"controlled-demo",async getMarkets(sport){const now=new Date().toISOString();return [{eventId:"demo-1",sport,market:"moneyline",selection:"Home",price:-110,book:"Demo Book",updatedAt:now,state:"simulated"}]}};
+import type {MarketQuote,MarketName} from "../contracts";
+const teams:Record<string,[string,string][]>={NBA:[["BOS","NYK"],["LAL","GSW"],["MIL","CLE"]],NFL:[["BUF","NYJ"],["DAL","PHI"],["KC","DEN"]],NHL:[["BOS","NYR"],["TOR","MTL"],["VGK","EDM"]],MLB:[["BOS","NYY"],["LAD","SD"],["CHC","STL"]]};
+const books=["Northstar","Metro","Prime"];
+export const mockProvider:OddsProvider={name:"controlled-demo",async getMarkets(sport){const now=new Date();const games=teams[sport]||teams.NBA;const out:MarketQuote[]=[];games.forEach(([away,home],gi)=>{const eventId=sport.toLowerCase()+"-"+(gi+1);const startTime=new Date(now.getTime()+(gi+1)*3600000).toISOString();(["moneyline","spread","total"] as MarketName[]).forEach((market,mi)=>books.forEach((book,bi)=>{const base=-118+gi*7+mi*5+bi*4;const selection=market==="total"?"Over":home;const line=market==="spread"?-3.5+gi:market==="total"?218.5+gi*2:undefined;out.push({eventId,sport,market,selection,line,price:base,book,updatedAt:now.toISOString(),state:"simulated",away,home,startTime})}))});return out}};
