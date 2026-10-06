@@ -505,13 +505,15 @@ elif page == "Sharp Movement":
     with col2:
         st.subheader("Active Alerts")
         # Get alerts from the alert system
-        alerts = clients['simulator'].get_alerts()
+        alerts = clients['simulator'].get_alerts() if hasattr(clients['simulator'], "get_alerts") else []
         if alerts:
             for alert in alerts:
                 with st.expander(f"{alert.type.upper()} - {alert.sport}"):
                     st.write(f"Confidence: {alert.confidence:.2%}")
                     st.write(f"Movement: {alert.old_line} → {alert.new_line}")
                     st.write("Details:", alert.details)
+        else:
+            st.info("No active sharp-movement alerts.")
 
 elif page == "Walters Mode":
     st.title("Walters Mode")
