@@ -15,23 +15,22 @@ jobs:
           TARGETS_JSON: ${{ secrets.SUPABASE_HEALTH_TARGETS_JSON }}
         run: |
           python3 - <<'PY'
-          import json,os,urllib.request,urllib.error,sys
+          import json,os,urllib.request,sys
           targets=json.loads(os.environ.get("TARGETS_JSON") or "[]")
           if not targets:
-              print("No targets configured. Add SUPABASE_HEALTH_TARGETS_JSON repository secret.")
-              sys.exit(1)
+              sys.exit("No targets configured. Add SUPABASE_HEALTH_TARGETS_JSON repository secret.")
           failures=[]
           for target in targets:
               name=target.get("name","unnamed")
-              url=target["url"].rstrip("/")+"/rest/v1/"+target["table"]+"?select="+target["column"]+"&limit=1"
+              url=target["url"].rstrip("/")+"/rest/v1/rpc/rounders_healthcheck"
               key=target["key"]
-              req=urllib.request.Request(url,headers={"apikey":key,"Authorization":"Bearer "+key})
+              req=urllib.request.Request(url,data=b"{}",method="POST",headers={"apikey":key,"Authorization":"Bearer "+key,"Content-Type":"application/json"})
               try:
                   with urllib.request.urlopen(req,timeout=20) as response:
-                      print(name+": HTTP "+str(response.status))
+                      if response.status!=200: raise ValueError("Unexpected HTTP status")
+                      print(name+": healthy")
               except Exception as exc:
                   print(name+": FAILED "+type(exc).__name__)
                   failures.append(name)
-          if failures:
-              sys.exit("Database checks failed: "+", ".join(failures))
+          if failures: sys.exit("Database checks failed: "+", ".join(failures))
           PY
