@@ -3,12 +3,15 @@ on:
   pull_request:
     paths:
       - "native/**"
+      - "netlify.toml"
       - ".github/workflows/native-ci.yml"
   push:
     branches:
+      - main
       - feature/native-control-shell
     paths:
       - "native/**"
+      - "netlify.toml"
       - ".github/workflows/native-ci.yml"
 jobs:
   validate:
