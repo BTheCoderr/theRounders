@@ -1,0 +1,5 @@
+import {NextRequest,NextResponse} from "next/server";
+import {mockProvider} from "../../../lib/providers/mock";
+import {liveProvider} from "../../../lib/providers/live";
+const STALE_MS=120000;
+export async function GET(req:NextRequest){const sport=req.nextUrl.searchParams.get("sport")||"NBA";let providerName=mockProvider.name,mode=mockProvider.mode,fallback=true;try{const health=await liveProvider.health();let markets=await mockProvider.getMarkets(sport);if(health.healthy){try{const live=await liveProvider.getMarkets(sport);if(live.length){markets=live;providerName=liveProvider.name;mode=liveProvider.mode;fallback=false}}catch{fallback=true}}const newest=markets.reduce((max,q)=>Math.max(max,new Date(q.updatedAt).getTime()),0);const ageMs=newest?Date.now()-newest:null;return NextResponse.json({provider:providerName,mode,fallback,fresh:ageMs!==null&&ageMs<=STALE_MS,ageMs,markets})}catch{return NextResponse.json({provider:providerName,mode,fallback,fresh:false,ageMs:null,markets:[],error:"Market feed unavailable"},{status:503})}}
