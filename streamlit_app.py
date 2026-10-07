@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import sqlite3
 import os
 import asyncio
+import time
 from odds_api import OddsAPI
 from data_scraper import DataScraper
 from api_config import APIConfig
@@ -459,37 +460,33 @@ elif page == "Line Shopping":
     
     auto_refresh = st.checkbox("Auto-refresh (30s)", value=False)
     
+    odds_data = clients['odds_api'].get_odds(sport)
+    if odds_data:
+        for game, data in odds_data.items():
+            with st.expander(game):
+                best_odds = {}
+                for book, book_data in data['bookmakers'].items():
+                    for market, outcomes in book_data['markets'].items():
+                        for outcome, odds in outcomes['outcomes'].items():
+                            if outcome not in best_odds or odds['price'] > best_odds[outcome]['price']:
+                                best_odds[outcome] = {'price': odds['price'], 'book': book}
+
+                st.write("Best Odds:")
+                for outcome, odds in best_odds.items():
+                    st.write(f"{outcome}: {odds['price']} ({odds['book']})")
+    else:
+        st.info("No odds are available for this sport right now.")
+
     if auto_refresh:
-        st.empty()
-        while True:
-            odds_data = clients['odds_api'].get_odds(sport)
-            if odds_data:
-                for game, data in odds_data.items():
-                    with st.expander(game):
-                        best_odds = {}
-                        for book, book_data in data['bookmakers'].items():
-                            for market, outcomes in book_data['markets'].items():
-                                for outcome, odds in outcomes['outcomes'].items():
-                                    if outcome not in best_odds or odds['price'] > best_odds[outcome]['price']:
-                                        best_odds[outcome] = {
-                                            'price': odds['price'],
-                                            'book': book
-                                        }
-                        
-                        # Display best odds
-                        st.write("Best Odds:")
-                        for outcome, odds in best_odds.items():
-                            st.write(f"{outcome}: {odds['price']} ({odds['book']})")
-            
-            st.empty()
-            time.sleep(30)
+        time.sleep(30)
+        st.rerun()
 
 elif page == "Sharp Movement":
     st.title("Sharp Movement Detection")
     
-        col1, col2 = st.columns(2)
-        
-        with col1:
+    col1, col2 = st.columns(2)
+    
+    with col1:
         monitoring_window = st.slider(
             "Monitoring Window (minutes)",
             min_value=1,
@@ -508,13 +505,15 @@ elif page == "Sharp Movement":
     with col2:
         st.subheader("Active Alerts")
         # Get alerts from the alert system
-        alerts = clients['simulator'].get_alerts()
+        alerts = clients['simulator'].get_alerts() if hasattr(clients['simulator'], "get_alerts") else []
         if alerts:
             for alert in alerts:
                 with st.expander(f"{alert.type.upper()} - {alert.sport}"):
                     st.write(f"Confidence: {alert.confidence:.2%}")
                     st.write(f"Movement: {alert.old_line} → {alert.new_line}")
                     st.write("Details:", alert.details)
+        else:
+            st.info("No active sharp-movement alerts.")
 
 elif page == "Walters Mode":
     st.title("Walters Mode")
@@ -533,7 +532,7 @@ elif page == "Walters Mode":
                 st.write(f"Weight: {rule['weight']}")
                 st.write(f"Category: {rule['category']}")
             
-        with col2:
+    with col2:
         st.subheader("Performance Metrics")
         # Add performance metrics here
         st.metric("Win Rate", "62.5%")
@@ -595,8 +594,18 @@ elif page == "Support":
     with tab2:
         st.subheader("Your Support Tickets")
         
-        # Fetch tickets from database
         conn = sqlite3.connect(st.session_state.db.db_path)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS support_tickets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                type TEXT,
+                priority TEXT,
+                description TEXT,
+                status TEXT DEFAULT 'Open',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.commit()
         tickets_df = pd.read_sql_query("SELECT * FROM support_tickets ORDER BY created_at DESC", conn)
         conn.close()
         
@@ -605,7 +614,7 @@ elif page == "Support":
                 with st.expander(f"{ticket['type']} - {ticket['status']} ({ticket['created_at']})"):
                     st.write(f"Priority: {ticket['priority']}")
                     st.write(f"Description: {ticket['description']}")
-    else:
+        else:
             st.info("No support tickets found.")
 
 elif page == "Settings":

@@ -211,6 +211,24 @@ class APIConfig:
             
         return None
 
+    def get_rate_limit(self, api_name: str) -> Dict:
+        """Return rate-limit settings with safe defaults for optional sources."""
+        aliases = {"understat": "espn", "ufc_stats": "espn"}
+        return self.RATE_LIMITS.get(api_name, self.RATE_LIMITS.get(aliases.get(api_name), {"min_interval": 1}))
+
+    def get_headers(self, api_name: str) -> Dict:
+        """Backward-compatible alias used by older API clients."""
+        aliases = {"odds": "odds_api"}
+        return self.get_api_headers(aliases.get(api_name, api_name))
+
+    @property
+    def UFC_STATS_URL(self) -> str:
+        return self.SCRAPING_ENDPOINTS["UFC"]
+
+    @property
+    def UNDERSTAT_BASE_URL(self) -> str:
+        return "https://understat.com"
+
     @classmethod
     def get_odds_url(cls, endpoint: str, **kwargs) -> str:
         """Get full URL for Odds API endpoint."""
