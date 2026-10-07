@@ -1,7 +1,7 @@
 import type {MarketName} from "./contracts";
 
 export type ProjectionSnapshot={
- id:string;eventId:string;sport:string;away:string;home:string;createdAt:string;
+ id:string;eventId:string;sport:string;away:string;home:string;createdAt:string;startTime?:string;
  modelVersion:string;trainingProvider:string;trainingDataState:string;
  projectedAway:number;projectedHome:number;fairSpreadHome:number;
  homeWinProbability:number;confidence:number;
