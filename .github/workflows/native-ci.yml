@@ -1,0 +1,26 @@
+name: Native CI
+on:
+  pull_request:
+    paths:
+      - "native/**"
+      - ".github/workflows/native-ci.yml"
+  push:
+    branches:
+      - feature/native-control-shell
+    paths:
+      - "native/**"
+      - ".github/workflows/native-ci.yml"
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install
+      - run: npm run typecheck
+      - run: npm run build
