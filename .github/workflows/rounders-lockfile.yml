@@ -27,5 +27,6 @@ jobs:
           git add mobile/package-lock.json
           if ! git diff --cached --quiet; then
             git commit -m 'build(mobile): lock Expo SDK 54 dependencies'
+            git pull --rebase origin "$GITHUB_REF_NAME"
             git push origin HEAD:"$GITHUB_REF_NAME"
           fi
