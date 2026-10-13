@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: "22"
       - name: Install Expo dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
       - name: TypeScript native checks
         run: npm run typecheck
       - name: Verify Expo SDK dependencies

@@ -15,7 +15,7 @@ This is an actual Expo React Native iOS/Android client, separate from the legacy
 From \`mobile/\`:
 
 \`\`\`sh
-npm install
+npm ci --legacy-peer-deps
 cp .env.example .env
 # Set EXPO_PUBLIC_ROUNDERS_API_URL to the deployed HTTPS Rounders API origin.
 npx expo start
