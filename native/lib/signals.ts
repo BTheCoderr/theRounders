@@ -7,7 +7,7 @@ const implied=(price:number)=>price<0?100*(-price)/(100-price):10000/(price+100)
 export function findLineShopGaps(quotes:MarketQuote[],threshold=1.5):LineShopGap[]{
  const groups=new Map<string,MarketQuote[]>();
  for(const q of quotes){
-  if(!q||!["moneyline","spread","total"].includes(q.market)||!Number.isFinite(q.price)||q.price===0||Math.abs(q.price)<100||q.line!==undefined&&!Number.isFinite(q.line)||!q.book||!q.selection||!q.eventId||!["live","simulated"].includes(q.state))continue;
+  if(!q||!["moneyline","spread","total"].includes(q.market)||!Number.isFinite(q.price)||q.price===0||Math.abs(q.price)<100||q.line!==undefined&&!Number.isFinite(q.line)||!q.book||!q.selection||!q.eventId||(q.state!=="live"&&q.state!=="simulated"))continue;
   const key=JSON.stringify([q.eventId,q.market,q.selection,q.line??null,q.state]);
   groups.set(key,[...(groups.get(key)||[]),q]);
  }
