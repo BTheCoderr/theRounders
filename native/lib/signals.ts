@@ -19,7 +19,7 @@ export function findLineShopGaps(quotes:MarketQuote[],threshold=1.5):LineShopGap
   if(options.length<2)continue;
   const [best]=options,worst=options[options.length-1],gap=implied(worst.price)-implied(best.price);
   if(gap<threshold)continue;
-  gaps.push({key,eventId:best.eventId,sport:best.sport,matchup:best.away+" @ "+best.home,market:best.market,selection:best.selection,line:best.line,bestBook:best.book,bestPrice:best.price,worstBook:worst.book,worstPrice:worst.price,impliedGapPoints:Number(gap.toFixed(2)),state:best.state});
+  gaps.push({key,eventId:best.eventId,sport:best.sport,matchup:best.away+" @ "+best.home,market:best.market,selection:best.selection,line:best.line,bestBook:best.book,bestPrice:best.price,worstBook:worst.book,worstPrice:worst.price,impliedGapPoints:Number(gap.toFixed(2)),state:best.state==='live'?'live':'simulated'});
  }
  return gaps.sort((a,b)=>b.impliedGapPoints-a.impliedGapPoints);
 }
