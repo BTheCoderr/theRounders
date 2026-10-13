@@ -18,7 +18,10 @@ jobs:
           import json,os,urllib.request,sys
           targets=json.loads(os.environ.get("TARGETS_JSON") or "[]")
           if not targets:
-              sys.exit("No targets configured. Add SUPABASE_HEALTH_TARGETS_JSON repository secret.")
+              print("::warning::Supabase health checks NOT CONFIGURED. No database was queried. Set SUPABASE_HEALTH_TARGETS_JSON.")
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as report:
+                  report.write("WARNING: Supabase monitoring is inactive. Configure SUPABASE_HEALTH_TARGETS_JSON.\\n")
+              sys.exit(0)
           failures=[]
           for target in targets:
               name=target.get("name","unnamed")
@@ -27,7 +30,8 @@ jobs:
               req=urllib.request.Request(url,data=b"{}",method="POST",headers={"apikey":key,"Authorization":"Bearer "+key,"Content-Type":"application/json"})
               try:
                   with urllib.request.urlopen(req,timeout=20) as response:
-                      if response.status!=200: raise ValueError("Unexpected HTTP status")
+                      if response.status!=200 or json.loads(response.read(128).decode("utf-8")) is not True:
+                          raise ValueError("Database healthcheck did not return true")
                       print(name+": healthy")
               except Exception as exc:
                   print(name+": FAILED "+type(exc).__name__)
