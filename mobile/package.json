@@ -7,7 +7,8 @@
     "start": "expo start",
     "ios": "expo start --ios",
     "android": "expo start --android",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "preflight:ios": "node scripts/release-preflight.mjs"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

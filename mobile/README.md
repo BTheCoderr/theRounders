@@ -35,7 +35,7 @@ The iOS and Android React Native source is in this `mobile/` directory, not `nat
 1. From `mobile/`, sign in with your own Expo account using `npx eas-cli login`, then run `npx eas-cli init`. Commit the generated `expo.extra.eas.projectId` to `mobile/app.json`. Confirm the bundle identifier `com.bthecoderr.therounders` belongs to your intended Apple Developer account before generating certificates.
 2. In Expo's project settings, set `EXPO_PUBLIC_ROUNDERS_API_URL` to your deployed HTTPS Rounders API **in the production environment**. Only this public origin can go in a client-side `EXPO_PUBLIC_` variable; keep sportsbook provider keys on the backend. The production EAS profile is explicitly mapped to the production environment.
 3. Configure iOS distribution credentials and App Store Connect API access in your own Expo/Apple accounts (`npx eas-cli credentials --platform ios`). Check that the correct app exists in App Store Connect and supply its numeric `ascAppId` in `eas.json > submit.production.ios` before attempting a noninteractive upload.
-4. Replace Expo's generic icon with a reviewed 1024x1024 nontransparent app icon and add the asset path to `app.json`. Take real-device/screenshots and confirm the market-feed mode is accurately labeled.
+4. Use the approved sports-R primary artwork as the iOS/Android icon. Save its 1024x1024 RGB PNG as `mobile/assets/icon.png`, then set `expo.icon` to `./assets/icon.png` in `mobile/app.json`. Keep the analytics-R design as alternate marketing artwork. Take real-device screenshots and confirm the market-feed mode is accurately labeled.
 5. On GitHub, add `EXPO_TOKEN` under repository **Settings → Secrets and variables → Actions**. Do not commit credentials or the token.
 6. Run **Actions → therounders iOS TestFlight (manual) → Run workflow**. Leave `submit_to_testflight` unchecked to create only an Apple-signed store build. Choose it only when TestFlight submission is explicitly desired and the App Store Connect API key is configured.
 
@@ -46,3 +46,11 @@ npx eas-cli submit --platform ios --profile production
 ```
 
 A passing Expo JavaScript export is **not** evidence that an .ipa was signed, a tester installed it, or Apple accepted it. No real wagering is included.
+
+## Release preflight
+
+Run `npm run preflight:ios` after linking EAS and adding the approved icon. The script rejects a missing project ID, invalid bundle identifier, missing/transparent/wrong-sized PNG, or wrong production build environment. Run `node scripts/release-preflight.mjs --submit` before automatic TestFlight submission; that mode also requires the numeric App Store Connect `ascAppId` in `eas.json`.
+
+The manually dispatched TestFlight workflow now runs the same checks before installing dependencies and starting a paid/signed EAS build. These are static release guards, not evidence of App Store approval, live odds correctness, or physical-device QA.
+
+The full-resolution approved 1024x1024 primary and alternate sports artwork must be added to the repo as binary files from the brand-asset package. Those PNG binaries are not part of this workflow-only PR, and setting an icon path without uploading the file will fail preflight/Expo export.
