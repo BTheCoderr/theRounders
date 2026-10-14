@@ -1,0 +1,20 @@
+therounders is a sports research app with on-device simulated paper tickets. It does not accept wagers, process payments, or connect to a sportsbook account.
+
+No login or demo account is required. Paper tickets stay on the device and can be marked won, lost, push, or pending by the tester.
+
+Market prices come from https://therounders.netlify.app. The current production feed is the controlled demo provider. The app labels those prices SIMULATED and keeps a PAPER ONLY badge on screen. Do not review them as live sportsbook odds.
+
+Matchup ratings are model estimates. The screen names the training source. They are not betting advice or a guarantee.
+
+The app uses only standard HTTPS. Export compliance: ITSAppUsesNonExemptEncryption = false.
+
+Bundle ID: com.bthecoderr.therounders
+Expo project: @bferrell514/therounders
+
+Screenshots still required before App Store review. Capture these on a device or simulator after the approved sports-R icon is installed, with the SIMULATED or LIVE label visible:
+
+- Board, with NBA, NFL, NHL, and MLB available
+- Price Gaps
+- Paper Bets, including one saved ticket
+
+Use 6.7-inch iPhone resolution (1290 x 2796). Add 6.5-inch (1284 x 2778) if App Store Connect asks for it. TestFlight internal testing does not require these screenshots; external TestFlight and App Store review do.

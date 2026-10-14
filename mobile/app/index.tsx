@@ -6,7 +6,7 @@ import {
 import {SafeAreaView} from "react-native-safe-area-context";
 import {apiOrigin,fetchFeed,fetchRating,type Feed,type Rating} from "../src/api";
 import {
- SPORTS,demoQuotes,fmtPrice,getPriceGaps,groupQuotes,
+ SPORTS,demoQuotes,displayTeam,fmtPrice,getPriceGaps,groupQuotes,
  type Group,type MarketName,type Quote,type Sport,
 } from "../src/markets";
 import {loadPaper,profit,validStake,writePaper,type PaperEntry} from "../src/paper";
@@ -28,7 +28,7 @@ function GroupRow({group,onChoose,onRating}:{group:Group;onChoose:(quote:Quote)=
  const q=group.first;
  return <View style={styles.card}>
   <View style={styles.rowBetween}>
-   <View style={{flex:1}}><Text style={styles.matchup}>{q.away}  @  {q.home}</Text><Text style={styles.label}>{MARKET_NAMES[q.market]} · {q.selection}{q.line===undefined?"":" "+q.line}</Text></View>
+   <View style={{flex:1}}><Text style={styles.matchup}>{displayTeam(q.sport,q.away)}  @  {displayTeam(q.sport,q.home)}</Text><Text style={styles.label}>{MARKET_NAMES[q.market]} · {displayTeam(q.sport,q.selection)}{q.line===undefined?"":" "+q.line}</Text></View>
    <Text style={[styles.state,q.state==="live"?styles.live:styles.demo]}>{q.state.toUpperCase()}</Text>
   </View>
   <View style={styles.books}>
@@ -153,13 +153,13 @@ export default function Home(){
      {ratingLoading?<ActivityIndicator color={theme.accent}/>:ratingError?<Text style={styles.warning}>{ratingError}</Text>:rating?.projection?<View>
       <Text style={styles.matchup}>{rating.projection.away} {rating.projection.projectedAway.toFixed(1)} · {rating.projection.home} {rating.projection.projectedHome.toFixed(1)}</Text>
       <Text style={styles.label}>Home win probability {rating.projection.homeWinProbability.toFixed(1)}% · Confidence {rating.projection.confidence.toFixed(0)}%</Text>
-      <Text style={styles.warning}>MODEL · Training: {rating.trainingDataState||"unknown"} · {rating.trainingProvider||"unknown"}{rating.fallback?" · Simulated fallback":""}</Text>
+      <Text style={styles.caption}>MODEL · Training: {rating.trainingDataState||"unknown"} · {rating.trainingProvider||"unknown"}{rating.fallback?" · Simulated fallback":""}</Text>
      </View>:<Text style={styles.warning}>No verified model result.</Text>}
     </View>}
     {ticket&&<View style={[styles.card,styles.ticket]}>
      <Text style={styles.eyebrow}>SIMULATED PAPER TICKET</Text>
-     <Text style={styles.matchup}>{ticket.selection} {ticket.line===undefined?"":ticket.line} · {fmtPrice(ticket.price)}</Text>
-     <Text style={styles.caption}>{ticket.away} @ {ticket.home} · {ticket.book} · {ticket.state.toUpperCase()}</Text>
+     <Text style={styles.matchup}>{displayTeam(ticket.sport,ticket.selection)} {ticket.line===undefined?"":ticket.line} · {fmtPrice(ticket.price)}</Text>
+     <Text style={styles.caption}>{displayTeam(ticket.sport,ticket.away)} @ {displayTeam(ticket.sport,ticket.home)} · {ticket.book} · {ticket.state.toUpperCase()}</Text>
      <TextInput style={styles.input} keyboardType="decimal-pad" value={stake} onChangeText={setStake} placeholder="Stake in USD" placeholderTextColor={theme.muted}/>
      <Pressable style={[styles.submit,!paperReady&&{opacity:0.5}]} disabled={!paperReady} onPress={()=>void add()}><Text style={styles.submitText}>{paperReady?"Save paper ticket":"Loading saved tickets…"}</Text></Pressable>
      <Pressable onPress={()=>setTicket(null)}><Text style={styles.actionText}>Cancel</Text></Pressable>
@@ -169,8 +169,8 @@ export default function Home(){
     <SectionHeader eyebrow="PRICE GAP SCANNER" title="Evidence, not hype."/>
     <Text style={styles.caption}>These compare distinct books at the same line, event and selection. They do not establish steam or reverse-line movement.</Text>
     {loading?<ActivityIndicator color={theme.accent}/>:gaps.length===0?<Text style={styles.empty}>No qualifying price gaps. Historical movement alerts remain unavailable.</Text>:gaps.slice(0,15).map(g=><View style={styles.card} key={g.key}>
-     <Text style={styles.matchup}>{g.first.away} @ {g.first.home}</Text>
-     <Text style={styles.label}>{MARKET_NAMES[g.first.market]} · {g.first.selection} {g.first.line===undefined?"":g.first.line} · {g.first.state.toUpperCase()}</Text>
+     <Text style={styles.matchup}>{displayTeam(g.first.sport,g.first.away)} @ {displayTeam(g.first.sport,g.first.home)}</Text>
+     <Text style={styles.label}>{MARKET_NAMES[g.first.market]} · {displayTeam(g.first.sport,g.first.selection)} {g.first.line===undefined?"":g.first.line} · {g.first.state.toUpperCase()}</Text>
      <Text style={styles.strong}>{g.gap.toFixed(2)} percentage-point difference</Text>
      <Text style={styles.caption}>Best: {g.best.book} {fmtPrice(g.best.price)} · Other: {g.worst.book} {fmtPrice(g.worst.price)}</Text>
     </View>)}
@@ -184,8 +184,8 @@ export default function Home(){
      <View style={styles.stat}><Text style={styles.label}>Settled</Text><Text style={styles.strong}>{settled} · {wins} won</Text></View>
     </View>
     {!paperReady?<ActivityIndicator color={theme.accent}/>:bets.length===0?<Text style={styles.empty}>Your paper entries will appear here. Add a ticket from the Board tab.</Text>:bets.map(b=><View key={b.id} style={styles.card}>
-     <Text style={styles.matchup}>{b.quote.away} @ {b.quote.home}</Text>
-     <Text style={styles.caption}>{b.quote.selection} {b.quote.line===undefined?"":b.quote.line} · {fmtPrice(b.quote.price)} · {b.quote.state.toUpperCase()}</Text>
+     <Text style={styles.matchup}>{displayTeam(b.quote.sport,b.quote.away)} @ {displayTeam(b.quote.sport,b.quote.home)}</Text>
+     <Text style={styles.caption}>{displayTeam(b.quote.sport,b.quote.selection)} {b.quote.line===undefined?"":b.quote.line} · {fmtPrice(b.quote.price)} · {b.quote.state.toUpperCase()}</Text>
      <Text style={styles.strong}>{usd(b.stake)} · {b.status.toUpperCase()} · P/L {usd(profit(b))}</Text>
      <View style={styles.filterRow}>{(["pending","won","lost","push"] as const).map(status=><Pill key={status} label={status.toUpperCase()} active={b.status===status} onPress={()=>void grade(b.id,status)}/>)}</View>
     </View>)}

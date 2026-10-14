@@ -16,7 +16,10 @@
     "production": {
       "autoIncrement": true,
       "environment": "production",
-      "distribution": "store"
+      "distribution": "store",
+      "env": {
+        "EXPO_PUBLIC_ROUNDERS_API_URL": "https://therounders.netlify.app"
+      }
     }
   },
   "submit": {

@@ -1,4 +1,4 @@
-import {type Quote,type Sport,validQuote} from "./markets";
+import {displayTeam,type Quote,type Sport,validQuote} from "./markets";
 export type Feed={quotes:Quote[];provider:string;live:boolean;fresh:boolean;message:string};
 export const apiOrigin=(process.env.EXPO_PUBLIC_ROUNDERS_API_URL||"").trim().replace(/\/+$/,"");
 export async function fetchFeed(sport:Sport):Promise<Feed>{
@@ -26,7 +26,8 @@ export type Rating={
 };
 export async function fetchRating(quote:Quote):Promise<Rating>{
  if(!apiOrigin||!/^https:\/\//i.test(apiOrigin))throw new Error("Rating API is not configured");
- const url=apiOrigin+"/api/ratings?sport="+encodeURIComponent(quote.sport)+"&away="+encodeURIComponent(quote.away)+"&home="+encodeURIComponent(quote.home);
+ const away=displayTeam(quote.sport,quote.away),home=displayTeam(quote.sport,quote.home);
+ const url=apiOrigin+"/api/ratings?sport="+encodeURIComponent(quote.sport)+"&away="+encodeURIComponent(away)+"&home="+encodeURIComponent(home);
  const abort=new AbortController();
  const timeout=setTimeout(()=>abort.abort(),10000);
  try{

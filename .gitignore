@@ -5,6 +5,9 @@
 
 # Python
 __pycache__/
+# lib/ also matches native/lib, which is application source.
+!native/lib/
+!native/lib/**
 *.py[cod]
 *$py.class
 *.so
@@ -59,6 +62,9 @@ htmlcov/
 .coverage.*
 coverage.xml
 *.cover
+
+# Node
+node_modules/
 
 # Project specific
 config.ini

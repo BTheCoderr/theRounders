@@ -6,10 +6,10 @@ import type {TeamGame} from "./ratings";
  * provider without changing the rating mathematics or UI.
  */
 const strengths:Record<string,Record<string,number>>={
- NBA:{BOS:8,NYK:5,LAL:2,GSW:4,MIL:6,CLE:7},
- NFL:{BUF:7,NYJ:-2,DAL:3,PHI:7,KC:8,DEN:4},
- NHL:{BOS:6,NYR:5,TOR:4,MTL:-2,VGK:5,EDM:7},
- MLB:{BOS:3,NYY:6,LAD:8,SD:5,CHC:2,STL:1}
+ NBA:{"Boston Celtics":8,"New York Knicks":5,"Los Angeles Lakers":2,"Golden State Warriors":4,"Milwaukee Bucks":6,"Cleveland Cavaliers":7},
+ NFL:{"Buffalo Bills":7,"New York Jets":-2,"Dallas Cowboys":3,"Philadelphia Eagles":7,"Kansas City Chiefs":8,"Denver Broncos":4},
+ NHL:{"Boston Bruins":6,"New York Rangers":5,"Toronto Maple Leafs":4,"Montreal Canadiens":-2,"Vegas Golden Knights":5,"Edmonton Oilers":7},
+ MLB:{"Boston Red Sox":3,"New York Yankees":6,"Los Angeles Dodgers":8,"San Diego Padres":5,"Chicago Cubs":2,"St. Louis Cardinals":1}
 };
 export function demoHistory(sport:string):TeamGame[]{
  const table=strengths[sport]||strengths.NBA,teams=Object.keys(table),games:TeamGame[]=[];

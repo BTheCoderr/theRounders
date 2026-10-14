@@ -1,5 +1,13 @@
 export const SPORTS=["NBA","NFL","NHL","MLB"] as const;
 export type Sport=typeof SPORTS[number];
+/** Abbreviations from the deployed demo feed, mapped to ESPN display names the ratings model uses. */
+const TEAM_NAMES:Record<Sport,Record<string,string>>={
+ NBA:{BOS:"Boston Celtics",NYK:"New York Knicks",LAL:"Los Angeles Lakers",GSW:"Golden State Warriors",MIL:"Milwaukee Bucks",CLE:"Cleveland Cavaliers"},
+ NFL:{BUF:"Buffalo Bills",NYJ:"New York Jets",DAL:"Dallas Cowboys",PHI:"Philadelphia Eagles",KC:"Kansas City Chiefs",DEN:"Denver Broncos"},
+ NHL:{BOS:"Boston Bruins",NYR:"New York Rangers",TOR:"Toronto Maple Leafs",MTL:"Montreal Canadiens",VGK:"Vegas Golden Knights",EDM:"Edmonton Oilers"},
+ MLB:{BOS:"Boston Red Sox",NYY:"New York Yankees",LAD:"Los Angeles Dodgers",SD:"San Diego Padres",CHC:"Chicago Cubs",STL:"St. Louis Cardinals"},
+};
+export function displayTeam(sport:string,name:string){return TEAM_NAMES[sport as Sport]?.[name]??name;}
 export type MarketName="moneyline"|"spread"|"total";
 export type DataState="live"|"simulated";
 export type Quote={
@@ -47,14 +55,20 @@ export function getPriceGaps(quotes:Quote[]):PriceGap[]{
  }
  return result.sort((a,b)=>b.gap-a.gap);
 }
+const DEMO_BOARD:Record<Sport,{games:[string,string][];spread:number;total:number}>={
+ NBA:{games:[["Boston Celtics","New York Knicks"],["Los Angeles Lakers","Golden State Warriors"]],spread:-3.5,total:220.5},
+ NFL:{games:[["Buffalo Bills","New York Jets"],["Dallas Cowboys","Philadelphia Eagles"]],spread:-3.5,total:45.5},
+ NHL:{games:[["Boston Bruins","New York Rangers"],["Toronto Maple Leafs","Montreal Canadiens"]],spread:-1.5,total:6.5},
+ MLB:{games:[["Boston Red Sox","New York Yankees"],["Los Angeles Dodgers","San Diego Padres"]],spread:-1.5,total:8.5},
+};
 export function demoQuotes(sport:Sport):Quote[]{
  const ts=new Date().toISOString();
- const events=[["Sample Away","Sample Home"],["Practice Blue","Practice Gold"]];
- return events.flatMap(([away,home],i)=>[["Sample Book A",-110],["Sample Book B",105]].flatMap(([book,price])=>
+ const board=DEMO_BOARD[sport];
+ return board.games.flatMap(([away,home],i)=>[["Sample Book A",-110],["Sample Book B",105]].flatMap(([book,price])=>
   (["moneyline","spread","total"] as MarketName[]).map(market=>({
    eventId:"demo-"+sport+"-"+i,sport,market,away,home,
    selection:market==="total"?"Over":home,
-   line:market==="spread"?-3.5:market==="total"?220.5:undefined,
+   line:market==="spread"?board.spread:market==="total"?board.total:undefined,
    price:Number(price),book:String(book),updatedAt:ts,state:"simulated" as const,
    startTime:ts,
   }))

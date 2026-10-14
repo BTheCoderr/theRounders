@@ -7,9 +7,18 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
+    "backgroundColor": "#081429",
+    "owner": "bferrell514",
+    "splash": {
+      "backgroundColor": "#081429",
+      "resizeMode": "contain"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bthecoderr.therounders"
+      "bundleIdentifier": "com.bthecoderr.therounders",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.bthecoderr.therounders"
@@ -19,6 +28,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "40f4305a-ef4e-48bf-aedf-f16068e20791"
+      }
     }
   }
 }
