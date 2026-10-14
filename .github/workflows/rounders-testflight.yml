@@ -38,20 +38,15 @@ jobs:
             exit 1
           fi
 
-      - name: Confirm EAS project linked
+      - name: Confirm EAS project and reviewed iOS app icon
+        env:
+          SUBMIT_TO_TESTFLIGHT: ${{ inputs.submit_to_testflight }}
         run: |
-          node - <<'NODE'
-          const app = require("./app.json").expo;
-          if (!app.extra?.eas?.projectId) {
-            console.error("::error::Connect the Expo project first: cd mobile && eas init. Commit the resulting app.json change.");
-            process.exit(1);
-          }
-          if (!app.ios?.bundleIdentifier) {
-            console.error("::error::Set and verify the correct iOS bundleIdentifier in mobile/app.json.");
-            process.exit(1);
-          }
-          console.log("Expo project link and iOS bundle identifier present.");
-          NODE
+          if [ "$SUBMIT_TO_TESTFLIGHT" = "true" ]; then
+            node scripts/release-preflight.mjs --submit
+          else
+            node scripts/release-preflight.mjs
+          fi
 
       - name: Set up EAS
         uses: expo/expo-github-action@v8
