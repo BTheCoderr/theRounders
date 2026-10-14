@@ -10,10 +10,10 @@ import {
  type Group,type MarketName,type Quote,type Sport,
 } from "../src/markets";
 import {loadPaper,profit,validStake,writePaper,type PaperEntry} from "../src/paper";
+import {theme} from "../src/theme";
 
 type Tab="board"|"signals"|"paper";
 const MARKET_NAMES:Record<MarketName,string>={moneyline:"Moneyline",spread:"Spread",total:"Total"};
-const theme={bg:"#0B1220",surface:"#121F33",surface2:"#1C2D46",border:"#314765",text:"#F8FAFC",muted:"#A6B8D0",accent:"#93C5FD",primary:"#2563EB",onPrimary:"#FFFFFF",danger:"#FDA4AF"};
 const usd=(value:number)=>"$"+(Number.isFinite(value)?value:0).toFixed(2);
 
 function Pill({label,active=false,onPress}:{label:string;active?:boolean;onPress:()=>void}){
@@ -57,6 +57,7 @@ export default function Home(){
  const [bets,setBets]=useState<PaperEntry[]>([]);
  const [paperReady,setPaperReady]=useState(false);
  const requestId=useRef(0);
+ const ratingRequestId=useRef(0);
 
  const refresh=useCallback(async()=>{
   const id=++requestId.current;
@@ -75,7 +76,20 @@ export default function Home(){
  },[sport,demo]);
  useEffect(()=>{void refresh();return()=>{requestId.current++}},[refresh]);
  useEffect(()=>{let active=true;void loadPaper().then(value=>{if(active){setBets(value);setPaperReady(true)}});return()=>{active=false}},[]);
- useEffect(()=>{setRating(null);setRatingError("");setTicket(null)},[sport,demo]);
+ useEffect(()=>{ratingRequestId.current++;setRating(null);setRatingError("");setRatingLoading(false);setTicket(null)},[sport,demo]);
+ const changeSport=(next:Sport)=>{
+  if(next===sport)return;
+  requestId.current++;ratingRequestId.current++;
+  setFeed({quotes:[],provider:"",live:false,fresh:false,message:""});
+  setFeedError("");setRating(null);setRatingError("");setRatingLoading(false);setTicket(null);
+  setSport(next);
+ };
+ const toggleDemo=()=>{
+  requestId.current++;ratingRequestId.current++;
+  setFeed({quotes:[],provider:"",live:false,fresh:false,message:""});
+  setRating(null);setRatingError("");setRatingLoading(false);setTicket(null);
+  setDemo(v=>!v);
+ };
  const groups=useMemo(()=>groupQuotes(feed.quotes,market),[feed.quotes,market]);
  const gaps=useMemo(()=>getPriceGaps(feed.quotes),[feed.quotes]);
  const wins=bets.filter(b=>b.status==="won").length;
@@ -84,16 +98,18 @@ export default function Home(){
  const exposure=bets.filter(b=>b.status==="pending").reduce((sum,b)=>sum+b.stake,0);
 
  const showRating=async(quote:Quote)=>{
+  const id=++ratingRequestId.current;
   setRating(null);setRatingError("");setRatingLoading(true);
   try{
    if(demo)throw new Error("Model ratings are disabled in demo mode. Connect the live Rounders API.");
    const result=await fetchRating(quote);
-   setRating(result);
-  }catch(error){setRatingError(error instanceof Error?error.message:"Ratings unavailable.")}
-  finally{setRatingLoading(false)}
+   if(id===ratingRequestId.current)setRating(result);
+  }catch(error){if(id===ratingRequestId.current)setRatingError(error instanceof Error?error.message:"Ratings unavailable.")}
+  finally{if(id===ratingRequestId.current)setRatingLoading(false)}
  };
  const add=async()=>{
   if(!ticket)return;
+  if(!paperReady){Alert.alert("Paper tickets loading","Your saved paper tickets are still loading. Try again.");return;}
   const amount=Number(stake);
   if(!validStake(amount)){Alert.alert("Invalid paper stake","Enter an amount between $1 and $100,000.");return}
   const bet:PaperEntry={id:Date.now().toString(36)+"-"+Math.random().toString(36).slice(2),
@@ -119,13 +135,13 @@ export default function Home(){
      <Text style={styles.modeTitle}>{demo?"DEMO MODE":"API MODE"}</Text>
      <Text style={styles.hint}>{demo?"Fixtures are simulated, not current games or sportsbook prices.":feed.live?(feed.fresh?"Live provider feed":"Live feed is stale"):"Feed is simulated or unavailable; no live claim."}</Text>
     </View>
-    {apiOrigin?<Pressable accessibilityRole="button" onPress={()=>setDemo(v=>!v)} style={styles.switchMode}><Text style={styles.actionText}>{demo?"Use API":"Use demo"}</Text></Pressable>:null}
+    {apiOrigin?<Pressable accessibilityRole="button" onPress={toggleDemo} style={styles.switchMode}><Text style={styles.actionText}>{demo?"Use API":"Use demo"}</Text></Pressable>:null}
    </View>
    {!apiOrigin&&<Text style={styles.warning}>A live API is not configured yet. Add EXPO_PUBLIC_ROUNDERS_API_URL to enable backend access.</Text>}
    <View style={styles.tabs}>
     {(["board","signals","paper"] as const).map(id=><Pill key={id} label={id==="board"?"Board":id==="signals"?"Price Gaps":"Paper Bets"} active={tab===id} onPress={()=>setTab(id)}/>)}
    </View>
-   {tab!=="paper"&&<View style={styles.filterRow}>{SPORTS.map(name=><Pill key={name} label={name} active={sport===name} onPress={()=>setSport(name)}/>)}</View>}
+   {tab!=="paper"&&<View style={styles.filterRow}>{SPORTS.map(name=><Pill key={name} label={name} active={sport===name} onPress={()=>changeSport(name)}/>)}</View>}
    {feedError?<View style={styles.card}><Text style={styles.warning}>{feedError}</Text><Pressable onPress={()=>void refresh()}><Text style={styles.actionText}>Retry →</Text></Pressable></View>:null}
    {tab==="board"&&<>
     <SectionHeader eyebrow="MARKET BOARD" title="Compare every point."/>
@@ -145,7 +161,7 @@ export default function Home(){
      <Text style={styles.matchup}>{ticket.selection} {ticket.line===undefined?"":ticket.line} · {fmtPrice(ticket.price)}</Text>
      <Text style={styles.caption}>{ticket.away} @ {ticket.home} · {ticket.book} · {ticket.state.toUpperCase()}</Text>
      <TextInput style={styles.input} keyboardType="decimal-pad" value={stake} onChangeText={setStake} placeholder="Stake in USD" placeholderTextColor={theme.muted}/>
-     <Pressable style={styles.submit} onPress={()=>void add()}><Text style={styles.submitText}>Save paper ticket</Text></Pressable>
+     <Pressable style={[styles.submit,!paperReady&&{opacity:0.5}]} disabled={!paperReady} onPress={()=>void add()}><Text style={styles.submitText}>{paperReady?"Save paper ticket":"Loading saved tickets…"}</Text></Pressable>
      <Pressable onPress={()=>setTicket(null)}><Text style={styles.actionText}>Cancel</Text></Pressable>
     </View>}
    </>}
@@ -194,7 +210,7 @@ const styles=StyleSheet.create({
  title:{fontSize:24,fontWeight:"800",color:theme.text},card:{backgroundColor:theme.surface,borderWidth:1,borderColor:theme.border,borderRadius:15,padding:15,gap:11},
  rowBetween:{flexDirection:"row",alignItems:"center",gap:10},matchup:{fontSize:16,fontWeight:"800",color:theme.text},
  label:{color:theme.muted,fontSize:12,lineHeight:19},state:{fontSize:10,fontWeight:"800",padding:6,borderRadius:7,overflow:"hidden"},
- live:{backgroundColor:"#18392a",color:theme.accent},demo:{backgroundColor:"#39404e",color:"#f3d59e"},
+ live:{backgroundColor:"#18392a",color:theme.success},demo:{backgroundColor:"#39404e",color:"#f3d59e"},
  books:{flexDirection:"row",flexWrap:"wrap",gap:8},quote:{minWidth:115,flexGrow:1,backgroundColor:theme.surface2,padding:11,borderRadius:10,gap:5},
  bestQuote:{borderColor:theme.accent,borderWidth:1},odds:{fontWeight:"900",fontSize:23,color:theme.text},
  best:{color:theme.accent,fontSize:9,fontWeight:"700"},caption:{color:theme.muted,fontSize:12,lineHeight:19},

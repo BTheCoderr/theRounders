@@ -38,8 +38,12 @@ export function buildRatings(games:TeamGame[],iterations=24):Map<string,TeamRati
       const rows=byTeam.get(team)||[];
       next.set(team,mean(rows.map(g=>(g.teamScore-g.opponentScore)+(power.get(g.opponent)||0))));
     }
+    // A direct Jacobi update oscillates on two-team and bipartite schedules:
+    // A beats B by 10 -> [10,-10] -> [0,0] -> [10,-10] ...
+    // Damping preserves the opponent adjustment while converging to a stable
+    // centered rating even for sparse schedules.
     const center=mean([...next.values()]);
-    power=new Map([...next].map(([t,v])=>[t,v-center]));
+    power=new Map([...next].map(([t,v])=>[t,0.5*(power.get(t)||0)+0.5*(v-center)]));
   }
   const out=new Map<string,TeamRating>();
   for(const team of teams){
