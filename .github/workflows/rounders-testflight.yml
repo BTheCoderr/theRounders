@@ -19,7 +19,7 @@ jobs:
   signed-ios:
     name: Signed iOS build
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     defaults:
       run:
         working-directory: mobile
@@ -65,7 +65,7 @@ jobs:
           npm ci --legacy-peer-deps
           npm run typecheck
           npx expo install --check
-          npx expo-doctor
+          npx --yes expo-doctor
 
       - name: Build store-signed iOS app
         env:
