@@ -13,7 +13,7 @@ import {loadPaper,profit,validStake,writePaper,type PaperEntry} from "../src/pap
 
 type Tab="board"|"signals"|"paper";
 const MARKET_NAMES:Record<MarketName,string>={moneyline:"Moneyline",spread:"Spread",total:"Total"};
-const theme={bg:"#080d18",surface:"#131b2a",surface2:"#1c283a",border:"#2a3a50",text:"#f4f7fb",muted:"#a0b0c6",accent:"#b8f86c",danger:"#ffb3a5"};
+const theme={bg:"#0B1220",surface:"#121F33",surface2:"#1C2D46",border:"#314765",text:"#F8FAFC",muted:"#A6B8D0",accent:"#93C5FD",primary:"#2563EB",onPrimary:"#FFFFFF",danger:"#FDA4AF"};
 const usd=(value:number)=>"$"+(Number.isFinite(value)?value:0).toFixed(2);
 
 function Pill({label,active=false,onPress}:{label:string;active?:boolean;onPress:()=>void}){
@@ -189,8 +189,8 @@ const styles=StyleSheet.create({
  switchMode:{padding:8,borderColor:theme.border,borderWidth:1,borderRadius:9},
  tabs:{flexDirection:"row",flexWrap:"wrap",gap:7,marginTop:3},filterRow:{flexDirection:"row",flexWrap:"wrap",gap:7},
  pill:{borderColor:theme.border,borderWidth:1,borderRadius:99,paddingHorizontal:12,paddingVertical:9,backgroundColor:theme.surface},
- pillActive:{backgroundColor:theme.accent,borderColor:theme.accent},pillText:{fontSize:12,color:theme.muted,fontWeight:"700"},
- pillTextActive:{color:theme.bg},sectionHeader:{gap:3,marginTop:8},eyebrow:{fontSize:10,color:theme.accent,fontWeight:"900",letterSpacing:1.8},
+ pillActive:{backgroundColor:theme.primary,borderColor:theme.primary},pillText:{fontSize:12,color:theme.muted,fontWeight:"700"},
+ pillTextActive:{color:theme.onPrimary},sectionHeader:{gap:3,marginTop:8},eyebrow:{fontSize:10,color:theme.accent,fontWeight:"900",letterSpacing:1.8},
  title:{fontSize:24,fontWeight:"800",color:theme.text},card:{backgroundColor:theme.surface,borderWidth:1,borderColor:theme.border,borderRadius:15,padding:15,gap:11},
  rowBetween:{flexDirection:"row",alignItems:"center",gap:10},matchup:{fontSize:16,fontWeight:"800",color:theme.text},
  label:{color:theme.muted,fontSize:12,lineHeight:19},state:{fontSize:10,fontWeight:"800",padding:6,borderRadius:7,overflow:"hidden"},
@@ -202,7 +202,7 @@ const styles=StyleSheet.create({
  strong:{fontSize:19,fontWeight:"800",color:theme.text},warning:{color:theme.danger,fontSize:12,lineHeight:19},
  empty:{color:theme.muted,padding:20,backgroundColor:theme.surface,borderRadius:12,textAlign:"center"},
  ticket:{borderColor:theme.accent},input:{backgroundColor:theme.surface2,color:theme.text,borderWidth:1,borderColor:theme.border,borderRadius:10,padding:13,fontSize:16},
- submit:{backgroundColor:theme.accent,padding:14,borderRadius:10,alignItems:"center"},submitText:{fontWeight:"900",color:theme.bg},
+ submit:{backgroundColor:theme.primary,padding:14,borderRadius:10,alignItems:"center"},submitText:{fontWeight:"900",color:theme.onPrimary},
  statRow:{flexDirection:"row",flexWrap:"wrap",gap:7},stat:{flexGrow:1,backgroundColor:theme.surface2,borderRadius:12,padding:12,gap:5},
  footer:{color:theme.muted,fontSize:11,lineHeight:18,marginTop:20,borderTopWidth:1,borderTopColor:theme.border,paddingTop:15},
 });
