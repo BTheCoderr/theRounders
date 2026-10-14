@@ -38,15 +38,15 @@ function isValidIcon(icon) {
 }
 
 check(Boolean(app.extra?.eas?.projectId && /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(app.extra.eas.projectId)), "Expo EAS project UUID linked in app.json");
-check(Boolean(app.ios?.bundleIdentifier && /^([A-Za-z][A-Za-z0-9-]*\\.)+[A-Za-z][A-Za-z0-9-]*$/.test(app.ios.bundleIdentifier)), "iOS bundle identifier configured");
+check(Boolean(app.ios?.bundleIdentifier && /^([A-Za-z][A-Za-z0-9-]*\.)+[A-Za-z][A-Za-z0-9-]*$/.test(app.ios.bundleIdentifier)), "iOS bundle identifier configured");
 check(isValidIcon(app.icon), "1024x1024 opaque RGB/indexed PNG configured as Expo app icon");
 check(eas.build?.production?.distribution === "store", "Production EAS build uses App Store distribution");
 check(eas.build?.production?.environment === "production", "Production build reads Expo production environment");
 if (submit) {
-  check(/^\\d+$/.test(String(eas.submit?.production?.ios?.ascAppId || "")), "App Store Connect ascAppId set for automatic submission");
+  check(/^\d+$/.test(String(eas.submit?.production?.ios?.ascAppId || "")), "App Store Connect ascAppId set for automatic submission");
 }
 if (errors) {
-  console.error(`\\n${errors} iOS release preflight check(s) failed. Do not start a signed build yet.`);
+  console.error(`\n${errors} iOS release preflight check(s) failed. Do not start a signed build yet.`);
   process.exit(1);
 }
-console.log("\\nStatic iOS release checks passed. Apple signing, backend connectivity, and a physical-device test are still separate requirements.");
+console.log("\nStatic iOS release checks passed. Apple signing, backend connectivity, and a physical-device test are still separate requirements.");
