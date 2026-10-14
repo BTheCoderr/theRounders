@@ -1,3 +1,12 @@
+# therounders
+
+## Current release tracks (October 2026)
+
+- **`mobile/`** is the new first-party **Expo React Native iOS/Android app**, with simulated/demo-safe market comparison, API-fed ratings, on-device paper bets and iOS/Android Expo export CI. It is not yet signed, built through EAS or submitted to TestFlight. See [mobile/README.md](mobile/README.md).
+- **`native/`** is the mobile-responsive **Next.js research/API service**, not a native mobile binary. It serves provider-separated markets, ratings, paper-mode views and explicit live-versus-demo labeling. See [native/README.md](native/README.md).
+- The **legacy Python Streamlit research system** remains in this repository and is not the native release experience.
+- Source changes are staged in PR #4 until reviewed. Neither production Netlify deploy nor Supabase migrations are implicitly performed by CI.
+
 # The Rounders Sports Betting Analytics Platform 🎯
 
 <!-- repo-intro:start -->

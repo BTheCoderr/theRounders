@@ -1,5 +1,35 @@
 "use client";
 import {useEffect,useState} from "react";
 import type {MarketQuote} from "../lib/contracts";
-type Row={eventId:string;matchup:string,sport:string,kind:"STEAM"|"RLM";confidence:number;movement:number;book:string};
-export default function SharpSignals(){const [rows,setRows]=useState<Row[]>([]);useEffect(()=>{Promise.all(["NBA","NFL"].map(s=>fetch("/api/markets?sport="+s).then(r=>r.json()))).then(data=>{const seen=new Set<string>(),next:Row[]=[];data.flatMap(d=>d.markets as MarketQuote[]).forEach(q=>{if(seen.has(q.eventId))return;seen.add(q.eventId);const seed=q.eventId.charCodeAt(q.eventId.length-1);next.push({eventId:q.eventId,matchup:q.away+" @ "+q.home,sport:q.sport,kind:seed%2?"STEAM":"RLM",confidence:72+(seed%19),movement:Number((1.2+(seed%5)*.7).toFixed(1)),book:q.book})});setRows(next)})},[]);return <section className="signalsPanel"><div className="sectionHead"><div><p className="tag">SHARP SIGNALS</p><h2>Movement worth investigating.</h2><p className="muted">Signals rank market behavior. They are context, not guarantees or betting instructions.</p></div><span className="modelBadge">MODEL</span></div><div className="signalList">{rows.map(r=><div className="signalRow" key={r.eventId}><div><span className={"signalKind "+r.kind.toLowerCase()}>{r.kind}</span><strong>{r.matchup}</strong><small>{r.sport} · reference {r.book}</small></div><div className="signalMetric"><small>MOVE</small><b>{r.movement}%</b></div><div className="signalMetric"><small>CONFIDENCE</small><b>{r.confidence}%</b></div><div className="confidence"><i style={{width:r.confidence+"%"}}/></div></div>)}</div></section>}
+import {findLineShopGaps,type LineShopGap} from "../lib/signals";
+const SPORTS=["NBA","NFL","NHL","MLB"];
+const fmt=(n:number)=>n>0?"+"+n:String(n);
+export default function SharpSignals(){
+ const [gaps,setGaps]=useState<LineShopGap[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(false);
+ useEffect(()=>{
+  const ctrl=new AbortController();setLoading(true);setError(false);
+  void Promise.allSettled(SPORTS.map(async sport=>{
+   const response=await fetch("/api/markets?sport="+sport,{signal:ctrl.signal,cache:"no-store"});
+   if(!response.ok)throw new Error("Feed unavailable");
+   const body=await response.json() as {markets?:MarketQuote[]};
+   return Array.isArray(body.markets)?body.markets:[];
+  })).then(results=>{
+   if(ctrl.signal.aborted)return;
+   const valid=results.filter((x):x is PromiseFulfilledResult<MarketQuote[]>=>x.status==="fulfilled");
+   if(!valid.length)setError(true);
+   setGaps(findLineShopGaps(valid.flatMap(x=>x.value)).slice(0,8));
+  }).finally(()=>{if(!ctrl.signal.aborted)setLoading(false)});
+  return()=>ctrl.abort();
+ },[]);
+ return <section className="signalsPanel" id="signals"><div className="sectionHead"><div>
+  <p className="tag">LINE SHOP SIGNALS</p><h2>Compare prices, not invented movement.</h2>
+  <p className="muted">Same selection and line across different books. Price differences are not steam moves or reverse line movement; those need verified historical odds.</p>
+ </div><span className="modelBadge">MARKET COMPARISON</span></div>
+ {loading?<p className="muted" role="status">Comparing current market snapshots…</p>:error?<p className="muted" role="status">Market feeds unavailable. No signal claimed.</p>:gaps.length===0?<p className="muted">No comparable multi-book price gaps found. Historical movement alerts are not enabled.</p>:null}
+ <div className="signalList">{gaps.map(g=><div className="signalRow" key={g.key}>
+  <div><span className="signalKind">{g.market.toUpperCase()} · {g.state.toUpperCase()}</span><strong>{g.matchup}</strong><small>{g.sport} · {g.selection}{g.line===undefined?"":" "+g.line}</small></div>
+  <div className="signalMetric"><small>BEST PRICE</small><b>{fmt(g.bestPrice)}</b><small>{g.bestBook}</small></div>
+  <div className="signalMetric"><small>IMPLIED PROBABILITY GAP</small><b>{g.impliedGapPoints.toFixed(2)} pts</b><small>vs {g.worstBook} ({fmt(g.worstPrice)})</small></div>
+ </div>)}</div>
+ </section>
+}

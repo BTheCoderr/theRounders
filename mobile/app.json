@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "therounders",
+    "slug": "therounders",
+    "scheme": "therounders",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bthecoderr.therounders"
+    },
+    "android": {
+      "package": "com.bthecoderr.therounders"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

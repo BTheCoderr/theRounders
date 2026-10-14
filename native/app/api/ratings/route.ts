@@ -5,7 +5,7 @@ import {getEspnResults} from "../../../lib/results/espn";
 export const dynamic="force-dynamic";
 export async function GET(req:Request){
  const {searchParams}=new URL(req.url),sport=(searchParams.get("sport")||"NBA").toUpperCase(),away=searchParams.get("away"),home=searchParams.get("home");
- if(!away||!home)return NextResponse.json({error:"away and home are required"},{status:400});
+ if(!["NBA","NFL","NHL","MLB"].includes(sport)||!away||!home||away.length>80||home.length>80||away===home)return NextResponse.json({error:"Valid sport, away and home are required"},{status:400});
  let games=demoHistory(sport),trainingDataState:"external"|"simulated"="simulated",trainingProvider="controlled-demo",fallback=true,message="Controlled fallback history";
  try{const batch=await getEspnResults(sport);games=batch.games;trainingDataState=batch.source;trainingProvider=batch.provider;fallback=false;message=batch.message||""}catch(error){message=error instanceof Error?error.message:"External results unavailable"}
  const ratings=buildRatings(games);
