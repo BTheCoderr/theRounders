@@ -116,3 +116,35 @@ export async function recordModelEvaluation(sport:Sport){
  });
  return {trained:board.games,evaluated:holdout.evaluatedGames};
 }
+
+
+export async function saveComparison(sport:Sport):Promise<{evaluated:number;weeks:number;state:"external"|"simulated"}>{
+ const result=await getTrainingGames(sport);
+ const {compareWalkForward}=await import("../walkForward");
+ const evaluated=compareWalkForward(result.games,sport,new Date(),52);
+ const today=new Date();
+ await rest("rounders_model_comparisons?on_conflict=sport,method,run_day",{
+  method:"POST",
+  headers:{Prefer:"resolution=merge-duplicates,return=minimal"},
+  body:JSON.stringify({
+   sport,method:evaluated.method,run_day:today.toISOString().slice(0,10),
+   data_source:result.provider,data_state:result.source,historical_games:evaluated.totalHistoricalGames,
+   evaluated_games:evaluated.evaluatedGames,evaluated_weeks:evaluated.evaluatedWeeks,
+   seasons:evaluated.historySeasons,metrics:evaluated.models,best_model:evaluated.bestByMAE,
+   beats_baseline:evaluated.betterThanBaseline,warning:evaluated.warning
+  })
+ });
+ return {evaluated:evaluated.evaluatedGames,weeks:evaluated.evaluatedWeeks,state:result.source};
+}
+export async function readComparison(sport:Sport){
+ if(!archiveConfigured())return null;
+ const res=await rest("rounders_model_comparisons?select=sport,method,run_day,data_source,data_state,historical_games,evaluated_games,evaluated_weeks,seasons,metrics,best_model,beats_baseline,warning&sport=eq."+
+  encodeURIComponent(sport)+"&order=run_day.desc&limit=1");
+ const result=await res.json() as Array<{
+  sport:Sport;method:string;run_day:string;data_source:string;data_state:"external"|"simulated";
+  historical_games:number;evaluated_games:number;evaluated_weeks:number;seasons:number[];
+  metrics:Array<{model:string;games:number;mae:number|null;winnerAccuracy:number|null;meanBias:number|null}>;
+  best_model:string|null;beats_baseline:boolean|null;warning:string;
+ }>;
+ return result[0]||null;
+}
