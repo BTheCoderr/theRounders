@@ -64,7 +64,7 @@ const DEMO_BOARD:Record<Sport,{games:[string,string][];spread:number;total:numbe
 export function demoQuotes(sport:Sport):Quote[]{
  const ts=new Date().toISOString();
  const board=DEMO_BOARD[sport];
- const books=[["Sample Book A",-9],["Sample Book B",9]] as const;
+ const books=[["Sample Book A",-7],["Sample Book B",7]] as const;
  return board.games.flatMap(([away,home],i)=>{
   const homeSpread=(sport==="NHL"||sport==="MLB")?-1.5:board.spread+i;
   const total=board.total+i*(sport==="NHL"||sport==="MLB"?0.5:sport==="NFL"?1.5:2);

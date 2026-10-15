@@ -13,7 +13,7 @@ const baseline: Record<string, { spread: number; total: number }> = {
   NHL: { spread: -1.5, total: 6.5 },
   MLB: { spread: -1.5, total: 8.5 }
 };
-const books = [["Northstar", -9], ["Metro", 0], ["Prime", 9]] as const;
+const books = [["Northstar", -7], ["Metro", 0], ["Prime", 7]] as const;
 
 function choices(sport: string, away: string, home: string, game: number, market: MarketName): { selection: string; line?: number; price: number }[] {
   const shape = baseline[sport] ?? baseline.NBA;

@@ -1,12 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SPORTS, demoQuotes, groupQuotes, getPriceGaps } from "../src/markets.ts";
+import { SPORTS, demoQuotes, groupQuotes, getPriceGaps, validQuote } from "../src/markets.ts";
 
 for (const sport of SPORTS) {
  test(`${sport} local demo shows both selections and only simulated prices`, () => {
   const quotes = demoQuotes(sport);
   assert.equal(quotes.length, 24); // 2 games × 3 markets × 2 sides × 2 books
   assert.ok(quotes.every(q => q.state === "simulated" && q.sport === sport));
+  assert.ok(quotes.every(validQuote), "every generated quote must be valid American odds");
   assert.equal(new Set(quotes.map(q => q.eventId)).size, 2);
   for (const eventId of new Set(quotes.map(q => q.eventId))) {
    const game = quotes.filter(q => q.eventId === eventId);
@@ -23,6 +24,9 @@ for (const sport of SPORTS) {
     }
    }
   }
+  assert.ok(groupQuotes(quotes,"moneyline").every(g=>g.quotes.length===2));
+  assert.ok(groupQuotes(quotes,"spread").every(g=>g.quotes.length===2));
+  assert.ok(groupQuotes(quotes,"total").every(g=>g.quotes.length===2));
   assert.equal(groupQuotes(quotes,"moneyline").length,4);
   assert.equal(groupQuotes(quotes,"spread").length,4);
   assert.equal(groupQuotes(quotes,"total").length,4);
