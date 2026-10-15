@@ -117,6 +117,25 @@ export default function Home(){
   try{const all=[bet,...bets];await writePaper(all);setBets(all);setTicket(null);setTab("paper")}
   catch{Alert.alert("Could not save","Your paper ticket could not be saved on this device.")}
  };
+
+ const removePaper=(id:string)=>{
+  Alert.alert("Delete paper ticket?","Remove this paper ticket from this device?",[
+   {text:"Cancel",style:"cancel"},
+   {text:"Delete",style:"destructive",onPress:()=>{void (async()=>{
+    try{const remaining=bets.filter(b=>b.id!==id);await writePaper(remaining);setBets(remaining)}
+    catch{Alert.alert("Could not delete","Your paper ticket could not be removed.")}
+   })()}}
+  ]);
+ };
+ const clearPaper=()=>{
+  Alert.alert("Clear all paper tickets?","This permanently removes all paper entries stored on this device.",[
+   {text:"Cancel",style:"cancel"},
+   {text:"Delete all",style:"destructive",onPress:()=>{void (async()=>{
+    try{await writePaper([]);setBets([])}
+    catch{Alert.alert("Could not clear","Your paper tickets could not be removed.")}
+   })()}}
+  ]);
+ };
  const grade=async(id:string,status:PaperEntry["status"])=>{
   const all=bets.map(b=>b.id===id?{...b,status}:b);
   try{await writePaper(all);setBets(all)}
@@ -145,7 +164,7 @@ export default function Home(){
    {feedError?<View style={styles.card}><Text style={styles.warning}>{feedError}</Text><Pressable onPress={()=>void refresh()}><Text style={styles.actionText}>Retry →</Text></Pressable></View>:null}
    {tab==="board"&&<>
     <SectionHeader eyebrow="MARKET BOARD" title="Compare every point."/>
-    <Text style={styles.caption}>{feed.provider||"Not connected"} · {demo?"SIMULATED":feed.live?"LIVE":"FALLBACK"}</Text>
+    <Text style={styles.caption}>{feed.provider||"Not connected"} · {demo?"SIMULATED":feed.live?"LIVE":"FALLBACK"} · {feed.message}</Text>
     <View style={styles.filterRow}>{(["moneyline","spread","total"] as const).map(id=><Pill key={id} label={MARKET_NAMES[id]} active={market===id} onPress={()=>setMarket(id)}/>)}</View>
     {loading?<ActivityIndicator color={theme.accent} size="large"/>:groups.length===0?<Text style={styles.empty}>No markets available for this sport and selection.</Text>:groups.map(group=><GroupRow key={group.key} group={group} onChoose={setTicket} onRating={q=>void showRating(q)}/>)}
     {(ratingLoading||rating||ratingError)&&<View style={styles.card}>
@@ -188,7 +207,9 @@ export default function Home(){
      <Text style={styles.caption}>{displayTeam(b.quote.sport,b.quote.selection)} {b.quote.line===undefined?"":b.quote.line} · {fmtPrice(b.quote.price)} · {b.quote.state.toUpperCase()}</Text>
      <Text style={styles.strong}>{usd(b.stake)} · {b.status.toUpperCase()} · P/L {usd(profit(b))}</Text>
      <View style={styles.filterRow}>{(["pending","won","lost","push"] as const).map(status=><Pill key={status} label={status.toUpperCase()} active={b.status===status} onPress={()=>void grade(b.id,status)}/>)}</View>
+     <Pressable accessibilityRole="button" accessibilityLabel="Delete paper ticket" onPress={()=>removePaper(b.id)}><Text style={styles.warning}>Delete this ticket</Text></Pressable>
     </View>)}
+    {paperReady&&bets.length>0&&<Pressable accessibilityRole="button" onPress={clearPaper}><Text style={styles.warning}>Delete all paper tickets from this device</Text></Pressable>}
    </>}
    <Text style={styles.footer}>Research and simulated paper tracking only. Prices and models are not guarantees. No wagering or sportsbook account connection.</Text>
   </ScrollView>

@@ -10,6 +10,10 @@ export async function fetchFeed(sport:Sport):Promise<Feed>{
   if(!response.ok)throw new Error("Market API returned "+response.status);
   const data=await response.json() as {markets?:unknown[];mode?:string;provider?:string;fresh?:boolean;fallback?:boolean};
   if(!Array.isArray(data.markets))throw new Error("Invalid market feed response");
+  // Hide stale live odds. Real-but-stale prices must not be relabeled simulated.
+  if(data.mode==="live"&&data.fallback!==true&&data.fresh!==true){
+   return {quotes:[],provider:data.provider||"Unknown provider",live:false,fresh:false,message:"Stale provider odds withheld. Refresh later or switch to demo."};
+  }
   // Never let the server's label promote demo quotes into live prices.
   const sourceLive=data.mode==="live"&&data.fallback!==true;
   const quotes=data.markets.filter(validQuote).filter(q=>q.sport===sport).map(q=>({...q,state:sourceLive&&q.state==="live"?"live" as const:"simulated" as const}));
