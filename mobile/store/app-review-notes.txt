@@ -20,3 +20,9 @@ Screenshots still required before App Store review. Capture these on a device or
 Use 6.7-inch iPhone resolution (1290 x 2796). Add 6.5-inch (1284 x 2778) if App Store Connect asks for it. TestFlight internal testing does not require these screenshots; external TestFlight and App Store review do.
 
 Stale live sportsbook data is withheld rather than displayed as a current price. The fallback demo board remains clearly labeled simulated.
+
+App Store Connect support URL: https://therounders.netlify.app/support
+App Store Connect privacy policy URL: https://therounders.netlify.app/privacy
+Temporary support contact: Bferrell514@gmail.com
+
+The mobile app has visible Support and Privacy Policy links. Website sign-in is optional and separate from the mobile paper-tracking experience. A website account does not sync mobile paper tickets.

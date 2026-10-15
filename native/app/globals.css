@@ -17,3 +17,18 @@
 .modelLabMetric span,.modelLabMetric p{font-size:.75rem;color:#AEC1DF;margin:0}
 @media(max-width:900px){.modelLabGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){.modelLabGrid{grid-template-columns:1fr}}
+
+/* Release support and privacy screens */
+.siteFooter{max-width:1180px;margin:0 auto 24px;padding:22px 24px 8px;border-top:1px solid #314765;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#AEC1DF;font-size:.83rem}
+.siteFooter nav{display:flex;gap:18px;flex-wrap:wrap}
+.siteFooter a,.policyPage a{color:#89C5FF;text-underline-offset:3px}
+.siteFooter a:hover,.policyPage a:hover{text-decoration:underline}
+.policyPage{max-width:880px}
+.policyPage>p{line-height:1.75}
+.policyPage .policyBack{display:inline-block;margin-bottom:28px}
+.policyPage h1{font-size:clamp(2.5rem,6vw,4.4rem)}
+.policyPanel{margin:22px 0;padding:24px;background:#111C2F;border:1px solid #315176;border-radius:16px}
+.policyPanel h2{margin:14px 0 12px;font-size:1.35rem;color:#F7FAFF}
+.policyPanel h3{font-size:1rem;margin:20px 0 6px;color:#F7FAFF}
+.policyPanel p{font-size:.96rem;line-height:1.78;color:#AEC1DF;overflow-wrap:anywhere}
+@media(max-width:540px){.siteFooter{padding:20px 16px}.policyPanel{padding:18px}}

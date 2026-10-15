@@ -1,6 +1,6 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState} from "react";
 import {
- ActivityIndicator,Alert,Pressable,RefreshControl,ScrollView,StatusBar,
+ ActivityIndicator,Alert,Linking,Pressable,RefreshControl,ScrollView,StatusBar,
  StyleSheet,Text,TextInput,View
 } from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
@@ -259,6 +259,11 @@ export default function Home(){
     {paperReady&&bets.length>0&&<Pressable accessibilityRole="button" onPress={clearPaper}><Text style={styles.warning}>Delete all paper tickets from this device</Text></Pressable>}
    </>}
    <Text style={styles.footer}>Research and simulated paper tracking only. Prices and models are not guarantees. No wagering or sportsbook account connection.</Text>
+   <View style={styles.filterRow}>
+    <Pressable accessibilityRole="link" onPress={()=>void Linking.openURL("https://therounders.netlify.app/support").catch(()=>Alert.alert("Link unavailable","Email Bferrell514@gmail.com for help."))}><Text style={styles.actionText}>Support</Text></Pressable>
+    <Pressable accessibilityRole="link" onPress={()=>void Linking.openURL("https://therounders.netlify.app/privacy").catch(()=>Alert.alert("Link unavailable","Privacy policy: therounders.netlify.app/privacy"))}><Text style={styles.actionText}>Privacy Policy</Text></Pressable>
+    <Pressable accessibilityRole="link" onPress={()=>void Linking.openURL("mailto:Bferrell514@gmail.com?subject=The%20Rounders%20Support").catch(()=>Alert.alert("Email unavailable","Contact Bferrell514@gmail.com"))}><Text style={styles.actionText}>Email support</Text></Pressable>
+   </View>
   </ScrollView>
  </SafeAreaView>;
 }
