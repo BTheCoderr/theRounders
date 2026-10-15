@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {compareWalkForward,fitMasseyRidge,fitElo} from "../lib/walkForward.ts";
 
 const start=Date.UTC(2024,0,1);
-function history(weeks=32,includeFuture=false){
+function history(weeks=80,includeFuture=false){
  const teams=["BOS","NYK","LAL","GSW"],rows=[];
  for(let w=0;w<weeks;w++){
   const date=new Date(start+w*7*86400000).toISOString();
@@ -16,7 +16,7 @@ function history(weeks=32,includeFuture=false){
  if(includeFuture)rows.push({date:"2030-01-01T00:00:00Z",team:"NYK",opponent:"BOS",teamScore:500,opponentScore:0,location:"home"});
  return rows;
 }
-const asOf=new Date("2025-01-01T00:00:00Z");
+const asOf=new Date("2025-10-01T00:00:00Z");
 test("all four models use the exact same held-out games",()=>{
  const r=compareWalkForward(history(),"NBA",asOf);
  assert.ok(r.evaluatedWeeks>=4);
@@ -27,7 +27,7 @@ test("all four models use the exact same held-out games",()=>{
 });
 test("future outcomes cannot affect any past evaluation",()=>{
  const normal=compareWalkForward(history(),"NBA",asOf);
- const future=compareWalkForward(history(32,true),"NBA",asOf);
+ const future=compareWalkForward(history(80,true),"NBA",asOf);
  assert.deepEqual(future,normal);
 });
 test("regularized Massey comparator remains centered and finite",()=>{
