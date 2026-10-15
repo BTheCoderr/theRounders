@@ -11,8 +11,9 @@ import {
 } from "../src/markets";
 import {loadPaper,profit,validStake,writePaper,type PaperEntry} from "../src/paper";
 import {theme} from "../src/theme";
+import {PowerRankingsPanel} from "../src/components/PowerRankingsPanel";
 
-type Tab="board"|"signals"|"ai"|"paper";
+type Tab="board"|"rankings"|"signals"|"ai"|"paper";
 const MARKET_NAMES:Record<MarketName,string>={moneyline:"Moneyline",spread:"Spread",total:"Total"};
 const usd=(value:number)=>"$"+(Number.isFinite(value)?value:0).toFixed(2);
 
@@ -183,7 +184,7 @@ export default function Home(){
    </View>
    {!apiOrigin&&<Text style={styles.warning}>A live API is not configured yet. Add EXPO_PUBLIC_ROUNDERS_API_URL to enable backend access.</Text>}
    <View style={styles.tabs}>
-    {(["board","signals","ai","paper"] as const).map(id=><Pill key={id} label={id==="board"?"Board":id==="signals"?"Price Gaps":id==="ai"?"Rounders AI":"Paper Bets"} active={tab===id} onPress={()=>setTab(id)}/>)}
+    {(["board","rankings","signals","ai","paper"] as const).map(id=><Pill key={id} label={id==="board"?"Board":id==="rankings"?"Power Index":id==="signals"?"Price Gaps":id==="ai"?"Rounders AI":"Paper Bets"} active={tab===id} onPress={()=>setTab(id)}/>)}
    </View>
    {tab!=="paper"&&<View style={styles.filterRow}>{SPORTS.map(name=><Pill key={name} label={name} active={sport===name} onPress={()=>changeSport(name)}/>)}</View>}
    {feedError?<View style={styles.card}><Text style={styles.warning}>{feedError}</Text><Pressable onPress={()=>void refresh()}><Text style={styles.actionText}>Retry →</Text></Pressable></View>:null}
@@ -209,6 +210,7 @@ export default function Home(){
      <Pressable onPress={()=>setTicket(null)}><Text style={styles.actionText}>Cancel</Text></Pressable>
     </View>}
    </>}
+   {tab==="rankings"&&<PowerRankingsPanel sport={sport} demo={demo}/>}
    {tab==="signals"&&<>
     <SectionHeader eyebrow="PRICE GAP SCANNER" title="Evidence, not hype."/>
     <Text style={styles.caption}>These compare distinct books at the same line, event and selection. They do not establish steam or reverse-line movement.</Text>
