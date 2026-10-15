@@ -188,7 +188,7 @@ export async function refreshHistoricalArchive(sport:Sport,now=new Date()):Promi
  const old=new Map(completed.map(row=>[row.year_month,Date.parse(row.fetched_at)]));
  const current=now.getTime();
  const fresh=(key:string)=>old.has(key)&&current-(old.get(key)??0)<20*60*60*1000;
- const backfill=keys.slice(1).reverse().filter(key=>!old.has(key)).slice(0,2);
+ const backfill=keys.slice(1).reverse().filter(key=>!old.has(key)).slice(0,1);
  const targets=[
   ...backfill,
   ...(now.getUTCDate()<=5&&!fresh(keys[1])?[keys[1]]:[]),
