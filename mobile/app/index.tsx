@@ -12,8 +12,9 @@ import {
 import {loadPaper,profit,validStake,writePaper,type PaperEntry} from "../src/paper";
 import {theme} from "../src/theme";
 import {PowerRankingsPanel} from "../src/components/PowerRankingsPanel";
+import ModelLab from "../src/components/ModelLab";
 
-type Tab="board"|"rankings"|"signals"|"ai"|"paper";
+type Tab="board"|"rankings"|"lab"|"signals"|"ai"|"paper";
 const MARKET_NAMES:Record<MarketName,string>={moneyline:"Moneyline",spread:"Spread",total:"Total"};
 const usd=(value:number)=>"$"+(Number.isFinite(value)?value:0).toFixed(2);
 
@@ -184,7 +185,7 @@ export default function Home(){
    </View>
    {!apiOrigin&&<Text style={styles.warning}>A live API is not configured yet. Add EXPO_PUBLIC_ROUNDERS_API_URL to enable backend access.</Text>}
    <View style={styles.tabs}>
-    {(["board","rankings","signals","ai","paper"] as const).map(id=><Pill key={id} label={id==="board"?"Board":id==="rankings"?"Power Index":id==="signals"?"Price Gaps":id==="ai"?"Rounders AI":"Paper Bets"} active={tab===id} onPress={()=>setTab(id)}/>)}
+    {(["board","rankings","lab","signals","ai","paper"] as const).map(id=><Pill key={id} label={id==="board"?"Board":id==="rankings"?"Power Index":id==="lab"?"Model Lab":id==="signals"?"Price Gaps":id==="ai"?"Rounders AI":"Paper Bets"} active={tab===id} onPress={()=>setTab(id)}/>)}
    </View>
    {tab!=="paper"&&<View style={styles.filterRow}>{SPORTS.map(name=><Pill key={name} label={name} active={sport===name} onPress={()=>changeSport(name)}/>)}</View>}
    {feedError?<View style={styles.card}><Text style={styles.warning}>{feedError}</Text><Pressable onPress={()=>void refresh()}><Text style={styles.actionText}>Retry →</Text></Pressable></View>:null}
@@ -211,6 +212,7 @@ export default function Home(){
     </View>}
    </>}
    {tab==="rankings"&&<PowerRankingsPanel sport={sport} demo={demo}/>}
+   {tab==="lab"&&<ModelLab sport={sport}/>}
    {tab==="signals"&&<>
     <SectionHeader eyebrow="PRICE GAP SCANNER" title="Evidence, not hype."/>
     <Text style={styles.caption}>These compare distinct books at the same line, event and selection. They do not establish steam or reverse-line movement.</Text>

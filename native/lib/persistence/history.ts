@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto";
 import type {TeamGame} from "../ratings";
 import {uniqueCompletedGames} from "../powerRatings";
-import {getEspnResults} from "../results/espn";
+import {getEspnResults,getEspnMonthResults} from "../results/espn";
 
 export type Sport="NBA"|"NFL"|"NHL"|"MLB";
 const validSports=new Set(["NBA","NFL","NHL","MLB"]);
@@ -115,4 +115,88 @@ export async function recordModelEvaluation(sport:Sport){
   })
  });
  return {trained:board.games,evaluated:holdout.evaluatedGames};
+}
+
+
+export async function saveComparison(sport:Sport):Promise<{evaluated:number;weeks:number;state:"external"|"simulated"}>{
+ const result=await getTrainingGames(sport);
+ const {compareWalkForward}=await import("../walkForward");
+ const evaluated=compareWalkForward(result.games,sport,new Date(),52);
+ const today=new Date();
+ await rest("rounders_model_comparisons?on_conflict=sport,method,run_day",{
+  method:"POST",
+  headers:{Prefer:"resolution=merge-duplicates,return=minimal"},
+  body:JSON.stringify({
+   sport,method:evaluated.method,run_day:today.toISOString().slice(0,10),
+   data_source:result.provider,data_state:result.source,historical_games:evaluated.totalHistoricalGames,
+   evaluated_games:evaluated.evaluatedGames,evaluated_weeks:evaluated.evaluatedWeeks,
+   seasons:evaluated.historySeasons,metrics:evaluated.models,best_model:evaluated.bestByMAE,
+   beats_baseline:evaluated.betterThanBaseline,warning:evaluated.warning
+  })
+ });
+ return {evaluated:evaluated.evaluatedGames,weeks:evaluated.evaluatedWeeks,state:result.source};
+}
+export async function readComparison(sport:Sport){
+ if(!archiveConfigured())return null;
+ const res=await rest("rounders_model_comparisons?select=sport,method,run_day,data_source,data_state,historical_games,evaluated_games,evaluated_weeks,seasons,metrics,best_model,beats_baseline,warning&sport=eq."+
+  encodeURIComponent(sport)+"&order=run_day.desc&limit=1");
+ const result=await res.json() as Array<{
+  sport:Sport;method:string;run_day:string;data_source:string;data_state:"external"|"simulated";
+  historical_games:number;evaluated_games:number;evaluated_weeks:number;seasons:number[];
+  metrics:Array<{model:string;games:number;mae:number|null;winnerAccuracy:number|null;meanBias:number|null}>;
+  best_model:string|null;beats_baseline:boolean|null;warning:string;
+ }>;
+ return result[0]||null;
+}
+
+
+export function recentMonthKeys(now:Date,count=25):string[]{
+ if(!Number.isFinite(now.getTime())||count<1||count>120)throw new Error("Invalid backfill window");
+ const dates:string[]=[];
+ for(let i=0;i<count;i++){
+  const d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-i,1));
+  dates.push(String(d.getUTCFullYear())+String(d.getUTCMonth()+1).padStart(2,"0"));
+ }
+ return dates;
+}
+export async function archiveEspnMonth(sport:Sport,yearMonth:string):Promise<number>{
+ if(!validSports.has(sport)||!/^20\d{2}(0[1-9]|1[0-2])$/.test(yearMonth))throw new Error("Invalid sport or month");
+ const games=uniqueCompletedGames(await getEspnMonthResults(sport,yearMonth));
+ let count=0;
+ for(let i=0;i<games.length;i+=100){
+  const data=games.slice(i,i+100).map(g=>({
+   source:"espn-scoreboard",source_event_id:createHash("sha256").update([sport,g.date,g.home,g.away].join("|")).digest("hex"),
+   sport,season:Number(g.date.slice(0,4)),occurred_at:g.date,
+   home:g.home,away:g.away,home_score:g.homeScore,away_score:g.awayScore,neutral:g.neutral
+  }));
+  await rest("rounders_games?on_conflict=source,sport,source_event_id",{
+   method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(data)
+  });
+  count+=data.length;
+ }
+ await rest("rounders_history_months?on_conflict=sport,year_month,source",{
+  method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},
+  body:JSON.stringify({sport,year_month:yearMonth,source:"espn-scoreboard",imported_games:count,fetched_at:new Date().toISOString()})
+ });
+ return count;
+}
+export async function refreshHistoricalArchive(sport:Sport,now=new Date()):Promise<{months:string[];games:number}>{
+ const keys=recentMonthKeys(now,25);
+ const response=await rest("rounders_history_months?select=year_month,fetched_at&sport=eq."+
+  encodeURIComponent(sport)+"&source=eq.espn-scoreboard");
+ const completed=await response.json() as Array<{year_month:string;fetched_at:string}>;
+ const old=new Map(completed.map(row=>[row.year_month,Date.parse(row.fetched_at)]));
+ const current=now.getTime();
+ const fresh=(key:string)=>old.has(key)&&current-(old.get(key)??0)<20*60*60*1000;
+ const backfill=keys.slice(1).reverse().filter(key=>!old.has(key)).slice(0,2);
+ const targets=[
+  ...backfill,
+  ...(now.getUTCDate()<=5&&!fresh(keys[1])?[keys[1]]:[]),
+  ...(!fresh(keys[0])?[keys[0]]:[])
+ ];
+ let games=0;
+ for(const month of [...new Set(targets)]){
+  games+=await archiveEspnMonth(sport,month);
+ }
+ return {months:[...new Set(targets)],games};
 }
