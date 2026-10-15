@@ -64,13 +64,21 @@ const DEMO_BOARD:Record<Sport,{games:[string,string][];spread:number;total:numbe
 export function demoQuotes(sport:Sport):Quote[]{
  const ts=new Date().toISOString();
  const board=DEMO_BOARD[sport];
- return board.games.flatMap(([away,home],i)=>[["Sample Book A",-110],["Sample Book B",105]].flatMap(([book,price])=>
-  (["moneyline","spread","total"] as MarketName[]).map(market=>({
-   eventId:"demo-"+sport+"-"+i,sport,market,away,home,
-   selection:market==="total"?"Over":home,
-   line:market==="spread"?board.spread:market==="total"?board.total:undefined,
-   price:Number(price),book:String(book),updatedAt:ts,state:"simulated" as const,
-   startTime:ts,
-  }))
- ));
+ const books=[["Sample Book A",-9],["Sample Book B",9]] as const;
+ return board.games.flatMap(([away,home],i)=>{
+  const homeSpread=(sport==="NHL"||sport==="MLB")?-1.5:board.spread+i;
+  const total=board.total+i*(sport==="NHL"||sport==="MLB"?0.5:sport==="NFL"?1.5:2);
+  const choices:Record<MarketName,{selection:string;line?:number;base:number}[]>={
+   moneyline:[{selection:home,base:-128},{selection:away,base:113}],
+   spread:[{selection:home,line:homeSpread,base:-110},{selection:away,line:-homeSpread,base:-110}],
+   total:[{selection:"Over",line:total,base:-112},{selection:"Under",line:total,base:-108}]
+  };
+  return (["moneyline","spread","total"] as MarketName[]).flatMap(market=>
+   choices[market].flatMap(choice=>books.map(([book,offset])=>({
+    eventId:"demo-"+sport+"-"+i,sport,market,away,home,
+    selection:choice.selection,line:choice.line,
+    price:choice.base+offset,book,updatedAt:ts,state:"simulated" as const,startTime:ts
+   })))
+  );
+ });
 }

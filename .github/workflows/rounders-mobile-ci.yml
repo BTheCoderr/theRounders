@@ -28,6 +28,8 @@ jobs:
         run: npm ci --legacy-peer-deps
       - name: TypeScript native checks
         run: npm run typecheck
+      - name: Simulated market integrity regression tests
+        run: node --experimental-strip-types --test tests/*.test.mjs
       - name: Verify Expo SDK dependencies
         run: npx expo install --check
       - name: Expo doctor
