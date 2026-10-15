@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {buildRatings,projectMatchup} from "../../../../lib/ratings";
-import {demoHistory} from "../../../../lib/demoHistory";
-import {getEspnResults} from "../../../../lib/results/espn";
+import {getTrainingGames,claimSharedAiQuota} from "../../../../lib/persistence/history";
+import {createHash} from "node:crypto";
 import {createEvidence,explainFromModel,readResponseText,ANALYST_INSTRUCTIONS} from "../../../../lib/aiInsights";
 
 export const dynamic="force-dynamic";
@@ -39,15 +39,10 @@ export async function POST(req:Request){
   }
   const id=req.headers.get("x-nf-client-connection-ip")||req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||"anonymous";
   if(limited(id))return json({error:"Analysis request limit reached. Please try again later."},429);
-  let games=demoHistory(sport);
-  let source:{trainingDataState:"external"|"simulated";trainingProvider:string;fallback:boolean;sampleGames:number}={
-    trainingDataState:"simulated",trainingProvider:"controlled-demo",fallback:true,sampleGames:Math.floor(games.length/2)
-  };
-  try{
-    const batch=await getEspnResults(sport);
-    games=batch.games;
-    source={trainingDataState:batch.source,trainingProvider:batch.provider,fallback:false,sampleGames:Math.floor(games.length/2)};
-  }catch{/* Clearly labeled controlled fallback; never call simulated games live. */}
+  const batch=await getTrainingGames(sport as "NBA"|"NFL"|"NHL"|"MLB");
+  const games=batch.games;
+  const source={trainingDataState:batch.source,trainingProvider:batch.provider,
+    fallback:batch.fallback,sampleGames:batch.sampleGames};
   const ratings=buildRatings(games);
   const baseline=sport==="NFL"?23:sport==="NHL"?3:sport==="MLB"?4.5:112;
   const hfa=sport==="NFL"?2.2:sport==="NHL"?.18:sport==="MLB"?.25:2.2;
@@ -57,6 +52,17 @@ export async function POST(req:Request){
   const summary=explainFromModel(evidence,question);
   const enabled=process.env.ROUNDERS_AI_ENABLED==="true"&&Boolean(process.env.OPENAI_API_KEY);
   if(!enabled)return json({mode:"model-summary",answer:summary,evidence,notice:"LLM commentary is disabled; this is a statistical model explanation, not generative AI."});
+  // Fail closed. A shared database transaction enforces 100 global requests/day
+  // and 8 per identity/15 min. The shared service key is ONLY used as a hash salt.
+  // Never bill the LLM if storage or the quota RPC is unavailable.
+  const forwarded=req.headers.get("x-nf-client-connection-ip")||"unidentified";
+  const serviceSalt=process.env.SUPABASE_SERVICE_ROLE_KEY||"";
+  const identityHash=createHash("sha256").update(serviceSalt+"|"+forwarded).digest("hex");
+  if(!(await claimSharedAiQuota(identityHash))){
+    return json({mode:"model-summary",answer:summary,evidence,
+      notice:"Shared AI usage limit reached or not configured. Showing model-only summary."});
+  }
+
 
   try{
     const response=await fetch("https://api.openai.com/v1/responses",{
