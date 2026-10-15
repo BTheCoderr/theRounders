@@ -1,4 +1,4 @@
-import {archiveEspnSeason,recordIngestion,recordModelEvaluation,type Sport} from "../../lib/persistence/history";
+import {archiveEspnSeason,recordIngestion,recordModelEvaluation,saveComparison,type Sport} from "../../lib/persistence/history";
 
 /** Netlify Scheduled Function. Runs only on published deploys, daily at 11:00 UTC. */
 export default async function handler(_req:Request):Promise<Response>{
@@ -8,6 +8,7 @@ export default async function handler(_req:Request):Promise<Response>{
    const count=await archiveEspnSeason(sport);
    await recordIngestion(sport,count,"ok","Current-year completed scoreboard import");
    await recordModelEvaluation(sport);
+   await saveComparison(sport);
    summary.push({sport,games:count,ok:true});
   }catch(error){
    // Do not log service keys or full payloads.
