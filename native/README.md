@@ -41,3 +41,16 @@ The endpoint is available in **model-summary** mode without any paid API key. On
 **Production security prerequisite:** The per-instance 8-request/15-minute guard helps with accidental bursts but is NOT a distributed rate limit across Netlify serverless invocations and cannot enforce a spend cap. Leave `ROUNDERS_AI_ENABLED` unset in public production until a durable shared quota / authentication limit and an upstream provider budget are established. Avoid sending personal details in questions, and keep API keys out of source control. The AI is grounded commentary, not a trained/validated predictive model, and the old statistical confidence metric is only a heuristic. The endpoint never promises guaranteed winners or verified injury/lineup/news information.
 
 Run `node --experimental-strip-types --test tests/*.test.mjs` to check simulated provenance, missing-data disclosures, and response parsing. No provider credentials are necessary for those tests.
+
+
+## Rounders Power Index v2 preview
+
+`GET /api/power-rankings?sport=NBA|NFL|NHL|MLB` returns power rankings, opponent-average strength, game counts and W-L-T records, history source, sample completeness flag, and a preliminary chronological holdout MAE versus a home-advantage-only baseline.
+
+The experimental `rounders-power-v2-preview` is **Massey-inspired, not official Massey Ratings**. It forms the weighted graph normal equations from completed game score differences and solves them with diagonally preconditioned conjugate gradients. Design choices include recency weighting (half-life per sport), regularization to cope with sparse/disconnected league schedules, bounded point margins for diminishing returns, and a fixed league home-advantage parameter. Those parameters are *not yet tuned against held-out seasons*. Ratings are relative **point margins**, not calibrated win probabilities or confidence percentages. These previews must not be advertised as independently validated predictions.
+
+`holdoutMarginEvaluation` splits eligible completed games chronologically 70% training and 30% held-out, with no retraining on held-out results. It reports MAE for both v2 and a constant home-advantage baseline when at least five held-out games had known teams. A single chronological split is only diagnostic, not proven superiority. Future work: multi-season licensed or reputable historical dataset, rolling-origin backtests, strictly separate tuning and test windows, calibration, team identity mapping, publishing complete methodology.
+
+Coverage warnings are required because the current ESPN scoreboard adapter is not a verified full-season historical feed. Results may be sparse, and `controlled-demo` fallback rankings must always say **SIMULATED**. The web and mobile clients must never treat a ranking as a betting recommendation.
+
+Local tests: `node --experimental-strip-types --test tests/*.test.mjs`.
