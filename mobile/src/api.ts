@@ -47,3 +47,37 @@ export async function fetchRating(quote:Quote):Promise<Rating>{
   return rating;
  }finally{clearTimeout(timeout)}
 }
+
+
+export type MatchupInsight={
+ mode:"ai"|"model-summary";
+ answer:string;
+ notice:string;
+ evidence:{
+  sport:string;away:string;home:string;
+  projectedAway:number;projectedHome:number;homeWinProbability:number;
+  trainingDataState:"external"|"simulated";trainingProvider:string;fallback:boolean;sampleGames:number;
+ };
+};
+export async function fetchMatchupInsight(quote:Quote,question:string):Promise<MatchupInsight>{
+ if(!apiOrigin||!/^https:\/\//i.test(apiOrigin))throw new Error("Rounders API is not configured");
+ const away=displayTeam(quote.sport,quote.away),home=displayTeam(quote.sport,quote.home);
+ const abort=new AbortController();
+ const timeout=setTimeout(()=>abort.abort(),18000);
+ try{
+  const response=await fetch(apiOrigin+"/api/ai/matchup",{
+   method:"POST",signal:abort.signal,
+   headers:{"Accept":"application/json","Content-Type":"application/json"},
+   body:JSON.stringify({sport:quote.sport,away,home,question:question.trim()})
+  });
+  if(!response.ok)throw new Error(response.status===429?"AI analysis limit reached. Try later.":response.status===404?"No model coverage for this matchup.":"Matchup analysis returned "+response.status);
+  const data=await response.json() as Partial<MatchupInsight>;
+  if((data.mode!=="ai"&&data.mode!=="model-summary")||
+    typeof data.answer!=="string"||data.answer.length<5||data.answer.length>1800||
+    !data.evidence||data.evidence.sport!==quote.sport||
+    data.evidence.away!==away||data.evidence.home!==home||
+    !Number.isFinite(data.evidence.homeWinProbability)||
+    !["external","simulated"].includes(data.evidence.trainingDataState))throw new Error("Invalid matchup analysis response");
+  return {...data,notice:typeof data.notice==="string"?data.notice:"Model research only. Not a guarantee."} as MatchupInsight;
+ }finally{clearTimeout(timeout)}
+}
