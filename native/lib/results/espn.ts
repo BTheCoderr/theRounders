@@ -39,3 +39,20 @@ export function completedTeamGames(events:Event[]):TeamGame[]{
  }
  return games;
 }
+
+/** Historical monthly scoreboard. Empty off-season months are valid and recorded as completed. */
+export async function getEspnMonthResults(sport:string,yearMonth:string):Promise<TeamGame[]>{
+ const pair=league[sport.toUpperCase()];
+ if(!pair||!/^20\d{2}(0[1-9]|1[0-2])$/.test(yearMonth))throw new Error("Invalid month or sport");
+ const [kind,slug]=pair;
+ const response=await fetch(`https://site.api.espn.com/apis/site/v2/sports/${kind}/${slug}/scoreboard?dates=${yearMonth}&limit=1000`,{
+  signal:AbortSignal.timeout(12000),
+  next:{revalidate:86400}
+ });
+ if(!response.ok)throw new Error("History provider returned "+response.status);
+ const data=await response.json() as {events?:Event[]};
+ if(!Array.isArray(data.events))throw new Error("History provider returned an invalid event set");
+ if(data.events.length>=1000)throw new Error("Potentially truncated monthly scoreboard data");
+ const results=completedTeamGames(data.events);
+ return results.filter(g=>g.date.slice(0,7).replace("-","")===yearMonth);
+}
