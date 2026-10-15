@@ -97,3 +97,22 @@ export async function recordIngestion(sport:Sport,count:number,status:"ok"|"erro
   })
  });
 }
+
+export async function recordModelEvaluation(sport:Sport){
+ const data=await getTrainingGames(sport);
+ const {computePowerBoard,holdoutMarginEvaluation}=await import("../powerRatings");
+ const today=new Date();
+ const board=computePowerBoard(data.games,sport,today);
+ const holdout=holdoutMarginEvaluation(data.games,sport,today);
+ await rest("rounders_model_runs?on_conflict=sport,model_version,run_day",{
+  method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},
+  body:JSON.stringify({
+   sport,model_version:board.model,run_day:today.toISOString().slice(0,10),as_of:today.toISOString(),
+   data_source:data.provider+(data.fallback?" (SIMULATED)":""),
+   training_games:board.games,evaluated_games:holdout.evaluatedGames,
+   model_mae:holdout.modelMAE,baseline_mae:holdout.homeBaselineMAE,
+   beats_baseline:holdout.beatsBaseline
+  })
+ });
+ return {trained:board.games,evaluated:holdout.evaluatedGames};
+}
