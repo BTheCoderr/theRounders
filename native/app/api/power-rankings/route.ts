@@ -1,6 +1,5 @@
 import {NextResponse} from "next/server";
-import {demoHistory} from "../../../lib/demoHistory";
-import {getEspnResults} from "../../../lib/results/espn";
+import {getTrainingGames} from "../../../lib/persistence/history";
 import {computePowerBoard,holdoutMarginEvaluation,type Sport} from "../../../lib/powerRatings";
 
 export const dynamic="force-dynamic";
@@ -9,15 +8,9 @@ const SPORTS=new Set(["NBA","NFL","NHL","MLB"]);
 export async function GET(req:Request){
   const sport=(new URL(req.url).searchParams.get("sport")||"NBA").toUpperCase();
   if(!SPORTS.has(sport))return NextResponse.json({error:"Unsupported sport"},{status:400});
-  let games=demoHistory(sport);
-  let dataState:"external"|"simulated"="simulated";
-  let provider="controlled-demo",fallback=true;
-  let warning="Controlled simulated history: this is NOT an actual league ranking.";
-  try{
-    const batch=await getEspnResults(sport);
-    games=batch.games;dataState=batch.source;provider=batch.provider;fallback=false;
-    warning="";
-  }catch{/* Remain unmistakably labeled simulated. */}
+  const batch=await getTrainingGames(sport as Sport);
+  const games=batch.games, dataState=batch.source,provider=batch.provider,fallback=batch.fallback;
+  const warning=batch.message;
   const now=new Date();
   const board=computePowerBoard(games,sport as Sport,now);
   const evaluation=holdoutMarginEvaluation(games,sport as Sport,now);
