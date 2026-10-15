@@ -54,3 +54,9 @@ Run `npm run preflight:ios` after linking EAS and adding the approved icon. The 
 The manually dispatched TestFlight workflow now runs the same checks before installing dependencies and starting a paid/signed EAS build. These are static release guards, not evidence of App Store approval, live odds correctness, or physical-device QA.
 
 The full-resolution approved 1024x1024 primary art must be committed as the actual PNG file, not just referenced in `app.json`. Keep the separate alternate art out of the app icon. Do not run `eas init` again, because the correct Expo project is already linked. No EAS build or submission should be launched while signing, `ascAppId`, or iPhone QA is outstanding.
+
+## Rounders AI matchup analyst
+
+The Board now includes **Ask Rounders AI** for each matchup, and a dedicated **Rounders AI** tab offers a bounded question input and explanations from the backend `POST /api/ai/matchup` endpoint. It shows **AI EXPLANATION** only when the server actually calls a generative model. Otherwise the same workflow returns **MODEL SUMMARY · GENERATIVE AI OFF**, with modeled scores, favored team, provenance and explicit limits. Every result identifies external versus simulated training data; nothing here is guaranteed, backtested, or a verified injury/news feed.
+
+The AI key is never in Expo or GitHub. Configure `OPENAI_API_KEY` and `ROUNDERS_AI_ENABLED` *only* server-side after durable production rate limiting / provider budgets exist. Until then, the statistical explanation works without keys and no LLM calls are made. Expo's configured `EXPO_PUBLIC_ROUNDERS_API_URL` must point at the updated deployed backend for these screens to work on a device.
