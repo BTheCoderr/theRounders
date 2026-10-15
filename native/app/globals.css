@@ -3,3 +3,17 @@
 .navAction{display:inline-flex;align-items:center;justify-content:center;background:#2563EB;color:#FFFFFF;text-decoration:none;border-radius:10px;padding:11px 13px;font-weight:700;margin-top:auto;align-self:flex-start}
 .navAction:hover,button:hover{filter:brightness(1.12)}
 .navAction:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #93C5FD;outline-offset:3px}
+
+/* Model Lab keeps all comparisons visible with first-party provenance. */
+.modelLab{display:block;margin-top:28px}
+.modelLab .sports{margin:18px 0 12px}
+.modelLabRefresh{background:#1A3151;border:1px solid #3B5A81}
+.modelLabWarning{color:#FDA4AF;line-height:1.55;font-size:.82rem}
+.modelLabResults{margin-top:18px}
+.modelLabGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.modelLabMetric{min-height:180px;display:grid;align-content:start;gap:10px;padding:16px;border:1px solid #315176;border-radius:14px;background:#132641}
+.modelLabMetric h3{font-size:.92rem;margin:0;color:#F7FAFF}
+.modelLabMetric strong{font-size:1.8rem;color:#89C5FF}
+.modelLabMetric span,.modelLabMetric p{font-size:.75rem;color:#AEC1DF;margin:0}
+@media(max-width:900px){.modelLabGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.modelLabGrid{grid-template-columns:1fr}}
