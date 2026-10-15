@@ -60,3 +60,8 @@ The full-resolution approved 1024x1024 primary art must be committed as the actu
 The Board now includes **Ask Rounders AI** for each matchup, and a dedicated **Rounders AI** tab offers a bounded question input and explanations from the backend `POST /api/ai/matchup` endpoint. It shows **AI EXPLANATION** only when the server actually calls a generative model. Otherwise the same workflow returns **MODEL SUMMARY · GENERATIVE AI OFF**, with modeled scores, favored team, provenance and explicit limits. Every result identifies external versus simulated training data; nothing here is guaranteed, backtested, or a verified injury/news feed.
 
 The AI key is never in Expo or GitHub. Configure `OPENAI_API_KEY` and `ROUNDERS_AI_ENABLED` *only* server-side after durable production rate limiting / provider budgets exist. Until then, the statistical explanation works without keys and no LLM calls are made. Expo's configured `EXPO_PUBLIC_ROUNDERS_API_URL` must point at the updated deployed backend for these screens to work on a device.
+
+
+## Power Index preview
+
+The new Power Index tab reads `GET /api/power-rankings` for NBA, NFL, NHL and MLB, shows the ranked teams with schedule-opponent strength, win-loss records, point-margin and recent form, and displays a chronological holdout MAE comparison. The current backend's ESPN history coverage is not guaranteed complete; sparse data and simulated fallback are prominently labeled. These are *experimental* power rankings inspired by the classic least-squares method, not Kenneth Massey's official ratings, nor trained/calibrated probability estimates. Switching sports cancels stale ranking displays. A live provider or full-season archive is needed before marketing them as robust league standings.

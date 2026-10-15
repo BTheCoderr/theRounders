@@ -81,3 +81,35 @@ export async function fetchMatchupInsight(quote:Quote,question:string):Promise<M
   return {...data,notice:typeof data.notice==="string"?data.notice:"Model research only. Not a guarantee."} as MatchupInsight;
  }finally{clearTimeout(timeout)}
 }
+
+
+export type PowerRank={
+ rank:number;team:string;rating:number;games:number;record:{wins:number;losses:number;ties:number};
+ averageOpponentRating:number;adjustedMargin:number;recentForm:number;
+};
+export type PowerRankings={
+ model:"rounders-power-v2-preview";sport:Sport;dataState:"external"|"simulated";
+ provider:string;fallback:boolean;coverage:"substantial"|"limited";games:number;
+ medianGames:number;rankings:PowerRank[];notes:string[];
+ evaluation:{method:"chronological-70-30";evaluatedGames:number;modelMAE:number|null;
+  homeBaselineMAE:number|null;beatsBaseline:boolean|null;warning:string};
+};
+export async function fetchPowerRankings(sport:Sport):Promise<PowerRankings>{
+ if(!apiOrigin||!/^https:\/\//i.test(apiOrigin))throw new Error("Rounders API not configured");
+ const abort=new AbortController();
+ const timeout=setTimeout(()=>abort.abort(),15000);
+ try{
+  const response=await fetch(apiOrigin+"/api/power-rankings?sport="+encodeURIComponent(sport),{
+   headers:{Accept:"application/json"},signal:abort.signal
+  });
+  if(!response.ok)throw new Error("Rankings API returned "+response.status);
+  const data=await response.json() as PowerRankings;
+  if(data.model!=="rounders-power-v2-preview"||data.sport!==sport||
+    !["external","simulated"].includes(data.dataState)||
+    !Array.isArray(data.rankings)||data.rankings.some(x=>
+      typeof x.team!=="string"||typeof x.rank!=="number"||
+      !Number.isFinite(x.rating)||!Number.isFinite(x.games))||
+    !Array.isArray(data.notes))throw new Error("Invalid ranking data");
+  return data;
+ }finally{clearTimeout(timeout)}
+}
