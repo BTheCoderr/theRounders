@@ -1,5 +1,5 @@
 import type {TeamGame} from "./ratings";
-import {computePowerBoard,uniqueCompletedGames,type CompletedGame,type Sport} from "./powerRatings";
+import {computePowerBoard,uniqueCompletedGames,type CompletedGame,type Sport} from "./powerRatings.ts";
 
 /**
  * Historical-only expanding-window benchmark, recomputed at each UTC Monday.
