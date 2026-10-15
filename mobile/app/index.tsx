@@ -4,7 +4,7 @@ import {
  StyleSheet,Text,TextInput,View
 } from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {apiOrigin,fetchFeed,fetchRating,type Feed,type Rating} from "../src/api";
+import {apiOrigin,fetchFeed,fetchRating,fetchMatchupInsight,type Feed,type Rating,type MatchupInsight} from "../src/api";
 import {
  SPORTS,demoQuotes,displayTeam,fmtPrice,getPriceGaps,groupQuotes,
  type Group,type MarketName,type Quote,type Sport,
@@ -12,7 +12,7 @@ import {
 import {loadPaper,profit,validStake,writePaper,type PaperEntry} from "../src/paper";
 import {theme} from "../src/theme";
 
-type Tab="board"|"signals"|"paper";
+type Tab="board"|"signals"|"ai"|"paper";
 const MARKET_NAMES:Record<MarketName,string>={moneyline:"Moneyline",spread:"Spread",total:"Total"};
 const usd=(value:number)=>"$"+(Number.isFinite(value)?value:0).toFixed(2);
 
@@ -24,7 +24,7 @@ function Pill({label,active=false,onPress}:{label:string;active?:boolean;onPress
 function SectionHeader({eyebrow,title}:{eyebrow:string;title:string}){
  return <View style={styles.sectionHeader}><Text style={styles.eyebrow}>{eyebrow}</Text><Text style={styles.title}>{title}</Text></View>;
 }
-function GroupRow({group,onChoose,onRating}:{group:Group;onChoose:(quote:Quote)=>void;onRating:(quote:Quote)=>void}){
+function GroupRow({group,onChoose,onRating,onAnalyze}:{group:Group;onChoose:(quote:Quote)=>void;onRating:(quote:Quote)=>void;onAnalyze:(quote:Quote)=>void}){
  const q=group.first;
  return <View style={styles.card}>
   <View style={styles.rowBetween}>
@@ -37,7 +37,7 @@ function GroupRow({group,onChoose,onRating}:{group:Group;onChoose:(quote:Quote)=
     {i===0?<Text style={styles.best}>BEST SAME-LINE PRICE</Text>:<Text style={styles.hint}>Tap for paper ticket</Text>}
    </Pressable>)}
   </View>
-  <Pressable accessibilityRole="button" onPress={()=>onRating(q)} style={styles.textButton}><Text style={styles.actionText}>Show matchup rating  →</Text></Pressable>
+  <View style={styles.filterRow}><Pressable accessibilityRole="button" onPress={()=>onRating(q)} style={styles.textButton}><Text style={styles.actionText}>Show rating →</Text></Pressable><Pressable accessibilityRole="button" onPress={()=>onAnalyze(q)} style={styles.textButton}><Text style={styles.actionText}>Ask Rounders AI →</Text></Pressable></View>
  </View>;
 }
 
@@ -52,12 +52,18 @@ export default function Home(){
  const [rating,setRating]=useState<Rating|null>(null);
  const [ratingError,setRatingError]=useState("");
  const [ratingLoading,setRatingLoading]=useState(false);
+ const [aiSelected,setAiSelected]=useState<Quote|null>(null);
+ const [aiQuestion,setAiQuestion]=useState("Explain this matchup and what the model could be missing.");
+ const [aiInsight,setAiInsight]=useState<MatchupInsight|null>(null);
+ const [aiError,setAiError]=useState("");
+ const [aiLoading,setAiLoading]=useState(false);
  const [ticket,setTicket]=useState<Quote|null>(null);
  const [stake,setStake]=useState("25");
  const [bets,setBets]=useState<PaperEntry[]>([]);
  const [paperReady,setPaperReady]=useState(false);
  const requestId=useRef(0);
  const ratingRequestId=useRef(0);
+ const aiRequestId=useRef(0);
 
  const refresh=useCallback(async()=>{
   const id=++requestId.current;
@@ -77,15 +83,16 @@ export default function Home(){
  useEffect(()=>{void refresh();return()=>{requestId.current++}},[refresh]);
  useEffect(()=>{let active=true;void loadPaper().then(value=>{if(active){setBets(value);setPaperReady(true)}});return()=>{active=false}},[]);
  useEffect(()=>{ratingRequestId.current++;setRating(null);setRatingError("");setRatingLoading(false);setTicket(null)},[sport,demo]);
+ useEffect(()=>{aiRequestId.current++;setAiSelected(null);setAiInsight(null);setAiError("");setAiLoading(false)},[sport,demo]);
  const changeSport=(next:Sport)=>{
   if(next===sport)return;
-  requestId.current++;ratingRequestId.current++;
+  requestId.current++;ratingRequestId.current++;aiRequestId.current++;
   setFeed({quotes:[],provider:"",live:false,fresh:false,message:""});
   setFeedError("");setRating(null);setRatingError("");setRatingLoading(false);setTicket(null);
   setSport(next);
  };
  const toggleDemo=()=>{
-  requestId.current++;ratingRequestId.current++;
+  requestId.current++;ratingRequestId.current++;aiRequestId.current++;
   setFeed({quotes:[],provider:"",live:false,fresh:false,message:""});
   setRating(null);setRatingError("");setRatingLoading(false);setTicket(null);
   setDemo(v=>!v);
@@ -106,6 +113,24 @@ export default function Home(){
    if(id===ratingRequestId.current)setRating(result);
   }catch(error){if(id===ratingRequestId.current)setRatingError(error instanceof Error?error.message:"Ratings unavailable.")}
   finally{if(id===ratingRequestId.current)setRatingLoading(false)}
+ };
+ const openAi=(quote:Quote)=>{
+  aiRequestId.current++;
+  setAiSelected(quote);setAiInsight(null);setAiError("");setAiLoading(false);
+  setAiQuestion("Explain this matchup and what the model could be missing.");
+  setTab("ai");
+ };
+ const askAi=async()=>{
+  if(!aiSelected)return;
+  const id=++aiRequestId.current;
+  setAiError("");setAiInsight(null);setAiLoading(true);
+  try{
+   if(!apiOrigin)throw new Error("Rounders API is not configured. AI explanations require backend access.");
+   if(aiQuestion.trim().length<3||aiQuestion.length>240)throw new Error("Enter a question between 3 and 240 characters.");
+   const answer=await fetchMatchupInsight(aiSelected,aiQuestion);
+   if(id===aiRequestId.current)setAiInsight(answer);
+  }catch(error){if(id===aiRequestId.current)setAiError(error instanceof Error?error.message:"Could not analyze this matchup.")}
+  finally{if(id===aiRequestId.current)setAiLoading(false)}
  };
  const add=async()=>{
   if(!ticket)return;
@@ -158,7 +183,7 @@ export default function Home(){
    </View>
    {!apiOrigin&&<Text style={styles.warning}>A live API is not configured yet. Add EXPO_PUBLIC_ROUNDERS_API_URL to enable backend access.</Text>}
    <View style={styles.tabs}>
-    {(["board","signals","paper"] as const).map(id=><Pill key={id} label={id==="board"?"Board":id==="signals"?"Price Gaps":"Paper Bets"} active={tab===id} onPress={()=>setTab(id)}/>)}
+    {(["board","signals","ai","paper"] as const).map(id=><Pill key={id} label={id==="board"?"Board":id==="signals"?"Price Gaps":id==="ai"?"Rounders AI":"Paper Bets"} active={tab===id} onPress={()=>setTab(id)}/>)}
    </View>
    {tab!=="paper"&&<View style={styles.filterRow}>{SPORTS.map(name=><Pill key={name} label={name} active={sport===name} onPress={()=>changeSport(name)}/>)}</View>}
    {feedError?<View style={styles.card}><Text style={styles.warning}>{feedError}</Text><Pressable onPress={()=>void refresh()}><Text style={styles.actionText}>Retry →</Text></Pressable></View>:null}
@@ -166,7 +191,7 @@ export default function Home(){
     <SectionHeader eyebrow="MARKET BOARD" title="Compare every point."/>
     <Text style={styles.caption}>{feed.provider||"Not connected"} · {demo?"SIMULATED":feed.live?"LIVE":"FALLBACK"} · {feed.message}</Text>
     <View style={styles.filterRow}>{(["moneyline","spread","total"] as const).map(id=><Pill key={id} label={MARKET_NAMES[id]} active={market===id} onPress={()=>setMarket(id)}/>)}</View>
-    {loading?<ActivityIndicator color={theme.accent} size="large"/>:groups.length===0?<Text style={styles.empty}>No markets available for this sport and selection.</Text>:groups.map(group=><GroupRow key={group.key} group={group} onChoose={setTicket} onRating={q=>void showRating(q)}/>)}
+    {loading?<ActivityIndicator color={theme.accent} size="large"/>:groups.length===0?<Text style={styles.empty}>No markets available for this sport and selection.</Text>:groups.map(group=><GroupRow key={group.key} group={group} onChoose={setTicket} onRating={q=>void showRating(q)} onAnalyze={openAi}/>)}
     {(ratingLoading||rating||ratingError)&&<View style={styles.card}>
      <Text style={styles.eyebrow}>ROUNDERS MODEL</Text>
      {ratingLoading?<ActivityIndicator color={theme.accent}/>:ratingError?<Text style={styles.warning}>{ratingError}</Text>:rating?.projection?<View>
@@ -193,6 +218,24 @@ export default function Home(){
      <Text style={styles.strong}>{g.gap.toFixed(2)} percentage-point difference</Text>
      <Text style={styles.caption}>Best: {g.best.book} {fmtPrice(g.best.price)} · Other: {g.worst.book} {fmtPrice(g.worst.price)}</Text>
     </View>)}
+   </>}
+   {tab==="ai"&&<>
+    <SectionHeader eyebrow="SPORTS INTELLIGENCE" title="Ask Rounders AI."/>
+    <Text style={styles.caption}>Select a matchup, then ask about the statistical projection. Generative AI is used only when the server reports it is enabled. No unverified injury, news, or live-market claims.</Text>
+    {groupQuotes(feed.quotes,"moneyline").filter((g,i,all)=>all.findIndex(x=>x.first.eventId===g.first.eventId)===i).map(g=><Pressable key={g.first.eventId} accessibilityRole="button" onPress={()=>openAi(g.first)} style={[styles.card,aiSelected?.eventId===g.first.eventId&&{borderColor:theme.accent}]}><Text style={styles.matchup}>{displayTeam(g.first.sport,g.first.away)} @ {displayTeam(g.first.sport,g.first.home)}</Text><Text style={styles.caption}>{g.first.state.toUpperCase()} market · Tap to analyze</Text></Pressable>)}
+    {aiSelected?<View style={styles.card}>
+     <Text style={styles.eyebrow}>ASK ABOUT THIS MATCHUP</Text>
+     <Text style={styles.matchup}>{displayTeam(aiSelected.sport,aiSelected.away)} @ {displayTeam(aiSelected.sport,aiSelected.home)}</Text>
+     <TextInput style={[styles.input,{minHeight:80,textAlignVertical:"top"}]} value={aiQuestion} onChangeText={setAiQuestion} multiline maxLength={240} placeholder="What matters most in this matchup?" placeholderTextColor={theme.muted}/>
+     <Pressable accessibilityRole="button" style={[styles.submit,aiLoading&&{opacity:0.5}]} disabled={aiLoading} onPress={()=>void askAi()}><Text style={styles.submitText}>{aiLoading?"Analyzing…":"Analyze matchup"}</Text></Pressable>
+     {aiError?<Text style={styles.warning}>{aiError}</Text>:null}
+     {aiInsight?<View style={{gap:9}}>
+      <Text style={styles.eyebrow}>{aiInsight.mode==="ai"?"AI EXPLANATION":"MODEL SUMMARY · GENERATIVE AI OFF"}</Text>
+      <Text style={[styles.label,{color:theme.text,fontSize:14,lineHeight:22}]}>{aiInsight.answer}</Text>
+      <Text style={styles.caption}>Source: {aiInsight.evidence.trainingProvider} · {aiInsight.evidence.trainingDataState.toUpperCase()}{aiInsight.evidence.fallback?" · SIMULATED FALLBACK":""} · {aiInsight.evidence.sampleGames} completed games</Text>
+      <Text style={styles.hint}>{aiInsight.notice}</Text>
+     </View>:null}
+    </View>:<Text style={styles.empty}>Choose a matchup above, or tap “Ask Rounders AI” from the Board.</Text>}
    </>}
    {tab==="paper"&&<>
     <SectionHeader eyebrow="ON-DEVICE PAPER BANKROLL" title="Track before trading."/>
