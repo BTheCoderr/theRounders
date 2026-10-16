@@ -217,11 +217,10 @@ export async function refreshHistoricalArchive(sport:Sport,now=new Date()):Promi
  const current=now.getTime();
  const fresh=(key:string)=>historical.has(key)&&current-(historical.get(key)??0)<20*60*60*1000;
  const backfill=keys.slice(1).reverse().filter(key=>!historical.has(key)).slice(0,1);
- const targets=[
-  ...backfill,
-  ...(now.getUTCDate()<=5&&!fresh(keys[1])?[keys[1]]:[]),
-  ...(!fresh(keys[0])?[keys[0]]:[])
- ];
+ // Keep a scheduled invocation bounded to ONE provider month: the historical
+ // importer must leave enough of Netlify's 30-second window for database writes.
+ const targets=!fresh(keys[0])?[keys[0]]:
+  now.getUTCDate()<=5&&!fresh(keys[1])?[keys[1]]:backfill;
  let games=0;
  for(const month of [...new Set(targets)]){
   const imported=await archiveEspnMonth(sport,month);
