@@ -29,15 +29,6 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Confirm Expo authorization
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          if [ -z "$EXPO_TOKEN" ]; then
-            echo "::error::Add an EXPO_TOKEN repository Actions secret from your Expo account before running the workflow."
-            exit 1
-          fi
-
       - name: Confirm EAS project and reviewed iOS app icon
         env:
           SUBMIT_TO_TESTFLIGHT: ${{ inputs.submit_to_testflight }}
@@ -46,6 +37,15 @@ jobs:
             node scripts/release-preflight.mjs --submit
           else
             node scripts/release-preflight.mjs
+          fi
+
+      - name: Confirm Expo authorization
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Add an EXPO_TOKEN repository Actions secret from your Expo account before running the workflow."
+            exit 1
           fi
 
       - name: Set up EAS

@@ -26,6 +26,19 @@ jobs:
           node-version: "22"
       - name: Install Expo dependencies
         run: npm ci --legacy-peer-deps
+      - name: Verify release installer syntax and icon readiness
+        run: |
+          bash -n scripts/install-approved-icon.sh
+          if [ -f assets/icon.png ]; then
+            npm run preflight:ios
+          else
+            if node scripts/release-preflight.mjs >/tmp/rounders-preflight.txt 2>&1; then
+              echo "::error::Release preflight unexpectedly passed without an approved app icon."
+              exit 1
+            fi
+            grep -q "Approved sports-R icon" /tmp/rounders-preflight.txt
+            echo "Icon intentionally pending: correct missing-asset release guard verified."
+          fi
       - name: TypeScript native checks
         run: npm run typecheck
       - name: Simulated market integrity regression tests
