@@ -36,7 +36,7 @@ jobs:
               echo "::error::Release preflight unexpectedly passed without an approved app icon."
               exit 1
             fi
-            grep -q "Approved sports-R icon" /tmp/rounders-preflight.txt
+            grep -Fq "Expo icon is the exact approved sports-R artwork" /tmp/rounders-preflight.txt
             echo "Icon intentionally pending: correct missing-asset release guard verified."
           fi
       - name: TypeScript native checks
