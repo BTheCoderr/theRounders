@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {getTrainingGames} from "../../../lib/persistence/history";
+import {getVerifiedResearchGames} from "../../../lib/persistence/history";
 import {auditGameHistory} from "../../../lib/researchDataQuality";
 import type {Sport} from "../../../lib/powerRatings";
 
@@ -9,9 +9,9 @@ export async function GET(request:Request){
  if(!["NBA","NFL","NHL","MLB"].includes(sport))
   return NextResponse.json({error:"Unsupported sport"},{status:400});
  try{
-  const data=await getTrainingGames(sport as Sport);
+  const data=await getVerifiedResearchGames(sport as Sport);
   const audit=auditGameHistory(data.games,sport as Sport,data.provider,data.source);
-  return NextResponse.json({...audit,notice:"Approximate audit only. Not a league-certified game inventory."},{
+  return NextResponse.json({...audit,notice:"Uses only provider-ID verified regular-season games; legacy unclassified records are excluded. Approximate audit only, not a league-certified game inventory."},{
    headers:{"Cache-Control":"public, max-age=0, s-maxage=600"}
   });
  }catch{
