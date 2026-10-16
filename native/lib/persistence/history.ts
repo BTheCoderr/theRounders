@@ -140,7 +140,7 @@ export async function saveComparison(sport:Sport):Promise<{evaluated:number;week
 export async function readComparison(sport:Sport){
  if(!archiveConfigured())return null;
  const res=await rest("rounders_model_comparisons?select=sport,method,run_day,data_source,data_state,historical_games,evaluated_games,evaluated_weeks,seasons,metrics,best_model,beats_baseline,warning&sport=eq."+
-  encodeURIComponent(sport)+"&order=run_day.desc&limit=1");
+  encodeURIComponent(sport)+"&data_source=eq."+encodeURIComponent("Rounders verified regular-season ESPN archive")+"&order=run_day.desc&limit=1");
  const result=await res.json() as Array<{
   sport:Sport;method:string;run_day:string;data_source:string;data_state:"external"|"simulated";
   historical_games:number;evaluated_games:number;evaluated_weeks:number;seasons:number[];
