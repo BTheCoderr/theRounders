@@ -90,3 +90,29 @@ The new `native/lib/walkForward.ts` has four fixed untuned comparators: home-adv
 ### Scheduled ingestion operations
 
 The function directory is fixed at `native/netlify/functions` relative to the Netlify base `native` (configured in root `netlify.toml`). NBA runs at minute 0, NFL at minute 15, NHL at minute 30 and MLB at minute 45 of every three-hour window, UTC. Each bounded run imports at most one missing historical month and the current month when stale (plus the previous month near month turnover). With 24 historical months and no prior data, filling the backlog can take around three days and depends on the external scoreboard returning usable history. Scheduled Netlify functions cannot be invoked directly by a public URL; monitor `rounders_ingestion_runs`, `rounders_history_months`, `rounders_games` and `rounders_model_comparisons` after the next production schedule. A successful GitHub build or Netlify deployment does *not* establish that the scheduled job executed or imported games. No model result should be promoted as verified until the archive is populated.
+
+
+## Massey research report implementation (October 2026)
+
+The user-supplied `Modernizing Massey Ratings for therounders: Rounders Power Index v2` recommends keeping least-squares schedule adjustment while testing learned home advantage, pure recency weights, robust margin loss, prior-season shrinkage, context, and properly calibrated probabilities against locked chronological holdouts.
+
+### Implemented research-only slice
+
+- `lib/researchRpi.ts` fits a **separate** `rounders-research-v2.1` experimental model, using completed games before the cutoff, Huber IRLS, exponential half-life recency, joint league home advantage estimation with shrinkage, regularization and optional previous-season prior ratings. Default priors and Huber thresholds are placeholders, NOT tuned optimums. No extra key required; it does not replace production ratings or emit uncalibrated winning percentages.
+- `lib/walkForward.ts` includes the experimental model as the **fifth** weekly expanding-origin comparator on identical held-out games alongside home baseline, basic Massey ridge, Elo and Power Index v2.
+- `lib/researchDataQuality.ts` and `GET /api/data-quality?sport=NBA` surface approximate league-season game counts, expected team labels, and missing-season risks. Model Lab displays these warnings even when a stored weekly comparison exists. Candidate seasons are **not certified complete** based on a count alone.
+
+### Data audit findings and limitations
+
+At the initial implementation audit, the Supabase archive included 2024–2026 calendar-dated records with fewer than five usable complete seasons per league. Team name counts included labels beyond normal NBA/NHL roster-size expectations, indicating a need to check for preseason/all-star exhibitions, renamed teams and aliases; **do not interpret raw archive rows as verified full-season regular-season games**. The estimated game-count thresholds are not a replacement for comparing against an authoritative game schedule.
+
+### Next implementation gates (not yet delivered)
+
+1. Canonical external provider event IDs and team IDs, game stage (regular/postseason/preseason), verified completed timestamp; reconcile actual schedules and correct provider licensing.
+2. Obtain and audit at least five complete historical seasons per league, preferably 8–10.
+3. Sport-specific parameter tuning only on historical development/validation seasons; compare raw, clipped and Huber margins, estimated home models and preseason priors with ablations.
+4. Freeze each out-of-sample pregame forecast and independently train a logistic calibrator on **past frozen** forecasts. Publish Brier score, log loss, MAE, RMSE and calibration plots with reliability sample counts and intervals.
+5. Add offense/defense and rest/context only when they improve truly unseen-season performance; investigate team-level uncertainty and model change logs.
+6. Shadow test, audit dataset version and code commit, verify rollbacks, then consider replacing the live model only after passing documented objective release criteria.
+
+**Important:** The original website's current Massey Ratings are more involved than classic least squares; our `massey-ridge` comparator is a mathematical reference, not Kenneth Massey's proprietary production ratings. We cannot claim to outperform the official site without a matched independent evaluation.

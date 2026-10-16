@@ -1,5 +1,6 @@
 import type {TeamGame} from "./ratings";
 import {computePowerBoard,uniqueCompletedGames,type CompletedGame,type Sport} from "./powerRatings.ts";
+import {fitResearchRpi} from "./researchRpi.ts";
 
 /**
  * Historical-only expanding-window benchmark, recomputed at each UTC Monday.
@@ -7,7 +8,7 @@ import {computePowerBoard,uniqueCompletedGames,type CompletedGame,type Sport} fr
  * consumed until the next week's model fitting.
  * All compared models use identical eligible games.
  */
-export type Competitor="home-baseline"|"massey-ridge"|"elo-margin"|"rounders-power-v2";
+export type Competitor="home-baseline"|"massey-ridge"|"elo-margin"|"rounders-power-v2"|"rounders-research-v2.1";
 export type CompetitorScore={
  model:Competitor;games:number;mae:number|null;winnerAccuracy:number|null;
  correctWinners:number;decidedGames:number;meanBias:number|null;
@@ -34,7 +35,7 @@ const settings:Record<Sport,{hfa:number;eloPointScale:number}> = {
  NHL:{hfa:0.18,eloPointScale:0.0035},
  MLB:{hfa:0.25,eloPointScale:0.005}
 };
-const competitors:Competitor[]=["home-baseline","massey-ridge","elo-margin","rounders-power-v2"];
+const competitors:Competitor[]=["home-baseline","massey-ridge","elo-margin","rounders-power-v2","rounders-research-v2.1"];
 const week=7*86400000;
 const round=(n:number)=>Number(n.toFixed(3));
 const weekStart=(timestamp:number)=>{const d=new Date(timestamp);const utcDay=d.getUTCDay();return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-((utcDay+6)%7)*86400000;};
@@ -109,8 +110,10 @@ export function compareWalkForward(rows:TeamGame[],sport:Sport,asOf=new Date(),m
   const powerRating=new Map(power.rankings.map(r=>[r.team,r.rating]));
   const massey=fitMasseyRidge(train,params.hfa);
   const elo=fitElo(train,params.eloPointScale,params.hfa);
+  const research=fitResearchRpi(toRows(train),sport,new Date(origin));
   const eligible=upcoming.filter(g=>powerRating.has(g.home)&&powerRating.has(g.away)
-   &&massey.has(g.home)&&massey.has(g.away)&&elo.has(g.home)&&elo.has(g.away));
+   &&massey.has(g.home)&&massey.has(g.away)&&elo.has(g.home)&&elo.has(g.away)
+   &&research.ratings.has(g.home)&&research.ratings.has(g.away));
   if(!eligible.length){excludedColdStart+=upcoming.length;continue}
   excludedColdStart+=upcoming.length-eligible.length;
   weeksEvaluated++;
@@ -123,7 +126,8 @@ export function compareWalkForward(rows:TeamGame[],sport:Sport,asOf=new Date(),m
     "home-baseline":hfa,
     "massey-ridge":(massey.get(home)!-massey.get(away)!)+hfa,
     "elo-margin":(elo.get(home)!-elo.get(away)!)*params.eloPointScale+hfa,
-    "rounders-power-v2":(powerRating.get(home)!-powerRating.get(away)!)+hfa
+    "rounders-power-v2":(powerRating.get(home)!-powerRating.get(away)!)+hfa,
+    "rounders-research-v2.1":(research.ratings.get(home)!-research.ratings.get(away)!)+(game.neutral?0:research.homeAdvantage)
    };
    const actual=game.homeScore-game.awayScore;
    for(const model of competitors){
