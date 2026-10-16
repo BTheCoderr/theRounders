@@ -1,5 +1,5 @@
 import type {TeamGame} from "./ratings";
-import {uniqueCompletedGames,type Sport,type CompletedGame} from "./powerRatings";
+import {uniqueCompletedGames,type Sport,type CompletedGame} from "./powerRatings.ts";
 
 export type ResearchOptions={
  halfLifeDays:number;
@@ -37,7 +37,8 @@ function solveRatings(n:number,edges:Array<{home:number;away:number;weight:numbe
   return out;
  };
  let x=prior.slice();
- let r=rhs.map((v,i)=>v-multiply(x)[i]);
+ const ax=multiply(x);
+ let r=rhs.map((v,i)=>v-ax[i]);
  let z=r.map((v,i)=>v/diagonal[i]);
  let p=z.slice(),rz=dot(r,z);
  for(let k=0;k<Math.max(32,Math.min(350,n*8))&&rz>1e-16;k++){
