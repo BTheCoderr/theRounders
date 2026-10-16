@@ -2,11 +2,13 @@
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const app = JSON.parse(readFileSync(resolve(root, "app.json"), "utf8")).expo;
 const eas = JSON.parse(readFileSync(resolve(root, "eas.json"), "utf8"));
 const submit = process.argv.includes("--submit");
+const APPROVED_ICON_SHA256 = "377fa28d0df652926debe87146a186682ed99df8aecb4741dc8102c8ed3449d4";
 let errors = 0;
 function check(ok, message) {
   console.log(`${ok ? "PASS" : "FAIL"} ${message}`);
@@ -40,6 +42,17 @@ function isValidIcon(icon) {
 check(Boolean(app.extra?.eas?.projectId && /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(app.extra.eas.projectId)), "Expo EAS project UUID linked in app.json");
 check(Boolean(app.ios?.bundleIdentifier && /^([A-Za-z][A-Za-z0-9-]*\.)+[A-Za-z][A-Za-z0-9-]*$/.test(app.ios.bundleIdentifier)), "iOS bundle identifier configured");
 check(isValidIcon(app.icon), "1024x1024 opaque RGB/indexed PNG configured as Expo app icon");
+let approvedIconMatches = false;
+if (typeof app.icon === "string" && app.icon.trim()) {
+  try {
+    approvedIconMatches = createHash("sha256")
+      .update(readFileSync(resolve(root, app.icon)))
+      .digest("hex") === APPROVED_ICON_SHA256;
+  } catch {
+    // Missing icon is reported by both integrity and dimension checks.
+  }
+}
+check(approvedIconMatches, "Expo icon is the exact approved sports-R artwork (SHA-256)");
 check(eas.build?.production?.distribution === "store", "Production EAS build uses App Store distribution");
 check(eas.build?.production?.environment === "production", "Production build reads Expo production environment");
 if (submit) {

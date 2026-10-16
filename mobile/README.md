@@ -47,9 +47,28 @@ npx eas-cli submit --platform ios --profile production
 
 A passing Expo JavaScript export is **not** evidence that an .ipa was signed, a tester installed it, or Apple accepted it. No real wagering is included.
 
+
+## Install the exact approved icon
+
+From a clean and up-to-date local checkout on the `main` branch, save the original
+`therounders-primary-icon.png` locally (do not use the alternate). Run:
+
+```sh
+bash mobile/scripts/install-approved-icon.sh ~/Downloads/therounders-primary-icon.png
+```
+
+This checks the original image's SHA-256, verifies the linked Expo project, refuses
+to overwrite uncommitted work or an existing icon, runs the strengthened iOS preflight,
+and commits and pushes only `mobile/assets/icon.png` and `mobile/app.json`.
+The install intentionally does not trigger an EAS build or submit to Apple.
+
+App Store metadata is drafted at `mobile/store/app-store-listing.md`. Do not invent
+an App Store Connect numeric ID, API keys, or Apple signing credentials. Confirm the
+privacy policy and support URL fields in App Store Connect before submission.
+
 ## Release preflight
 
-Run `npm run preflight:ios` after linking EAS and adding the approved icon. The script rejects a missing project ID, invalid bundle identifier, missing/transparent/wrong-sized PNG, or wrong production build environment. Run `node scripts/release-preflight.mjs --submit` before automatic TestFlight submission; that mode also requires the numeric App Store Connect `ascAppId` in `eas.json`.
+Run `npm run preflight:ios` after linking EAS and adding the approved icon. The script rejects a missing project ID, invalid bundle identifier, missing/transparent/wrong-sized PNG, wrong production build environment, or artwork whose SHA-256 differs from the approved sports-R file. Run `node scripts/release-preflight.mjs --submit` before automatic TestFlight submission; that mode also requires the numeric App Store Connect `ascAppId` in `eas.json`.
 
 The manually dispatched TestFlight workflow now runs the same checks before installing dependencies and starting a paid/signed EAS build. These are static release guards, not evidence of App Store approval, live odds correctness, or physical-device QA.
 
