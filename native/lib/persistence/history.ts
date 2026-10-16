@@ -166,7 +166,7 @@ export function recentMonthKeys(now:Date,count=25):string[]{
  */
 export const REGULAR_ARCHIVE_REVISION=2;
 export async function archiveEspnMonth(sport:Sport,yearMonth:string):Promise<{games:number;excluded:number}>{
- if(!validSports.has(sport)||!/^20\\d{2}(0[1-9]|1[0-2])$/.test(yearMonth))
+ if(!validSports.has(sport)||!/^20\d{2}(0[1-9]|1[0-2])$/.test(yearMonth))
   throw new Error("Invalid sport or month");
  const parsed=await fetchRegularArchiveMonth(sport,yearMonth);
  for(let i=0;i<parsed.games.length;i+=75){
