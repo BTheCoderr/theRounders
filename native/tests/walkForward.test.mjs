@@ -21,7 +21,8 @@ test("all four models use the exact same held-out games",()=>{
  const r=compareWalkForward(history(),"NBA",asOf);
  assert.ok(r.evaluatedWeeks>=4);
  assert.ok(r.evaluatedGames>=10);
- assert.deepEqual(r.models.map(x=>x.games),[r.evaluatedGames,r.evaluatedGames,r.evaluatedGames,r.evaluatedGames]);
+ assert.deepEqual(r.models.map(x=>x.games),Array(5).fill(r.evaluatedGames));
+ assert.ok(r.models.some(x=>x.model==="rounders-research-v2.1"));
  assert.ok(r.models.every(x=>x.mae!==null&&Number.isFinite(x.mae)));
  assert.match(r.warning,/diagnostic|not independently validated/i);
 });
