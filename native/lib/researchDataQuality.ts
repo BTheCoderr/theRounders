@@ -1,5 +1,5 @@
 import type {TeamGame} from "./ratings";
-import {uniqueCompletedGames,type Sport} from "./powerRatings";
+import {uniqueCompletedGames,type Sport} from "./powerRatings.ts";
 
 export type SeasonCoverage={season:number;games:number;teams:number;approximateShare:number;status:"partial"|"candidate";};
 export type DataQuality={
