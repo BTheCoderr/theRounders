@@ -1,6 +1,7 @@
+import os
 # API Keys and Configuration
-ODDS_API_KEY = 'f4b284d121161d41abae2044e2f93ab1'  # Your Odds API key
-MYSPORTSFEEDS_API_KEY = '374cb8f7-58b4-475e-8859-5afb82'  # Add your complete key here
+ODDS_API_KEY = os.getenv("ODDS_API_KEY", "")  # Your Odds API key
+MYSPORTSFEEDS_API_KEY = os.getenv("MYSPORTSFEEDS_API_KEY", "")  # Add your complete key here
 ACTION_NETWORK_KEY = ''  # We can leave this empty for now
 WEATHER_API_KEY = ''     # We can leave this empty for now
 SPORTS_RADAR_KEY = 'your_sports_radar_key'  # Replace with your Sports Radar key
