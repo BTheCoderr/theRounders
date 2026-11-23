@@ -1,10 +1,11 @@
+import os
 import requests
 import pandas as pd
 from sports_betting.utils.logging_config import logger
 
 class OddsAPICollector:
     def __init__(self):
-        self.api_key = "f4b284d121161d41abae2044e2f93ab1"
+        self.api_key = os.getenv("ODDS_API_KEY", "")
         
     def get_odds(self, sport='basketball_nba') -> pd.DataFrame:
         """Get odds from the Odds API"""

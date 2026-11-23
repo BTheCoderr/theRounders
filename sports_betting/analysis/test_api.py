@@ -1,9 +1,10 @@
+import os
 import requests
 import json
 from datetime import datetime
 
 def test_odds_api():
-    API_KEY = 'f4b284d121161d41abae2044e2f93ab1'
+    API_KEY = os.getenv("ODDS_API_KEY", "")
     SPORT = 'basketball_nba'  # testing with NBA first
     
     print("\nTesting The Odds API")

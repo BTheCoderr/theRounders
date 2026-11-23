@@ -1,3 +1,4 @@
+import os
 from sports_betting.data_collection.nfl import NFLDataCollector
 from sports_betting.data_collection.ncaab import NCAABDataCollector
 from sports_betting.data_collection.ncaaf import NCAAFDataCollector
@@ -11,7 +12,7 @@ class ResultsTracker:
     def __init__(self):
         self.picks_file = 'picks_history.json'
         self.results_file = 'picks_results.json'
-        self.odds_api_key = 'f4b284d121161d41abae2044e2f93ab1'
+        self.odds_api_key = os.getenv("ODDS_API_KEY", "")
         self.collectors = {
             'NFL': NFLDataCollector(),
             'NBA': NBADataCollector(),

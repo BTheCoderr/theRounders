@@ -1,9 +1,10 @@
+import os
 import requests
 from datetime import datetime, timedelta
 
 class HistoricalAnalysis:
     def __init__(self):
-        self.odds_api_key = "f4b284d121161d41abae2044e2f93ab1"
+        self.odds_api_key = os.getenv("ODDS_API_KEY", "")
         
     def get_matchup_history(self, team1, team2, sport, years=3):
         """Get historical matchup data"""
