@@ -1,11 +1,10 @@
-export const SPORTS=["NBA","NFL","NHL","MLB"] as const;
+/** The product covers NBA and NFL. MLB/NHL history is preserved on the server but not shown. */
+export const SPORTS=["NBA","NFL"] as const;
 export type Sport=typeof SPORTS[number];
 /** Abbreviations from the deployed demo feed, mapped to ESPN display names the ratings model uses. */
 const TEAM_NAMES:Record<Sport,Record<string,string>>={
  NBA:{BOS:"Boston Celtics",NYK:"New York Knicks",LAL:"Los Angeles Lakers",GSW:"Golden State Warriors",MIL:"Milwaukee Bucks",CLE:"Cleveland Cavaliers"},
  NFL:{BUF:"Buffalo Bills",NYJ:"New York Jets",DAL:"Dallas Cowboys",PHI:"Philadelphia Eagles",KC:"Kansas City Chiefs",DEN:"Denver Broncos"},
- NHL:{BOS:"Boston Bruins",NYR:"New York Rangers",TOR:"Toronto Maple Leafs",MTL:"Montreal Canadiens",VGK:"Vegas Golden Knights",EDM:"Edmonton Oilers"},
- MLB:{BOS:"Boston Red Sox",NYY:"New York Yankees",LAD:"Los Angeles Dodgers",SD:"San Diego Padres",CHC:"Chicago Cubs",STL:"St. Louis Cardinals"},
 };
 export function displayTeam(sport:string,name:string){return TEAM_NAMES[sport as Sport]?.[name]??name;}
 export type MarketName="moneyline"|"spread"|"total";
@@ -58,16 +57,14 @@ export function getPriceGaps(quotes:Quote[]):PriceGap[]{
 const DEMO_BOARD:Record<Sport,{games:[string,string][];spread:number;total:number}>={
  NBA:{games:[["Boston Celtics","New York Knicks"],["Los Angeles Lakers","Golden State Warriors"]],spread:-3.5,total:220.5},
  NFL:{games:[["Buffalo Bills","New York Jets"],["Dallas Cowboys","Philadelphia Eagles"]],spread:-3.5,total:45.5},
- NHL:{games:[["Boston Bruins","New York Rangers"],["Toronto Maple Leafs","Montreal Canadiens"]],spread:-1.5,total:6.5},
- MLB:{games:[["Boston Red Sox","New York Yankees"],["Los Angeles Dodgers","San Diego Padres"]],spread:-1.5,total:8.5},
 };
 export function demoQuotes(sport:Sport):Quote[]{
  const ts=new Date().toISOString();
  const board=DEMO_BOARD[sport];
  const books=[["Sample Book A",-7],["Sample Book B",7]] as const;
  return board.games.flatMap(([away,home],i)=>{
-  const homeSpread=(sport==="NHL"||sport==="MLB")?-1.5:board.spread+i;
-  const total=board.total+i*(sport==="NHL"||sport==="MLB"?0.5:sport==="NFL"?1.5:2);
+  const homeSpread=board.spread+i;
+  const total=board.total+i*(sport==="NFL"?1.5:2);
   const choices:Record<MarketName,{selection:string;line?:number;base:number}[]>={
    moneyline:[{selection:home,base:-128},{selection:away,base:113}],
    spread:[{selection:home,line:homeSpread,base:-110},{selection:away,line:-homeSpread,base:-110}],

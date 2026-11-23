@@ -2,7 +2,7 @@
 import {useEffect,useState} from "react";
 import type {MarketQuote} from "../lib/contracts";
 import {findLineShopGaps,type LineShopGap} from "../lib/signals";
-const SPORTS=["NBA","NFL","NHL","MLB"];
+const SPORTS=["NBA","NFL"];
 const fmt=(n:number)=>n>0?"+"+n:String(n);
 export default function SharpSignals(){
  const [gaps,setGaps]=useState<LineShopGap[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(false);

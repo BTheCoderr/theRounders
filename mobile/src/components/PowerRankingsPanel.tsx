@@ -23,7 +23,7 @@ export function PowerRankingsPanel({sport,demo}:{sport:Sport;demo:boolean}){
  const f=(x:number)=>x>0?"+"+x.toFixed(2):x.toFixed(2);
  return <View style={styles.stack}>
   <Text style={styles.title}>Rounders Power Index</Text>
-  <Text style={styles.muted}>Massey-inspired opponent-adjusted point ratings. Preview model, not an official Massey ranking.</Text>
+  <Text style={styles.muted}>Schedule-adjusted point margin per game, weighted toward recent results. Independent Rounders model; not an official ranking.</Text>
   {demo?<Text style={styles.warning}>Switch to API mode to fetch labeled external or controlled-simulation rankings. No rankings are generated from demo fixtures on the phone.</Text>:
     <Pressable accessibilityRole="button" style={styles.refresh} onPress={()=>setRevision(x=>x+1)} disabled={loading}>
      <Text style={styles.action}>Refresh rankings ↻</Text>
@@ -50,7 +50,7 @@ export function PowerRankingsPanel({sport,demo}:{sport:Sport;demo:boolean}){
       <Text style={styles.teamName}>{team.team}</Text>
       <Text style={styles.rating}>{f(team.rating)}</Text>
      </View>
-     <Text style={styles.muted}>W-L-T {team.record.wins}-{team.record.losses}-{team.record.ties} · {team.games} games</Text>
+     <Text style={styles.muted}>{team.games} games in the weighted history (older games count less)</Text>
      <Text style={styles.muted}>Opp. rating {f(team.averageOpponentRating)} · Avg. margin {f(team.adjustedMargin)} · Last 5 margin {f(team.recentForm)}</Text>
     </View>)}
   </View>:null}

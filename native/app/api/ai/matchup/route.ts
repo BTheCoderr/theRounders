@@ -2,7 +2,10 @@ import {NextResponse} from "next/server";
 import {buildRatings,projectMatchup} from "../../../../lib/ratings";
 import {getTrainingGames,claimSharedAiQuota} from "../../../../lib/persistence/history";
 import {createHash} from "node:crypto";
-import {createEvidence,explainFromModel,readResponseText,ANALYST_INSTRUCTIONS} from "../../../../lib/aiInsights";
+import {createEvidence,explainFromModel,explainPrediction,evidenceFromPrediction,readResponseText,ANALYST_INSTRUCTIONS} from "../../../../lib/aiInsights";
+import {findStoredPrediction} from "../../../../lib/persistence/predictions";
+import {championFor} from "../../../../lib/engine/promotion";
+import {isEngineSport} from "../../../../lib/engine/models";
 
 export const dynamic="force-dynamic";
 const SPORTS=new Set(["NBA","NFL","NHL","MLB"]);
@@ -30,7 +33,7 @@ export async function POST(req:Request){
     body=JSON.parse(raw);
   }catch{return json({error:"Expected a JSON request"},400)}
   if(!body||typeof body!=="object")return json({error:"Invalid request"},400);
-  const {sport,away,home,question} = body as Record<string,unknown>;
+  const {sport,away,home,question,eventId} = body as Record<string,unknown>;
   if(typeof sport!=="string"||!SPORTS.has(sport)||
     typeof away!=="string"||typeof home!=="string"||
     !away.trim()||!home.trim()||away===home||away.length>80||home.length>80||
@@ -39,17 +42,27 @@ export async function POST(req:Request){
   }
   const id=req.headers.get("x-nf-client-connection-ip")||req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||"anonymous";
   if(limited(id))return json({error:"Analysis request limit reached. Please try again later."},429);
-  const batch=await getTrainingGames(sport as "NBA"|"NFL"|"NHL"|"MLB");
-  const games=batch.games;
-  const source={trainingDataState:batch.source,trainingProvider:batch.provider,
-    fallback:batch.fallback,sampleGames:batch.sampleGames};
-  const ratings=buildRatings(games);
-  const baseline=sport==="NFL"?23:sport==="NHL"?3:sport==="MLB"?4.5:112;
-  const hfa=sport==="NFL"?2.2:sport==="NHL"?.18:sport==="MLB"?.25:2.2;
-  const projection=projectMatchup(ratings,away,home,baseline,hfa);
-  if(!projection)return json({error:"No model coverage for this matchup",source},404);
-  const evidence=createEvidence(sport,projection,source);
-  const summary=explainFromModel(evidence,question);
+  if(eventId!==undefined&&(typeof eventId!=="string"||!/^\d{1,20}$/.test(eventId)))return json({error:"Invalid eventId"},400);
+  let evidence:unknown,summary:string;
+  // NBA/NFL: explain the stored champion prediction for this game, never a fresh guess.
+  const stored=typeof eventId==="string"&&isEngineSport(sport)
+    ?await findStoredPrediction(sport,eventId,championFor(sport)).catch(()=>null):null;
+  if(stored){
+    if(stored.home!==home||stored.away!==away)return json({error:"Matchup does not match the stored prediction"},400);
+    const e=evidenceFromPrediction(stored);
+    evidence=e;summary=explainPrediction(e,question);
+  }else{
+    const batch=await getTrainingGames(sport as "NBA"|"NFL"|"NHL"|"MLB");
+    const source={trainingDataState:batch.source,trainingProvider:batch.provider,
+      fallback:batch.fallback,sampleGames:batch.sampleGames};
+    const ratings=buildRatings(batch.games);
+    const baseline=sport==="NFL"?23:sport==="NHL"?3:sport==="MLB"?4.5:112;
+    const hfa=sport==="NFL"?2.2:sport==="NHL"?.18:sport==="MLB"?.25:2.2;
+    const projection=projectMatchup(ratings,away,home,baseline,hfa);
+    if(!projection)return json({error:"No model coverage for this matchup",source},404);
+    const e=createEvidence(sport,projection,source);
+    evidence=e;summary=explainFromModel(e,question);
+  }
   const enabled=process.env.ROUNDERS_AI_ENABLED==="true"&&Boolean(process.env.OPENAI_API_KEY);
   if(!enabled)return json({mode:"model-summary",answer:summary,evidence,notice:"LLM commentary is disabled; this is a statistical model explanation, not generative AI."});
   // Fail closed. A shared database transaction enforces 100 global requests/day

@@ -21,34 +21,53 @@ export async function fetchFeed(sport:Sport):Promise<Feed>{
   return {quotes,provider:data.provider||"Unknown provider",live,fresh:live&&data.fresh===true,message:live?"Provider prices":"Demo or fallback prices"};
  }finally{clearTimeout(timeout)}
 }
-export type Rating={
- model:string;trainingDataState:string;trainingProvider?:string;fallback?:boolean;
- projection?:{
-  projectedAway:number;projectedHome:number;fairSpreadHome:number;
-  homeWinProbability:number;confidence:number;away:string;home:string;
- };
+export type PredictionView={
+ eventId:string;startsAt:string;home:string;away:string;neutral:boolean;predictedAt:string;modelVersion:string;
+ projectedWinner:string;homeWinProbability:number;
+ projectedHome:number|null;projectedAway:number|null;projectedSpreadHome:number|null;projectedTotal:number|null;
+ market:{spreadHome:number|null;total:number|null;source:string}|null;
+ trainingGames:number;status:"pending"|"graded"|"void";final:{home:number;away:number}|null;locked?:string[];
 };
-export async function fetchRating(quote:Quote):Promise<Rating>{
- if(!apiOrigin||!/^https:\/\//i.test(apiOrigin))throw new Error("Rating API is not configured");
- const away=displayTeam(quote.sport,quote.away),home=displayTeam(quote.sport,quote.home);
- const url=apiOrigin+"/api/ratings?sport="+encodeURIComponent(quote.sport)+"&away="+encodeURIComponent(away)+"&home="+encodeURIComponent(home);
- const abort=new AbortController();
- const timeout=setTimeout(()=>abort.abort(),10000);
+export type Predictions={sport:Sport;model:string;modelLabel?:string;ready:boolean;reason?:string;predictions:PredictionView[]};
+const okNum=(v:unknown)=>v===null||typeof v==="number"&&Number.isFinite(v);
+/** Stored, immutable pregame predictions from the champion model. */
+export async function fetchPredictions(sport:Sport):Promise<Predictions>{
+ if(!apiOrigin||!/^https:\/\//i.test(apiOrigin))throw new Error("Rounders API is not configured");
+ const abort=new AbortController();const timeout=setTimeout(()=>abort.abort(),12000);
  try{
-  const result=await fetch(url,{signal:abort.signal,headers:{"Accept":"application/json"}});
-  if(!result.ok)throw new Error("No model coverage for this matchup");
-  const rating=await result.json() as Rating;
-  const p=rating?.projection;
-  if(!p||typeof p.away!=="string"||typeof p.home!=="string"||
-     ![p.projectedAway,p.projectedHome,p.fairSpreadHome,p.homeWinProbability,p.confidence].every(v=>typeof v==="number"&&Number.isFinite(v))||
-     p.homeWinProbability<0||p.homeWinProbability>100||p.confidence<0||p.confidence>100){
-   throw new Error("Model API returned an invalid matchup projection");
-  }
-  return rating;
+  const r=await fetch(apiOrigin+"/api/predictions?sport="+sport,{signal:abort.signal,headers:{Accept:"application/json"}});
+  const d=await r.json() as Predictions;
+  if(!d||d.sport!==sport||!Array.isArray(d.predictions))throw new Error("Invalid predictions response");
+  if(!d.ready)return {...d,predictions:[]};
+  const valid=d.predictions.filter(p=>typeof p.eventId==="string"&&typeof p.home==="string"&&typeof p.away==="string"
+   &&typeof p.homeWinProbability==="number"&&p.homeWinProbability>0&&p.homeWinProbability<1
+   &&[p.projectedHome,p.projectedAway,p.projectedSpreadHome,p.projectedTotal].every(okNum));
+  return {...d,predictions:valid};
  }finally{clearTimeout(timeout)}
 }
+export type Summary={games:number;decided:number;winnerAccuracy:number|null;brierScore:number|null;logLoss:number|null;marginMAE:number|null;totalMAE:number|null;totalGames:number;
+ calibration:Array<{from:number;to:number;forecasts:number;meanForecast:number|null;observedRate:number|null}>};
+export type Performance={sport:Sport;champion:string;championLabel?:string;ready:boolean;reason?:string;
+ live?:Array<{model:string;label:string;champion:boolean;summary:Summary}>;
+ backtest?:null|{runDay:string;evaluatedGames:number;evaluatedWeeks:number;seasons:number[];models:Array<{model:string;label:string;summary:Summary}>}};
+export async function fetchPerformance(sport:Sport):Promise<Performance>{
+ if(!apiOrigin||!/^https:\/\//i.test(apiOrigin))throw new Error("Rounders API is not configured");
+ const abort=new AbortController();const timeout=setTimeout(()=>abort.abort(),12000);
+ try{
+  const r=await fetch(apiOrigin+"/api/performance?sport="+sport,{signal:abort.signal,headers:{Accept:"application/json"}});
+  const d=await r.json() as Performance;
+  if(!d||d.sport!==sport||typeof d.ready!=="boolean")throw new Error("Invalid performance response");
+  return d;
+ }finally{clearTimeout(timeout)}
+}
+const key=(s:string)=>s.toLowerCase().replace(/^la\s/,"los angeles ").replace(/[^a-z0-9]+/g," ").trim();
+/** The stored prediction for a market row's real game, if one exists. Never computed on the fly. */
+export function predictionFor(list:PredictionView[],quote:Quote):PredictionView|undefined{
+ const home=key(displayTeam(quote.sport,quote.home)),away=key(displayTeam(quote.sport,quote.away));
+ return list.find(p=>key(p.home)===home&&key(p.away)===away&&p.status==="pending");
+}
 
-
+export type AiTarget={sport:string;away:string;home:string;eventId?:string};
 export type MatchupInsight={
  mode:"ai"|"model-summary";
  answer:string;
@@ -56,10 +75,11 @@ export type MatchupInsight={
  evidence:{
   sport:string;away:string;home:string;
   projectedAway:number;projectedHome:number;homeWinProbability:number;
-  trainingDataState:"external"|"simulated";trainingProvider:string;fallback:boolean;sampleGames:number;
+  trainingDataState:"external"|"simulated";trainingProvider?:string;fallback?:boolean;sampleGames?:number;
+  modelVersion?:string;dataSource?:string;trainingGames?:number;
  };
 };
-export async function fetchMatchupInsight(quote:Quote,question:string):Promise<MatchupInsight>{
+export async function fetchMatchupInsight(quote:AiTarget,question:string):Promise<MatchupInsight>{
  if(!apiOrigin||!/^https:\/\//i.test(apiOrigin))throw new Error("Rounders API is not configured");
  const away=displayTeam(quote.sport,quote.away),home=displayTeam(quote.sport,quote.home);
  const abort=new AbortController();
@@ -68,7 +88,7 @@ export async function fetchMatchupInsight(quote:Quote,question:string):Promise<M
   const response=await fetch(apiOrigin+"/api/ai/matchup",{
    method:"POST",signal:abort.signal,
    headers:{"Accept":"application/json","Content-Type":"application/json"},
-   body:JSON.stringify({sport:quote.sport,away,home,question:question.trim()})
+   body:JSON.stringify({sport:quote.sport,away,home,question:question.trim(),...(quote.eventId?{eventId:quote.eventId}:{})})
   });
   if(!response.ok)throw new Error(response.status===429?"AI analysis limit reached. Try later.":response.status===404?"No model coverage for this matchup.":"Matchup analysis returned "+response.status);
   const data=await response.json() as Partial<MatchupInsight>;

@@ -1,8 +1,17 @@
-import MarketBoard from "../components/MarketBoard";
+import Dashboard from "../components/Dashboard";
 import PaperBankroll from "../components/PaperBankroll";
 import SharpSignals from "../components/SharpSignals";
-import ModelPerformance from "../components/ModelPerformance";
-import ModelLab from "../components/ModelLab";
 import AccountAccess from "../components/AccountAccess";
-const cards=[["Market Board","Market prices and source status"],["Line Shop","Compare books and best available prices"],["Sharp Signals","Steam, RLM and market movement"],["Paper Bankroll","Track bets without risking money"]];
-export default function Home(){return <main><header><div><p className="eyebrow">THE ROUNDERS</p><h1>Command Center</h1><p className="muted">One controlled surface for live markets, model signals and simulated results.</p></div><span className="pill">PAPER MODE</span></header><AccountAccess/><section className="status"><span><i className="live"/> Research workspace ready</span><span>Data states: Live · Model · Simulated</span></section><section className="grid">{cards.map(([title,copy])=><article key={title}><p className="tag">CONTROL</p><h2>{title}</h2><p>{copy}</p><a className="navAction" href={title==="Market Board"||title==="Line Shop"?"#markets":title==="Sharp Signals"?"#signals":"#bankroll"}>Open {title}</a></article>)}</section><MarketBoard/><SharpSignals/><ModelPerformance/><ModelLab/><PaperBankroll/><section className="panel"><div><p className="tag">CONTROLLED DATA</p><h2>Providers stay behind our API.</h2><p className="muted">Swap a feed without rebuilding the interface. Browser code never receives provider secrets.</p></div><div className="legend"><span>LIVE</span><span>MODEL</span><span>SIMULATED</span></div></section></main>}
+
+export default function Home(){
+ return <main>
+  <header><div><p className="eyebrow">THE ROUNDERS · NBA & NFL</p><h1>Predictions with a public record.</h1>
+   <p className="muted">Daily NBA and weekly NFL projections: winners, win probabilities, spreads and totals. Every prediction is frozen before the game and graded after it, and the full track record is free to inspect.</p></div>
+   <div className="headerActions"><span className="pill">RESEARCH · NO WAGERING</span><a className="navAction" href="/pricing">Plans</a></div></header>
+  <AccountAccess/>
+  <section className="status"><span>Data labels: <b className="state model">MODEL</b> projection · <b className="state live">LIVE</b> provider price · <b className="state simulated">SIMULATED</b> demo data</span></section>
+  <Dashboard/>
+  <SharpSignals/>
+  <PaperBankroll/>
+ </main>;
+}
