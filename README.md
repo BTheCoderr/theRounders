@@ -1,5 +1,9 @@
 # therounders
 
+> **Security notice (November 2026):** Legacy provider keys were previously committed to this public repository. Removing literals from the working tree does not revoke them or erase Git history. Owners must rotate/revoke exposed Odds API, weather, and MySportsFeeds credentials and review historical commits before relying on them. Do not publish additional credentials.
+>
+> **Release status:** Next.js (`native/`) and Expo (`mobile/`) are implemented, but full device QA, paid subscriptions, and independently verified out-of-sample NBA/NFL prediction performance are not yet complete. Do not describe this as a validated paid prediction product.
+
 ## Current release tracks (October 2026)
 
 - **`mobile/`** is the new first-party **Expo React Native iOS/Android app**, with simulated/demo-safe market comparison, API-fed ratings, on-device paper bets and iOS/Android Expo export CI. It is not yet signed, built through EAS or submitted to TestFlight. See [mobile/README.md](mobile/README.md).
