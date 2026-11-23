@@ -137,3 +137,20 @@ For unit tests: `node --experimental-strip-types --test tests/regularArchive.tes
 The four regular-season history import functions now run **only one month per invocation**, on staggered three-hour UTC intervals (NBA :00, NFL :15, NHL :30, MLB :45). Model computation was removed from the same 30-second invocation to avoid a slow walk-forward comparison preventing a completed game import receipt. Four independent daily evaluation functions run at 14:00/14:15/14:30/14:45 UTC. All eight schedules are specified both in source and in root `netlify.toml`, so future releases can statically verify registration. These functions use existing Supabase service-role credentials on Netlify, not mobile secrets.
 
 The initial six-year backfill may take weeks at one old month per three-hour run, depending on provider behavior, empty months, Netlify scheduling and source coverage. There is no assertion of complete history based only on having a month receipt. The automated import watch observes `season_phase='regular'`, `provider_event_id` and `ingestion_revision>=2`; successful deployment does not prove scheduled execution. Check Netlify Functions dashboard for each registered name, and use its **Run now** control if immediate first invocation is needed. If no new verified rows appear, investigate provider event shape and function execution logs before tuning models.
+
+
+## NBA/NFL prediction engine (engine-1, November 2026)
+
+The engine lives in `lib/engine/` and is the only path for stored predictions. NBA and NFL only; MLB/NHL history keeps importing but is not modeled.
+
+**Models.** Candidates: `rounders-v1` (the model customers have been shown), `power-v2`, `rpi-v2.1`. Benchmarks: home-advantage baseline, Elo, least-squares ridge. Every model produces a home-minus-away margin. Totals and projected scores come from one shared model, `totals-v1` (recency-weighted ridge offense/defense). Win probability is `Φ(margin / σ)` with fixed σ (NBA 12, NFL 13.5); it is an assumption whose calibration is measured, not claimed.
+
+**Champion.** `ROUNDERS_CHAMPION_NBA` / `ROUNDERS_CHAMPION_NFL` (default `rounders-v1`). Nothing switches automatically. The daily backtest runs a promotion gate (`lib/engine/promotion.ts`): a challenger must beat the champion on the same out-of-sample games, by more than two standard errors of the paired margin-error difference, with a Brier score no worse, over at least 600 NBA / 250 NFL games spanning two seasons. A passing gate is shown in `/api/performance`; promotion is then a deliberate env change and redeploy.
+
+**Snapshots.** `rounders-predict-nba` (daily 15:20 UTC, next ~26 h) and `rounders-predict-nfl` (daily 15:25 UTC; the whole week on Tuesdays, two days otherwise) store one immutable row per game and candidate model in `rounders_predictions` (migration 008). Each row carries the model version, prediction time, training cutoff, projected winner, home win probability, projected scores, spread and total, and a consensus market line only when the odds provider is live. A database trigger blocks edits to prediction columns and a check constraint requires `predicted_at < starts_at`.
+
+**Grading.** `rounders-grade` (every 3 h at :50) grades games that started 3+ hours ago from the verified archive, falling back to the ESPN scoreboard, matching by event and team IDs. Games with no result after 7 days are marked `void`.
+
+**Backtests.** `rounders-backtest-nba` / `-nfl` (daily 13:05 / 13:20 UTC) run a weekly walk-forward over the verified regular-season archive (104 NBA weeks, 156 NFL weeks): each Monday every model is refit on earlier games only and predicts that week. Results and gate decisions go to `rounders_backtests`. Locally a synthetic 6,900-game NBA history takes about 9 s; check function durations after deploy against Netlify's 30 s scheduled-function limit.
+
+**APIs.** `GET /api/predictions?sport=NBA|NFL` serves the champion's stored predictions. `GET /api/performance?sport=NBA|NFL` reports live graded results (accuracy, Brier, log loss, calibration, margin and total error, ATS/over-under only where a live line was captured) separately from backtest results.
