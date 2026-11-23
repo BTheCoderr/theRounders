@@ -1,3 +1,4 @@
+import os
 import requests
 from datetime import datetime
 from .stadium_data import NFL_STADIUMS, COLLEGE_STADIUMS
@@ -7,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class WeatherAnalysis:
     def __init__(self):
-        self.weather_api_key = "2Sa999LZ1SSJQvcMxFYMUAcMMfJ8QaDT"
+        self.weather_api_key = os.getenv("WEATHER_API_KEY", "")
         self.base_url = "https://api.tomorrow.io/v4/weather/forecast"
         
     def get_stadium_info(self, team_name, league='NFL'):
