@@ -72,3 +72,14 @@ h1{font-size:clamp(2.3rem,6vw,4.4rem)}
 .muted.small,.small{font-size:.8rem}
 @media(max-width:900px){.tileGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:540px){.tileGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.dataTable{font-size:.78rem}.dataTable th,.dataTable td{padding:6px 4px}.pickGrid{grid-template-columns:1fr}.sportSwitch a{display:none}}
+
+/* Plans and account */
+.pricingPage{max-width:1100px}
+.testBanner{margin:18px 0;padding:12px 14px;border:1px solid #7A6131;background:#2A2412;color:var(--warn);border-radius:12px;font-size:.88rem}
+.planGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:22px 0}
+.planCard{min-height:0;gap:12px;background:var(--surface)}
+.planCard.featured{border-color:var(--accent)}
+.planCard h2{font-size:2rem;margin:0}.planCard h2 small{font-size:.9rem;color:var(--muted);font-weight:500}
+.planCard ul{margin:0;padding-left:18px;color:var(--muted);line-height:1.6;font-size:.9rem;flex:1}
+.planAction{display:grid;gap:6px}
+@media(max-width:800px){.planGrid{grid-template-columns:1fr}}

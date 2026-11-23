@@ -24,6 +24,7 @@ export default function PrivacyPage() {
       <h2>How information is used</h2>
       <p>We use the information described above to deliver requested features, authenticate optional website accounts, troubleshoot errors, maintain security, and respond to support or deletion requests.</p>
       <h2>Service providers</h2>
+      <p><strong>Payments.</strong> Paid plans are processed by Stripe. We store your Stripe customer ID, subscription status, plan and billing period, never your card details. Billing currently runs in Stripe test mode and no real charges are made.</p>
       <p>Netlify hosts the website and API. Supabase supports optional website authentication. Sports-data and AI processing providers may be used when their respective backend features are configured. Their processing is subject to their applicable agreements and policies. No sportsbook account connection or money wagering is offered by this app.</p>
       <h2>Storage and deletion</h2>
       <p>Phone and browser paper entries remain on that device or browser unless you clear them, delete individual mobile entries, or remove the app or site data. Optional account records and operational logs may remain in managed services according to operational and applicable retention requirements. We do not promise that deleting local entries erases provider logs.</p>

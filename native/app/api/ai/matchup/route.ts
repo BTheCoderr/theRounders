@@ -6,6 +6,8 @@ import {createEvidence,explainFromModel,explainPrediction,evidenceFromPrediction
 import {findStoredPrediction} from "../../../../lib/persistence/predictions";
 import {championFor} from "../../../../lib/engine/promotion";
 import {isEngineSport} from "../../../../lib/engine/models";
+import {planForRequest} from "../../../../lib/billing/server";
+import {hasFeature} from "../../../../lib/billing/plans";
 
 export const dynamic="force-dynamic";
 const SPORTS=new Set(["NBA","NFL","NHL","MLB"]);
@@ -65,6 +67,9 @@ export async function POST(req:Request){
   }
   const enabled=process.env.ROUNDERS_AI_ENABLED==="true"&&Boolean(process.env.OPENAI_API_KEY);
   if(!enabled)return json({mode:"model-summary",answer:summary,evidence,notice:"LLM commentary is disabled; this is a statistical model explanation, not generative AI."});
+  // Generative commentary is a paid feature; everyone keeps the full model explanation.
+  const {plan}=await planForRequest(req);
+  if(!hasFeature(plan,"ai.generative"))return json({mode:"model-summary",answer:summary,evidence,notice:"Model explanation. Generative analysis is part of Rounders Pro.",upgrade:"/pricing"});
   // Fail closed. A shared database transaction enforces 100 global requests/day
   // and 8 per identity/15 min. The shared service key is ONLY used as a hash salt.
   // Never bill the LLM if storage or the quota RPC is unavailable.
