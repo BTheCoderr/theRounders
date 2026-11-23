@@ -9,8 +9,8 @@ class SportsDataAPI:
         self.nba_base_url = "https://api.sportsdata.io/v3/nba"
         self.nfl_base_url = "https://api.sportsdata.io/v3/nfl"
         self.ncaab_base_url = "https://api.sportsdata.io/v3/cbb"
-        self.api_key = "YOUR_API_KEY"
-        self.odds_api_key = "f4b284d121161d41abae2044e2f93ab1"
+        self.api_key = os.getenv("SPORTS_API_KEY", "")
+        self.odds_api_key = os.getenv("ODDS_API_KEY", "")
         self.betting_analysis = BettingAnalysis()
         
     def get_nhl_team_stats(self, team):
