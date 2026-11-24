@@ -28,9 +28,11 @@ export async function POST(req:Request){
   const session=await stripe<{url:string}>("POST","checkout/sessions",{
    mode:"subscription",customer,client_reference_id:user.id,
    line_items:[{price,quantity:1}],
-   subscription_data:{metadata:{user_id:user.id,plan}},
+   // Flexible billing mode: accurate prorations on Pro <-> Edge changes in the portal.
+   subscription_data:{billing_mode:{type:"flexible"},metadata:{user_id:user.id,plan}},
+   allow_promotion_codes:true,
    metadata:{user_id:user.id,plan},
-   success_url:origin+"/account?checkout=success",cancel_url:origin+"/pricing?checkout=cancelled"
+   success_url:origin+"/account?checkout=success&session_id={CHECKOUT_SESSION_ID}",cancel_url:origin+"/pricing?checkout=cancelled"
   });
   return json({url:session.url});
  }catch(e){

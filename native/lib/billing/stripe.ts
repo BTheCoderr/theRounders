@@ -26,12 +26,14 @@ export function formEncode(data:Record<string,unknown>,prefix=""):string{
  }
  return parts.filter(Boolean).join("&");
 }
+/** Pinned so Stripe account-level upgrades never change response shapes under us. */
+export const STRIPE_API_VERSION="2025-09-30.clover";
 export async function stripe<T=Record<string,unknown>>(method:"GET"|"POST",path:string,data?:Record<string,unknown>,idempotencyKey?:string):Promise<T>{
  const key=stripeKey();
  const body=data&&method==="POST"?formEncode(data):undefined;
  const url="https://api.stripe.com/v1/"+path+(data&&method==="GET"?"?"+formEncode(data):"");
  const res=await fetch(url,{method,body,cache:"no-store",signal:AbortSignal.timeout(10000),
-  headers:{Authorization:"Bearer "+key,"Content-Type":"application/x-www-form-urlencoded",...(idempotencyKey?{"Idempotency-Key":idempotencyKey}:{})}});
+  headers:{Authorization:"Bearer "+key,"Stripe-Version":STRIPE_API_VERSION,"Content-Type":"application/x-www-form-urlencoded",...(idempotencyKey?{"Idempotency-Key":idempotencyKey}:{})}});
  const json=await res.json() as T&{error?:{message?:string;type?:string}};
  if(!res.ok)throw new Error("Stripe "+(json.error?.type||res.status)+": "+(json.error?.message||"request failed"));
  return json;
