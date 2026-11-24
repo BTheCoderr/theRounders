@@ -37,3 +37,29 @@ export async function runScheduledEvaluation(sport:Sport):Promise<Response>{
  console.log("rounders model evaluation",JSON.stringify({sport,ok,results}));
  return Response.json({sport,ok,results},{status:ok?200:503});
 }
+
+/** Shared wrapper: one bounded task per invocation, JSON receipt, 503 on failure. */
+async function receipt(name:string,detail:Record<string,unknown>,task:()=>Promise<Record<string,unknown>>):Promise<Response>{
+ try{
+  const result=await task();
+  console.log(name,JSON.stringify({...detail,ok:true,...result}));
+  return Response.json({...detail,ok:true,...result});
+ }catch(error){
+  const message=error instanceof Error?error.message:"failed";
+  console.error(name,JSON.stringify({...detail,ok:false,error:message}));
+  return Response.json({...detail,ok:false,error:message},{status:503});
+ }
+}
+/** Daily NBA slate / weekly NFL slate: first immutable pregame snapshot per game and model. */
+export async function runScheduledPredictions(sport:"NBA"|"NFL"):Promise<Response>{
+ const {snapshotPredictions}=await import("./predictions");
+ return receipt("rounders predictions",{sport},()=>snapshotPredictions(sport));
+}
+export async function runScheduledGrading():Promise<Response>{
+ const {gradePendingPredictions}=await import("./predictions");
+ return receipt("rounders grading",{},()=>gradePendingPredictions());
+}
+export async function runScheduledBacktest(sport:"NBA"|"NFL"):Promise<Response>{
+ const {recordBacktest}=await import("./predictions");
+ return receipt("rounders backtest",{sport},()=>recordBacktest(sport));
+}

@@ -10,7 +10,7 @@ const origin=()=>process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey=()=>process.env.SUPABASE_SERVICE_ROLE_KEY;
 export const archiveConfigured=()=>Boolean(origin()&&serviceKey());
 
-async function rest(resource:string,options:RequestInit={}):Promise<Response>{
+export async function rest(resource:string,options:RequestInit={}):Promise<Response>{
  const url=origin(),key=serviceKey();
  if(!url||!key)throw new Error("Historical database is not configured");
  const response=await fetch(url+"/rest/v1/"+resource,{
@@ -244,10 +244,7 @@ export async function getVerifiedResearchGames(sport:Sport,maxPages=22):Promise<
   if(batch.length<1000)break;
   if(p===maxPages-1)throw new Error("Verified archive exceeds research pagination limit");
  }
- const registryResponse=await rest("rounders_team_registry?select=provider_team_id,canonical_name&sport=eq."+encodeURIComponent(sport)+
-  "&provider=eq.espn-scoreboard&limit=1000");
- const registryRows=await registryResponse.json() as Array<{provider_team_id:string;canonical_name:string}>;
- const names=new Map(registryRows.map(x=>[x.provider_team_id,x.canonical_name]));
+ const names=await readTeamRegistry(sport);
  // Group by ID, so an historical rename is a single team in the rating matrix.
  const games:TeamGame[]=rows.flatMap(g=>{
   const home=names.get(g.home_team_id)||g.home;
@@ -259,4 +256,13 @@ export async function getVerifiedResearchGames(sport:Sport,maxPages=22):Promise<
  return {games,provider:"Rounders verified regular-season ESPN archive",
   source:"external",sampleGames:games.length,
   message:"Regular-season events only, provider IDs verified; coverage and redistribution permissions still require independent audit."};
+}
+
+/** Provider team ID -> canonical display name, so renamed clubs stay one team. */
+export async function readTeamRegistry(sport:Sport):Promise<Map<string,string>>{
+ const response=await rest("rounders_team_registry?select=provider_team_id,canonical_name&sport=eq."+encodeURIComponent(sport)+
+  "&provider=eq.espn-scoreboard&limit=1000");
+ const rows=await response.json() as Array<{provider_team_id:string;canonical_name:string}>;
+ if(!Array.isArray(rows))throw new Error("Invalid team registry response");
+ return new Map(rows.map(x=>[x.provider_team_id,x.canonical_name]));
 }

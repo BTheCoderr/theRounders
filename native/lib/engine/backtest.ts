@@ -1,0 +1,84 @@
+import {uniqueCompletedGames,type CompletedGame} from "../powerRatings.ts";
+import type {TeamGame} from "../ratings";
+import {ALL_MODELS,ENGINE_REVISION,SPORT_SETTINGS,fitMarginModel,type EngineSport,type MarginPredictor,type ModelId} from "./models.ts";
+import {TOTALS_MODEL,fitTotals,leagueAverageTotal} from "./totals.ts";
+import {summarizeForecasts,winProbability,type ForecastSummary,type GradedForecast} from "./metrics.ts";
+
+/**
+ * Weekly walk-forward backtest.
+ * At each Monday 00:00 UTC origin every model is refit on games that finished
+ * before the origin, then predicts that week's games. Results of the week are
+ * never visible to its own forecasts. All models are scored on the same games.
+ * These are simulated pregame forecasts on history, not live recorded predictions.
+ */
+export type ModelBacktest={model:ModelId;summary:ForecastSummary};
+export type BacktestReport={
+ method:"weekly-walk-forward";engineRevision:string;sport:EngineSport;
+ asOf:string;from:string|null;through:string|null;
+ historicalGames:number;evaluatedGames:number;evaluatedWeeks:number;skippedColdStart:number;
+ seasons:number[];
+ models:ModelBacktest[];
+ totals:{model:string;summary:{games:number;mae:number|null;bias:number|null};baseline:{games:number;mae:number|null;bias:number|null}};
+ /** Per-game absolute margin errors, aligned across models, for paired comparisons. */
+ paired:Record<ModelId,number[]>;
+ pairedBrier:Record<ModelId,number[]>;
+};
+const DAY=86400000;
+export const weekStart=(t:number)=>{const d=new Date(t);return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-((d.getUTCDay()+6)%7)*DAY;};
+/** Season label: the calendar year in which the season began (NBA Oct, NFL Sep). */
+export const seasonOf=(date:string)=>{const y=Number(date.slice(0,4)),m=Number(date.slice(5,7));return m>=7?y:y-1;};
+
+export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{maxWeeks?:number;minTrainGames?:number;models?:readonly ModelId[]}={}):BacktestReport{
+ const models=opts.models??ALL_MODELS;
+ const maxWeeks=opts.maxWeeks??104,minTrain=opts.minTrainGames??(sport==="NFL"?120:300);
+ if(!(Number.isInteger(maxWeeks)&&maxWeeks>=1&&maxWeeks<=260))throw new Error("Invalid evaluation window");
+ const history:CompletedGame[]=uniqueCompletedGames(rows,new Date(asOf.getTime()-1));
+ const groups=new Map<number,CompletedGame[]>();
+ for(const g of history){const k=weekStart(Date.parse(g.date));groups.set(k,[...(groups.get(k)||[]),g]);}
+ const weeks=[...groups.keys()].sort((a,b)=>a-b).slice(-maxWeeks);
+ const sigma=SPORT_SETTINGS[sport].marginSigma;
+ const forecasts=new Map<ModelId,GradedForecast[]>(models.map(m=>[m,[]]));
+ const paired=Object.fromEntries(models.map(m=>[m,[] as number[]])) as Record<ModelId,number[]>;
+ const pairedBrier=Object.fromEntries(models.map(m=>[m,[] as number[]])) as Record<ModelId,number[]>;
+ let totN=0,totAbs=0,totBias=0,baseN=0,baseAbs=0,baseBias=0;
+ let evaluated=0,evaluatedWeeks=0,skipped=0,from:string|null=null,through:string|null=null;
+ const seasons=new Set<number>();
+ for(const origin of weeks){
+  const upcoming=groups.get(origin)||[];
+  const originDate=new Date(origin);
+  const train=history.filter(g=>Date.parse(g.date)<origin);
+  if(train.length<minTrain){skipped+=upcoming.length;continue;}
+  const predictors=new Map<ModelId,MarginPredictor>(models.map(m=>[m,fitMarginModel(m,train,sport,originDate)]));
+  const totals=fitTotals(train,sport,originDate);
+  const leagueTotal=leagueAverageTotal(train,sport,originDate);
+  let used=0;
+  for(const g of upcoming){
+   const margins=models.map(m=>predictors.get(m)!(g.home,g.away,g.neutral));
+   const total=totals.predict(g.home,g.away,g.neutral);
+   if(margins.some(x=>x===null||!Number.isFinite(x))||!total){skipped++;continue;}
+   used++;evaluated++;seasons.add(seasonOf(g.date));
+   from??=g.date;through=g.date;
+   const actualTotal=g.homeScore+g.awayScore,actualMargin=g.homeScore-g.awayScore;
+   totN++;totAbs+=Math.abs(total.total-actualTotal);totBias+=total.total-actualTotal;
+   if(leagueTotal!==null){baseN++;baseAbs+=Math.abs(leagueTotal-actualTotal);baseBias+=leagueTotal-actualTotal;}
+   models.forEach((m,i)=>{
+    const margin=margins[i]!,p=winProbability(margin,sigma);
+    forecasts.get(m)!.push({homeWinProbability:p,projectedMargin:margin,projectedTotal:total.total,homeScore:g.homeScore,awayScore:g.awayScore});
+    paired[m].push(Math.abs(margin-actualMargin));
+    pairedBrier[m].push(actualMargin===0?NaN:(p-(actualMargin>0?1:0))**2);
+   });
+  }
+  if(used)evaluatedWeeks++;
+ }
+ const r=(x:number)=>Number(x.toFixed(4));
+ return {
+  method:"weekly-walk-forward",engineRevision:ENGINE_REVISION,sport,asOf:asOf.toISOString(),from,through,
+  historicalGames:history.length,evaluatedGames:evaluated,evaluatedWeeks,skippedColdStart:skipped,
+  seasons:[...seasons].sort((a,b)=>a-b),
+  models:models.map(m=>({model:m,summary:summarizeForecasts(forecasts.get(m)!)})),
+  totals:{model:TOTALS_MODEL,
+   summary:{games:totN,mae:totN?r(totAbs/totN):null,bias:totN?r(totBias/totN):null},
+   baseline:{games:baseN,mae:baseN?r(baseAbs/baseN):null,bias:baseN?r(baseBias/baseN):null}},
+  paired,pairedBrier
+ };
+}
