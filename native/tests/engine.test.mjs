@@ -126,7 +126,7 @@ test("snapshots are strictly pregame, use only past games, and stay internally c
   assert.ok(Math.abs(r.projected_home+r.projected_away-r.projected_total)<0.02);
   assert.ok(Math.abs(r.projected_home-r.projected_away-r.projected_margin)<0.02);
   assert.equal(r.projected_winner,r.home_win_probability>=0.5?"C":"H");
-  assert.match(r.model_version,/@engine-1$/);
+  assert.match(r.model_version,/@engine-2$/);
  }
 });
 
@@ -204,4 +204,35 @@ test("v3 learns a rest effect from data and never uses later results",()=>{
  assert.ok(fit.restPointsPerDay>1.5&&fit.restPointsPerDay<3.5,String(fit.restPointsPerDay));
  const future=[...withRest,{date:new Date(asOf.getTime()+86400000).toISOString(),home:"A",away:"B",homeScore:300,awayScore:0,neutral:false}];
  assert.equal(fitV3(future,"NBA",asOf,sched).predict("A","B",false),fit.predict("A","B",false));
+});
+
+test("calibrated sigma: default until enough games, then out-of-sample RMSE within a band",async()=>{
+ const {calibratedSigma,sigmaFromSummary}=await import("../lib/engine/calibration.ts");
+ assert.equal(calibratedSigma("NBA",1e6,10),12);
+ assert.equal(calibratedSigma("NBA",14*14*1000,1000),14);
+ assert.equal(calibratedSigma("NBA",40*40*1000,1000),18);   // clamped at 1.5x default
+ assert.ok(Math.abs(sigmaFromSummary("NFL",{games:1594,marginRMSE:13.37})-13.37)<1e-9);
+ assert.equal(sigmaFromSummary("NFL",null),13.5);
+});
+test("backtest reports a learned sigma per model and uses only earlier weeks for it",()=>{
+ const r=runBacktest(league(400),"NBA",new Date(Date.UTC(2024,10,10)),{maxWeeks:40,minTrainGames:60});
+ for(const m of r.models){assert.ok(m.sigma>=9&&m.sigma<=18,m.model+" sigma "+m.sigma);}
+ const p=r.models.find(m=>m.model==="power-v2");
+ assert.ok(p.summary.calibration.length>0);
+});
+test("ratings table: season record, offense/defense signs, slugs and SoS",async()=>{
+ const {buildRatingsTable,teamSlug,ratingHistory}=await import("../lib/engine/ratingsTable.ts");
+ const games=uniqueCompletedGames(league(300),new Date(Date.UTC(2024,6,1)));
+ const t=buildRatingsTable(games,"NBA",new Date(Date.UTC(2024,6,1)));
+ assert.equal(t.rows.length,8);
+ assert.equal(t.rows[0].team,"A");assert.equal(t.rows.at(-1).team,"H");
+ const a=t.rows[0];
+ assert.ok(a.wins+a.losses+a.ties===a.games&&a.games>0);
+ assert.ok(t.rows.find(r=>r.team==="A").offense>t.rows.find(r=>r.team==="H").offense);
+ assert.ok(t.rows.every(r=>r.sos!==null&&Math.abs(r.sos)<8));
+ assert.equal(teamSlug("Los Angeles Clippers"),"los-angeles-clippers");
+ assert.equal(teamSlug("Philadelphia 76ers"),"philadelphia-76ers");
+ const h=ratingHistory(games,"NBA","A",new Date(Date.UTC(2024,6,1)));
+ assert.ok(h.length>=2&&h.every(x=>x.rank>=1&&x.rank<=8));
+ assert.ok(h.at(-1).rating>0);
 });

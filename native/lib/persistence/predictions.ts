@@ -8,6 +8,7 @@ import {CANDIDATE_MODELS,ENGINE_REVISION,type EngineSport,type ModelId} from "..
 import {consensusLine} from "../engine/market";
 import {liveProvider} from "../providers/live";
 import {summarizeForecasts,type ForecastSummary} from "../engine/metrics";
+import {sigmaFromSummary} from "../engine/calibration";
 import type {MarketQuote} from "../contracts";
 
 const HOUR=3600000,DAY=24*HOUR;
@@ -16,17 +17,28 @@ const HOUR=3600000,DAY=24*HOUR;
 export async function snapshotPredictions(sport:EngineSport,now=new Date()){
  if(!archiveConfigured())throw new Error("Prediction storage is not configured");
  const {from,to}=snapshotWindow(sport,now);
- const [archive,registry,schedule]=await Promise.all([
-  getVerifiedResearchGames(sport),readTeamRegistry(sport),fetchUpcoming(sport,from,to)
+ const [archive,registry,schedule,backtest]=await Promise.all([
+  getVerifiedResearchGames(sport),readTeamRegistry(sport),fetchUpcoming(sport,from,to),latestBacktest(sport).catch(()=>null)
  ]);
+ // Per-model σ from the latest out-of-sample backtest (stored σ, else its margin RMSE).
+ const sigmas:Partial<Record<ModelId,number>>={};
+ for(const m of backtest?.models||[])sigmas[m.model]=typeof m.sigma==="number"&&m.sigma>0?m.sigma:sigmaFromSummary(sport,m.summary);
  // Use the archive's canonical names (by provider team ID) so models recognize every club.
  const upcoming:UpcomingGame[]=schedule.map(g=>({...g,home:registry.get(g.homeId)||g.home,away:registry.get(g.awayId)||g.away}));
  const history=uniqueCompletedGames(archive.games,now);
- const rows=predictUpcoming(history,upcoming,sport,now,{dataSource:archive.provider});
+ const rows=predictUpcoming(history,upcoming,sport,now,{dataSource:archive.provider,sigmas});
  // Attach a consensus market line only when the odds provider is genuinely live.
  let quotes:MarketQuote[]=[];
  try{if((await liveProvider.health()).healthy)quotes=await liveProvider.getMarkets(sport);}catch{quotes=[];}
- const withMarket=rows.map(r=>{
+ // One first prediction per game and model, even across engine revisions.
+ const ids=[...new Set(rows.map(r=>r.provider_event_id))].filter(x=>/^\d+$/.test(x));
+ const taken=new Set<string>();
+ for(let i=0;i<ids.length;i+=100){
+  const r=await rest("rounders_predictions?select=provider_event_id,model_id&sport=eq."+sport+"&provider_event_id=in.("+ids.slice(i,i+100).join(",")+")");
+  for(const x of await r.json() as Array<{provider_event_id:string;model_id:string}>)taken.add(x.provider_event_id+"|"+x.model_id);
+ }
+ const fresh=rows.filter(r=>!taken.has(r.provider_event_id+"|"+r.model_id));
+ const withMarket=fresh.map(r=>{
   const line=quotes.length?consensusLine(quotes,r.home,r.away):null;
   return {...r,market_spread_home:line?.spreadHome??null,market_total:line?.total??null,
    market_source:line&&line.books>0&&(line.spreadHome!==null||line.total!==null)?`the-odds-api consensus (${line.books} books)`:null};
@@ -122,12 +134,14 @@ export async function recordBacktest(sport:EngineSport,now=new Date()){
 }
 export type StoredBacktest={sport:EngineSport;engine_revision:string;run_day:string;data_source:string;champion:string;
  historical_games:number;evaluated_games:number;evaluated_weeks:number;seasons:number[];from_game:string|null;through_game:string|null;
- models:Array<{model:ModelId;summary:ForecastSummary}>;totals:unknown;promotion:unknown[]};
+ models:Array<{model:ModelId;summary:ForecastSummary;sigma?:number}>;totals:unknown;promotion:unknown[]};
+/** Latest backtest for the current engine revision; falls back to the newest earlier revision until one runs. */
 export async function latestBacktest(sport:EngineSport):Promise<StoredBacktest|null>{
- const r=await rest("rounders_backtests?select=sport,engine_revision,run_day,data_source,champion,historical_games,evaluated_games,evaluated_weeks,seasons,from_game,through_game,models,totals,promotion"+
-  "&sport=eq."+sport+"&engine_revision=eq."+encodeURIComponent(ENGINE_REVISION)+"&order=run_day.desc&limit=1");
- const rows=await r.json() as StoredBacktest[];
- return rows[0]||null;
+ const base="rounders_backtests?select=sport,engine_revision,run_day,data_source,champion,historical_games,evaluated_games,evaluated_weeks,seasons,from_game,through_game,models,totals,promotion&sport=eq."+sport;
+ const current=await (await rest(base+"&engine_revision=eq."+encodeURIComponent(ENGINE_REVISION)+"&order=run_day.desc&limit=1")).json() as StoredBacktest[];
+ if(current[0])return current[0];
+ const any=await (await rest(base+"&order=run_day.desc,created_at.desc&limit=1")).json() as StoredBacktest[];
+ return any[0]||null;
 }
 
 export async function findStoredPrediction(sport:EngineSport,eventId:string,model:ModelId):Promise<StoredPrediction|null>{
@@ -135,4 +149,12 @@ export async function findStoredPrediction(sport:EngineSport,eventId:string,mode
  const r=await rest("rounders_predictions?select="+COLUMNS+"&sport=eq."+sport+"&provider_event_id=eq."+eventId+"&model_id=eq."+encodeURIComponent(model)+"&order=predicted_at.asc&limit=1");
  const rows=await r.json() as StoredPrediction[];
  return rows[0]||null;
+}
+
+/** Every stored prediction of one model that involves a team, oldest first. */
+export async function listTeamPredictions(sport:EngineSport,model:ModelId,team:string):Promise<StoredPrediction[]>{
+ const q=`"${team.replace(/["\\]/g,"")}"`;
+ const r=await rest("rounders_predictions?select="+COLUMNS+"&sport=eq."+sport+"&model_id=eq."+encodeURIComponent(model)+
+  "&or="+encodeURIComponent(`(home.eq.${q},away.eq.${q})`)+"&grade_status=neq.void&order=starts_at.asc&limit=300");
+ return await r.json() as StoredPrediction[];
 }

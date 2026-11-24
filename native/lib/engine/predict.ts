@@ -27,7 +27,7 @@ const r2=(x:number)=>Number(x.toFixed(2));
  * stored prediction is always made before tip-off/kickoff.
  */
 export function predictUpcoming(history:CompletedGame[],upcoming:UpcomingGame[],sport:EngineSport,now:Date,
- opts:{models?:readonly ModelId[];minLeadMinutes?:number;dataSource:string}):PredictionRecord[]{
+ opts:{models?:readonly ModelId[];minLeadMinutes?:number;dataSource:string;sigmas?:Partial<Record<ModelId,number>>}):PredictionRecord[]{
  const models=opts.models??CANDIDATE_MODELS;
  const lead=(opts.minLeadMinutes??10)*60000;
  const past=history.filter(g=>Date.parse(g.date)<now.getTime());
@@ -35,10 +35,12 @@ export function predictUpcoming(history:CompletedGame[],upcoming:UpcomingGame[],
  const totals=fitTotals(past,sport,now);
  // Schedule = past game dates + the upcoming slate (dates only), for rest features.
  const schedule=buildSchedule([...past,...upcoming.map(g=>({date:g.startsAt,home:g.home,away:g.away}))]);
- const sigma=SPORT_SETTINGS[sport].marginSigma;
  const out:PredictionRecord[]=[];
  for(const m of models){
   const predict=fitMarginModel(m,past,sport,now,schedule);
+  // σ calibrated from the model's out-of-sample backtest errors; documented default otherwise.
+  const given=opts.sigmas?.[m];
+  const sigma=typeof given==="number"&&given>0?given:SPORT_SETTINGS[sport].marginSigma;
   for(const g of upcoming){
    if(!(Date.parse(g.startsAt)-now.getTime()>=lead))continue;
    const margin=predict(g.home,g.away,g.neutral,g.startsAt),t=totals.predict(g.home,g.away,g.neutral);
