@@ -32,3 +32,43 @@
 .policyPanel h3{font-size:1rem;margin:20px 0 6px;color:#F7FAFF}
 .policyPanel p{font-size:.96rem;line-height:1.78;color:#AEC1DF;overflow-wrap:anywhere}
 @media(max-width:540px){.siteFooter{padding:20px 16px}.policyPanel{padding:18px}}
+
+/* NBA/NFL product surfaces, aligned with the mobile midnight-blue palette (mobile/src/theme.ts). */
+:root{--bg:#081429;--surface:#101F3A;--surface2:#172D50;--border:#315176;--text:#F7FAFF;--muted:#AEC1DF;--accent:#89C5FF;--primary:#225CC8;--success:#65E7AE;--danger:#FDA4AF;--warn:#F5C77E;background:var(--bg);color:var(--text)}
+body{background:radial-gradient(circle at 80% 0,#16305A 0,transparent 38%),var(--bg)}
+.status,.panel,.market,.bankroll,.signalsPanel{background:var(--surface);border-color:var(--border)}
+button,.navAction{background:var(--primary)}
+h1{font-size:clamp(2.3rem,6vw,4.4rem)}
+.headerActions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.state.model{color:var(--accent);border-color:#3A6496}.state.live{color:var(--success);border-color:#2F7A5A}.state.simulated{color:var(--warn);border-color:#7A6131}.state.graded{color:var(--text);border-color:var(--border)}
+.status b.state{display:inline-block;margin:0 4px}
+.sportSwitch{position:sticky;top:0;z-index:5;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:24px;padding:10px 12px;background:rgba(8,20,41,.92);backdrop-filter:blur(6px);border:1px solid var(--border);border-radius:14px}
+.sportSwitch button{background:var(--surface2);color:var(--muted);min-width:64px}
+.sportSwitch button.active{background:var(--primary);color:#fff}
+.sportSwitch a{color:var(--accent);font-size:.82rem;text-decoration:none;margin-left:6px}
+.panel.stack{display:block}
+.panel h3{margin:18px 0 8px;font-size:1rem}
+.pickGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:16px}
+.pickCard{min-height:0;gap:10px;background:linear-gradient(145deg,var(--surface2),var(--surface))}
+.pickCard h3{margin:0;font-size:1.08rem}.pickCard h3 span{color:var(--muted);font-size:.8rem}
+.pickHead{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.pickMain{display:grid;gap:8px}.pickMain div{display:grid;gap:2px}.pickMain small,.pickStats small{color:var(--muted);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase}
+.pickMain strong{font-size:1.3rem}.pickMain span{color:var(--muted);font-size:.8rem}
+.probBar{height:6px;border-radius:99px;background:#24395E;overflow:hidden}.probBar i{display:block;height:100%;background:var(--accent)}
+.pickStats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.pickStats div{background:#0E1B33;border:1px solid var(--border);border-radius:10px;padding:9px;display:grid;gap:3px}
+.provenance{font-size:.68rem;color:#8FA6C6;margin:0}
+.lockNote{font-size:.75rem;color:var(--muted);margin:0}.lockNote a,.feedNote a{color:var(--accent)}
+.linkButton{background:transparent;color:var(--accent);padding:4px 0;text-align:left;font-weight:600}
+.explain{display:grid;gap:8px}.explain label{font-size:.72rem;color:var(--muted)}
+.explainRow{display:flex;gap:6px}.explainRow input{flex:1;min-width:0;background:#0E1B33;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px}
+.insight{background:#0E1B33;border:1px solid var(--border);border-radius:10px;padding:12px;display:grid;gap:6px}.insight p{margin:0;line-height:1.55;font-size:.88rem}.insight small{color:var(--muted)}
+.warn{color:var(--danger);font-size:.8rem}
+.tileGrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:10px 0}
+.dataTable{width:100%;border-collapse:collapse;margin:12px 0;font-size:.86rem}
+.dataTable caption{text-align:left;color:var(--muted);font-size:.75rem;padding-bottom:6px}
+.dataTable th,.dataTable td{text-align:left;padding:8px 6px;border-bottom:1px solid #22385C}
+.dataTable th{color:var(--muted);font-weight:600;font-size:.72rem;letter-spacing:.04em}
+.dataTable tr.champ td{color:var(--accent)}
+.muted.small,.small{font-size:.8rem}
+@media(max-width:900px){.tileGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:540px){.tileGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.dataTable{font-size:.78rem}.dataTable th,.dataTable td{padding:6px 4px}.pickGrid{grid-template-columns:1fr}.sportSwitch a{display:none}}

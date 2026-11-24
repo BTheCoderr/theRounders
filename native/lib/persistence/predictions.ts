@@ -128,3 +128,10 @@ export async function latestBacktest(sport:EngineSport):Promise<StoredBacktest|n
  const rows=await r.json() as StoredBacktest[];
  return rows[0]||null;
 }
+
+export async function findStoredPrediction(sport:EngineSport,eventId:string,model:ModelId):Promise<StoredPrediction|null>{
+ if(!/^\d{1,20}$/.test(eventId))return null;
+ const r=await rest("rounders_predictions?select="+COLUMNS+"&sport=eq."+sport+"&provider_event_id=eq."+eventId+"&model_id=eq."+encodeURIComponent(model)+"&order=predicted_at.asc&limit=1");
+ const rows=await r.json() as StoredPrediction[];
+ return rows[0]||null;
+}

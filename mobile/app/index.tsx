@@ -4,7 +4,7 @@ import {
  StyleSheet,Text,TextInput,View
 } from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {apiOrigin,fetchFeed,fetchRating,fetchMatchupInsight,type Feed,type Rating,type MatchupInsight} from "../src/api";
+import {apiOrigin,fetchFeed,fetchMatchupInsight,fetchPredictions,predictionFor,type AiTarget,type Feed,type MatchupInsight,type PredictionView} from "../src/api";
 import {
  SPORTS,demoQuotes,displayTeam,fmtPrice,getPriceGaps,groupQuotes,
  type Group,type MarketName,type Quote,type Sport,
@@ -12,9 +12,11 @@ import {
 import {loadPaper,profit,validStake,writePaper,type PaperEntry} from "../src/paper";
 import {theme} from "../src/theme";
 import {PowerRankingsPanel} from "../src/components/PowerRankingsPanel";
-import ModelLab from "../src/components/ModelLab";
+import {PredictionsPanel} from "../src/components/PredictionsPanel";
+import {PerformancePanel} from "../src/components/PerformancePanel";
 
-type Tab="board"|"rankings"|"lab"|"signals"|"ai"|"paper";
+type Tab="picks"|"board"|"rankings"|"record"|"signals"|"ai"|"paper";
+const TAB_LABELS:Record<Tab,string>={picks:"Predictions",rankings:"Power Index",record:"Track Record",board:"Line Shop",signals:"Price Gaps",ai:"Rounders AI",paper:"Paper Bets"};
 const MARKET_NAMES:Record<MarketName,string>={moneyline:"Moneyline",spread:"Spread",total:"Total"};
 const usd=(value:number)=>"$"+(Number.isFinite(value)?value:0).toFixed(2);
 
@@ -39,22 +41,22 @@ function GroupRow({group,onChoose,onRating,onAnalyze}:{group:Group;onChoose:(quo
     {i===0?<Text style={styles.best}>BEST SAME-LINE PRICE</Text>:<Text style={styles.hint}>Tap for paper ticket</Text>}
    </Pressable>)}
   </View>
-  <View style={styles.filterRow}><Pressable accessibilityRole="button" onPress={()=>onRating(q)} style={styles.textButton}><Text style={styles.actionText}>Show rating →</Text></Pressable><Pressable accessibilityRole="button" onPress={()=>onAnalyze(q)} style={styles.textButton}><Text style={styles.actionText}>Ask Rounders AI →</Text></Pressable></View>
+  <View style={styles.filterRow}><Pressable accessibilityRole="button" onPress={()=>onRating(q)} style={styles.textButton}><Text style={styles.actionText}>Show projection →</Text></Pressable><Pressable accessibilityRole="button" onPress={()=>onAnalyze(q)} style={styles.textButton}><Text style={styles.actionText}>Ask Rounders AI →</Text></Pressable></View>
  </View>;
 }
 
 export default function Home(){
  const [sport,setSport]=useState<Sport>("NBA");
  const [market,setMarket]=useState<MarketName>("moneyline");
- const [tab,setTab]=useState<Tab>("board");
+ const [tab,setTab]=useState<Tab>("picks");
  const [demo,setDemo]=useState(!apiOrigin);
  const [feed,setFeed]=useState<Feed>({quotes:[],provider:"",live:false,fresh:false,message:""});
  const [loading,setLoading]=useState(false);
  const [feedError,setFeedError]=useState("");
- const [rating,setRating]=useState<Rating|null>(null);
+ const [rating,setRating]=useState<PredictionView|null>(null);
  const [ratingError,setRatingError]=useState("");
  const [ratingLoading,setRatingLoading]=useState(false);
- const [aiSelected,setAiSelected]=useState<Quote|null>(null);
+ const [aiSelected,setAiSelected]=useState<AiTarget|null>(null);
  const [aiQuestion,setAiQuestion]=useState("Explain this matchup and what the model could be missing.");
  const [aiInsight,setAiInsight]=useState<MatchupInsight|null>(null);
  const [aiError,setAiError]=useState("");
@@ -110,15 +112,17 @@ export default function Home(){
   const id=++ratingRequestId.current;
   setRating(null);setRatingError("");setRatingLoading(true);
   try{
-   if(demo)throw new Error("Model ratings are disabled in demo mode. Connect the live Rounders API.");
-   const result=await fetchRating(quote);
-   if(id===ratingRequestId.current)setRating(result);
+   if(demo||quote.state!=="live")throw new Error("Projections are shown only next to live prices for real games. See the Predictions tab.");
+   const list=await fetchPredictions(quote.sport as Sport);
+   const match=predictionFor(list.predictions,quote);
+   if(!match)throw new Error("No stored prediction for this game yet.");
+   if(id===ratingRequestId.current)setRating(match);
   }catch(error){if(id===ratingRequestId.current)setRatingError(error instanceof Error?error.message:"Ratings unavailable.")}
   finally{if(id===ratingRequestId.current)setRatingLoading(false)}
  };
- const openAi=(quote:Quote)=>{
+ const openAi=(target:AiTarget)=>{
   aiRequestId.current++;
-  setAiSelected(quote);setAiInsight(null);setAiError("");setAiLoading(false);
+  setAiSelected(target);setAiInsight(null);setAiError("");setAiLoading(false);
   setAiQuestion("Explain this matchup and what the model could be missing.");
   setTab("ai");
  };
@@ -185,7 +189,7 @@ export default function Home(){
    </View>
    {!apiOrigin&&<Text style={styles.warning}>A live API is not configured yet. Add EXPO_PUBLIC_ROUNDERS_API_URL to enable backend access.</Text>}
    <View style={styles.tabs}>
-    {(["board","rankings","lab","signals","ai","paper"] as const).map(id=><Pill key={id} label={id==="board"?"Board":id==="rankings"?"Power Index":id==="lab"?"Model Lab":id==="signals"?"Price Gaps":id==="ai"?"Rounders AI":"Paper Bets"} active={tab===id} onPress={()=>setTab(id)}/>)}
+    {(["picks","rankings","record","board","signals","ai","paper"] as const).map(id=><Pill key={id} label={TAB_LABELS[id]} active={tab===id} onPress={()=>setTab(id)}/>)}
    </View>
    {tab!=="paper"&&<View style={styles.filterRow}>{SPORTS.map(name=><Pill key={name} label={name} active={sport===name} onPress={()=>changeSport(name)}/>)}</View>}
    {feedError?<View style={styles.card}><Text style={styles.warning}>{feedError}</Text><Pressable onPress={()=>void refresh()}><Text style={styles.actionText}>Retry →</Text></Pressable></View>:null}
@@ -196,11 +200,11 @@ export default function Home(){
     {loading?<ActivityIndicator color={theme.accent} size="large"/>:groups.length===0?<Text style={styles.empty}>No markets available for this sport and selection.</Text>:groups.map(group=><GroupRow key={group.key} group={group} onChoose={setTicket} onRating={q=>void showRating(q)} onAnalyze={openAi}/>)}
     {(ratingLoading||rating||ratingError)&&<View style={styles.card}>
      <Text style={styles.eyebrow}>ROUNDERS MODEL</Text>
-     {ratingLoading?<ActivityIndicator color={theme.accent}/>:ratingError?<Text style={styles.warning}>{ratingError}</Text>:rating?.projection?<View>
-      <Text style={styles.matchup}>{rating.projection.away} {rating.projection.projectedAway.toFixed(1)} · {rating.projection.home} {rating.projection.projectedHome.toFixed(1)}</Text>
-      <Text style={styles.label}>Home win probability {rating.projection.homeWinProbability.toFixed(1)}% · Confidence {rating.projection.confidence.toFixed(0)}%</Text>
-      <Text style={styles.caption}>MODEL · Training: {rating.trainingDataState||"unknown"} · {rating.trainingProvider||"unknown"}{rating.fallback?" · Simulated fallback":""}</Text>
-     </View>:<Text style={styles.warning}>No verified model result.</Text>}
+     {ratingLoading?<ActivityIndicator color={theme.accent}/>:ratingError?<Text style={styles.warning}>{ratingError}</Text>:rating?<View>
+      <Text style={styles.matchup}>{rating.projectedWinner} · {((rating.projectedWinner===rating.home?rating.homeWinProbability:1-rating.homeWinProbability)*100).toFixed(1)}% model win probability</Text>
+      <Text style={styles.label}>Spread ({rating.home}) {rating.projectedSpreadHome===null?"Pro":(rating.projectedSpreadHome>0?"+":"")+rating.projectedSpreadHome.toFixed(1)} · Total {rating.projectedTotal===null?"Pro":rating.projectedTotal.toFixed(1)}</Text>
+      <Text style={styles.caption}>MODEL · {rating.modelVersion} · frozen {new Date(rating.predictedAt).toLocaleString()}</Text>
+     </View>:<Text style={styles.warning}>No stored prediction.</Text>}
     </View>}
     {ticket&&<View style={[styles.card,styles.ticket]}>
      <Text style={styles.eyebrow}>SIMULATED PAPER TICKET</Text>
@@ -211,8 +215,9 @@ export default function Home(){
      <Pressable onPress={()=>setTicket(null)}><Text style={styles.actionText}>Cancel</Text></Pressable>
     </View>}
    </>}
+   {tab==="picks"&&<PredictionsPanel sport={sport} demo={demo} onAsk={p=>openAi({sport,away:p.away,home:p.home,eventId:p.eventId})}/>}
    {tab==="rankings"&&<PowerRankingsPanel sport={sport} demo={demo}/>}
-   {tab==="lab"&&<ModelLab sport={sport}/>}
+   {tab==="record"&&<PerformancePanel sport={sport} demo={demo}/>}
    {tab==="signals"&&<>
     <SectionHeader eyebrow="PRICE GAP SCANNER" title="Evidence, not hype."/>
     <Text style={styles.caption}>These compare distinct books at the same line, event and selection. They do not establish steam or reverse-line movement.</Text>
@@ -236,7 +241,7 @@ export default function Home(){
      {aiInsight?<View style={{gap:9}}>
       <Text style={styles.eyebrow}>{aiInsight.mode==="ai"?"AI EXPLANATION":"MODEL SUMMARY · GENERATIVE AI OFF"}</Text>
       <Text style={[styles.label,{color:theme.text,fontSize:14,lineHeight:22}]}>{aiInsight.answer}</Text>
-      <Text style={styles.caption}>Source: {aiInsight.evidence.trainingProvider} · {aiInsight.evidence.trainingDataState.toUpperCase()}{aiInsight.evidence.fallback?" · SIMULATED FALLBACK":""} · {aiInsight.evidence.sampleGames} completed games</Text>
+      <Text style={styles.caption}>Source: {aiInsight.evidence.modelVersion??aiInsight.evidence.trainingProvider??"Rounders model"} · {aiInsight.evidence.trainingDataState.toUpperCase()}{aiInsight.evidence.fallback?" · SIMULATED FALLBACK":""} · {aiInsight.evidence.trainingGames??aiInsight.evidence.sampleGames??0} completed games</Text>
       <Text style={styles.hint}>{aiInsight.notice}</Text>
      </View>:null}
     </View>:<Text style={styles.empty}>Choose a matchup above, or tap “Ask Rounders AI” from the Board.</Text>}

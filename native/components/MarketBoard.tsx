@@ -1,24 +1,59 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
 import type {MarketName,MarketQuote} from "../lib/contracts";
-import type {MatchupProjection} from "../lib/ratings";
+import {pct,signed,type PredictionView,type ProductSport} from "../lib/clientTypes";
+import {teamKey} from "../lib/engine/market";
+import {authHeaders} from "../lib/clientAuth";
 import AddPaperBet from "./AddPaperBet";
-const sports=["NBA","NFL","NHL","MLB"],markets:[MarketName,string][]=[["moneyline","Moneyline"],["spread","Spread"],["total","Total"]];
+
+const markets:[MarketName,string][]=[["moneyline","Moneyline"],["spread","Spread"],["total","Total"]];
 const fmt=(n:number)=>n>0?"+"+n:String(n);
 const implied=(odds:number)=>odds<0?(-odds)/((-odds)+100)*100:100/(odds+100)*100;
-type ProjectionResponse={model:string;trainingDataState:string;trainingProvider?:string;fallback?:boolean;sampleGames?:number;projection:MatchupProjection};
-export default function MarketBoard(){
- const [sport,setSport]=useState("NBA"),[market,setMarket]=useState<MarketName>("moneyline"),[quotes,setQuotes]=useState<MarketQuote[]>([]),[loading,setLoading]=useState(true),[open,setOpen]=useState<string|null>(null),[stake,setStake]=useState(25),[feed,setFeed]=useState({mode:"simulated",fresh:true,provider:"",fallback:true,ageMs:0}),[refresh,setRefresh]=useState(0),[feedError,setFeedError]=useState(false),[projections,setProjections]=useState<Record<string,ProjectionResponse>>({});
+type Feed={mode:string;fresh:boolean;provider:string;fallback:boolean;ageMs:number};
+
+export default function MarketBoard({sport}:{sport:ProductSport}){
+ const [market,setMarket]=useState<MarketName>("moneyline"),[quotes,setQuotes]=useState<MarketQuote[]>([]),[loading,setLoading]=useState(true);
+ const [open,setOpen]=useState<string|null>(null),[stake,setStake]=useState(25),[refresh,setRefresh]=useState(0),[feedError,setFeedError]=useState(false);
+ const [feed,setFeed]=useState<Feed>({mode:"simulated",fresh:false,provider:"",fallback:true,ageMs:0});
+ const [picks,setPicks]=useState<PredictionView[]>([]);
  useEffect(()=>{
- const controller=new AbortController();setLoading(true);setFeedError(false);setOpen(null);setQuotes([]);setProjections({});
- fetch("/api/markets?sport="+sport,{signal:controller.signal,cache:"no-store"})
-  .then(async r=>{if(!r.ok)throw new Error("Feed unavailable");return r.json()})
-  .then(d=>{if(controller.signal.aborted)return;setQuotes(Array.isArray(d.markets)?d.markets:[]);setFeed({mode:d.mode||"simulated",fresh:d.mode==="live"&&d.fresh===true,provider:d.provider||"",fallback:d.fallback!==false,ageMs:Number.isFinite(d.ageMs)?d.ageMs:0})})
-  .catch(()=>{if(!controller.signal.aborted)setFeedError(true)})
-  .finally(()=>{if(!controller.signal.aborted)setLoading(false)});
- return()=>controller.abort();
+  const c=new AbortController();setLoading(true);setFeedError(false);setOpen(null);setQuotes([]);
+  fetch("/api/markets?sport="+sport,{signal:c.signal,cache:"no-store"})
+   .then(async r=>{if(!r.ok)throw new Error("Feed unavailable");return r.json()})
+   .then(d=>{if(c.signal.aborted)return;setQuotes(Array.isArray(d.markets)?d.markets:[]);
+    setFeed({mode:d.mode||"simulated",fresh:d.mode==="live"&&d.fresh===true,provider:d.provider||"",fallback:d.fallback!==false,ageMs:Number.isFinite(d.ageMs)?d.ageMs:0})})
+   .catch(()=>{if(!c.signal.aborted)setFeedError(true)})
+   .finally(()=>{if(!c.signal.aborted)setLoading(false)});
+  fetch("/api/predictions?sport="+sport,{signal:c.signal,headers:authHeaders()})
+   .then(r=>r.ok?r.json():null).then(d=>{if(!c.signal.aborted)setPicks(Array.isArray(d?.predictions)?d.predictions:[])}).catch(()=>{});
+  return()=>c.abort();
  },[sport,refresh]);
+ const live=feed.mode==="live"&&!feed.fallback;
  const selections=useMemo(()=>{const map=new Map<string,MarketQuote[]>();quotes.filter(q=>q.market===market).forEach(q=>{const key=JSON.stringify([q.eventId,q.market,q.selection,q.line??null,q.state]);map.set(key,[...(map.get(key)||[]),q])});return [...map.entries()]},[quotes,market]);
- async function toggle(key:string,first:MarketQuote){if(open===key){setOpen(null);return}setOpen(key);if(!projections[first.eventId]){try{const r=await fetch("/api/ratings?sport="+encodeURIComponent(first.sport)+"&away="+encodeURIComponent(first.away)+"&home="+encodeURIComponent(first.home),{cache:"no-store"});if(r.ok){const d=await r.json();setProjections(p=>({...p,[first.eventId]:d}))}}catch{/* Model unavailable; no invented prediction. */}}}
- return <section className="market" id="markets"><div className="marketHead"><div><p className="tag">LIVE BOARD</p><h2>Markets at a glance.</h2><div className="feedStatus"><span className={"feedDot "+(feed.fresh?"ok":"stale")}/><b>{feed.mode==="live"?(feed.fresh?"Live feed current":"Live feed stale"):"Simulated demo feed"}</b><small>{feed.provider} · {feed.mode.toUpperCase()} · {Math.round(feed.ageMs/1000)}s old{feed.fallback?" · FALLBACK":""}</small><button className="refreshFeed" onClick={()=>setRefresh(v=>v+1)}>Refresh</button></div></div><div className="sports">{sports.map(s=><button className={sport===s?"active":""} onClick={()=>setSport(s)} key={s}>{s}</button>)}</div></div><div className="marketTabs">{markets.map(([id,label])=><button className={market===id?"active":""} onClick={()=>setMarket(id)} key={id}>{label}</button>)}</div>{loading?<p className="muted">Loading market feed…</p>:feedError?<p className="muted" role="status">Unable to load markets. Try Refresh.</p>:selections.length===0?<p className="muted">No matching markets available.</p>:<div className="gameList">{selections.map(([key,group])=>{const first=group[0],best=group.reduce((a,b)=>b.price>a.price?b:a),isOpen=open===key,prob=implied(best.price),model=projections[first.eventId],p=model?.projection,modelProb=p&&market==="moneyline"?(best.selection===p.home?p.homeWinProbability:best.selection===p.away?100-p.homeWinProbability:null):null,edge=modelProb===null||modelProb===undefined?null:modelProb-prob;return <div className={"gameWrap "+(isOpen?"opened":"")} key={key}><button className="gameCard" onClick={()=>toggle(key,first)}><div className="gameInfo"><span className="gameTime">{new Date(first.startTime).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</span><div className="teams"><strong>{first.away}</strong><span>@</span><strong>{first.home}</strong></div><div className="signal"><span>{first.selection}</span><span className="modelBadge">MARKET</span></div></div><div className="books">{group.map((q,i)=><div className={q===best?"quote best":"quote"} key={q.book+":"+i}><small>{q.book}</small>{q.line!==undefined&&<span className="line">{q.line>0?"+":""}{q.line}</span>}<b>{fmt(q.price)}</b>{q===best&&<em>BEST</em>}</div>)}</div><div className="fresh"><span className={"state "+first.state}>{first.state}</span><small>{isOpen?"Close analytics":"View analytics"} ›</small></div></button>{isOpen&&<div className="analytics"><div className="metric"><small>Best book</small><strong>{best.book}</strong><span>{fmt(best.price)}</span></div><div className="metric"><small>Market implied</small><strong>{prob.toFixed(1)}%</strong><span>from best price</span></div>{p?<><div className="metric"><small>Rounders power</small><strong>{p.awayRating.power.toFixed(1)} / {p.homeRating.power.toFixed(1)}</strong><span className="modelBadge">MODEL</span></div><div className="metric"><small>Projected score</small><strong>{p.away} {p.projectedAway.toFixed(1)} · {p.home} {p.projectedHome.toFixed(1)}</strong><span>Rounders v1</span></div><div className="metric"><small>Fair spread</small><strong>{p.home} {p.fairSpreadHome>0?"+":""}{p.fairSpreadHome.toFixed(1)}</strong><span>home perspective</span></div><div className="metric"><small>Strength of schedule</small><strong>{p.awayRating.sos.toFixed(1)} / {p.homeRating.sos.toFixed(1)}</strong><span>{p.away} / {p.home}</span></div><div className="metric"><small>Model confidence</small><strong>{p.confidence.toFixed(0)}%</strong><span>{model.trainingDataState.toUpperCase()} TRAINING DATA · {model.trainingProvider||"unknown"}{model.sampleGames?` · ${model.sampleGames} games`:""}{model.fallback?" · FALLBACK":""}</span></div>{modelProb!==null&&modelProb!==undefined&&<div className="metric"><small>Model probability</small><strong>{modelProb.toFixed(1)}%</strong><span className="modelBadge">MODEL</span></div>}{edge!==null&&<div className="metric edge"><small>Model vs market</small><strong>{edge>=0?"+":""}{edge.toFixed(1)}%</strong><span>probability-point difference</span></div>}</>:<div className="metric"><small>Rounders model</small><strong>Loading…</strong><span>independent rating engine</span></div>}<div className="paperTicket"><div><small>PAPER BET</small><strong>{best.selection} {best.line!==undefined?best.line:""} {fmt(best.price)}</strong></div><label>$<input type="number" min="1" max="100000" value={stake} onChange={e=>setStake(Number(e.target.value))}/></label><AddPaperBet eventId={first.eventId} sport={first.sport} matchup={first.away+" @ "+first.home} market={market} selection={best.selection} line={best.line} price={best.price} book={best.book} stake={stake} dataState={best.state}/></div></div>}</div>})}</div>}<p className="feedNote">Rounders model outputs are independent from sportsbook prices. Simulated training or market data stays visibly labeled until an authorized live source replaces it.</p></section>
+ // Model numbers come only from stored engine predictions for the same real game.
+ const pickFor=(q:MarketQuote)=>picks.find(p=>teamKey(p.home)===teamKey(q.home)&&teamKey(p.away)===teamKey(q.away)&&p.status==="pending");
+ return <section className="market" id="markets"><div className="marketHead"><div><p className="tag">{live?"LIVE ODDS":"DEMO ODDS"} · {sport}</p><h2>Line shop.</h2>
+  <div className="feedStatus"><span className={"feedDot "+(feed.fresh?"ok":"stale")}/><b>{live?(feed.fresh?"Live feed current":"Live feed stale"):"Simulated demo prices, not real sportsbooks"}</b><small>{feed.provider} · {Math.round(feed.ageMs/1000)}s old{feed.fallback?" · FALLBACK":""}</small><button className="refreshFeed" onClick={()=>setRefresh(v=>v+1)}>Refresh</button></div></div></div>
+  <div className="marketTabs">{markets.map(([id,label])=><button className={market===id?"active":""} onClick={()=>setMarket(id)} key={id}>{label}</button>)}</div>
+  {loading?<p className="muted">Loading market feed…</p>:feedError?<p className="muted" role="status">Unable to load markets. Try Refresh.</p>:selections.length===0?<p className="muted">No matching markets available.</p>:
+  <div className="gameList">{selections.map(([key,group])=>{
+   const first=group[0],best=group.reduce((a,b)=>b.price>a.price?b:a),isOpen=open===key,prob=implied(best.price);
+   const pick=live?pickFor(first):undefined;
+   const modelProb=pick&&market==="moneyline"?(best.selection===pick.home?pick.homeWinProbability*100:best.selection===pick.away?(1-pick.homeWinProbability)*100:null):null;
+   return <div className={"gameWrap "+(isOpen?"opened":"")} key={key}><button className="gameCard" onClick={()=>setOpen(isOpen?null:key)}>
+    <div className="gameInfo"><span className="gameTime">{new Date(first.startTime).toLocaleString([],{weekday:"short",hour:"numeric",minute:"2-digit"})}</span><div className="teams"><strong>{first.away}</strong><span>@</span><strong>{first.home}</strong></div><div className="signal"><span>{first.selection}{first.line!==undefined?" "+fmt(first.line):""}</span></div></div>
+    <div className="books">{group.map((q,i)=><div className={q===best?"quote best":"quote"} key={q.book+":"+i}><small>{q.book}</small>{q.line!==undefined&&<span className="line">{fmt(q.line)}</span>}<b>{fmt(q.price)}</b>{q===best&&<em>BEST</em>}</div>)}</div>
+    <div className="fresh"><span className={"state "+first.state}>{first.state}</span><small>{isOpen?"Close":"Details"} ›</small></div></button>
+    {isOpen&&<div className="analytics">
+     <div className="metric"><small>Best price</small><strong>{best.book}</strong><span>{fmt(best.price)} · {prob.toFixed(1)}% implied</span></div>
+     {pick?<>
+      <div className="metric"><small>Rounders projection</small><strong>{pick.projectedWinner}</strong><span>{pct(pick.projectedWinner===pick.home?pick.homeWinProbability:1-pick.homeWinProbability)} · {pick.modelVersion}</span></div>
+      <div className="metric"><small>Model spread / total</small><strong>{pick.projectedSpreadHome===null?"Pro":signed(pick.projectedSpreadHome)} / {pick.projectedTotal===null?"Pro":pick.projectedTotal.toFixed(1)}</strong><span>{pick.home} perspective</span></div>
+      {modelProb!==null?<div className="metric edge"><small>Model vs market</small><strong>{signed(modelProb-prob)} pts</strong><span>probability difference, live prices only</span></div>:null}
+     </>:<div className="metric"><small>Rounders projection</small><strong>{live?"No stored prediction":"Hidden on demo prices"}</strong><span>{live?"Predictions are stored for each day's games":"Model comparisons use live odds only"}</span></div>}
+     <div className="paperTicket"><div><small>PAPER TICKET</small><strong>{best.selection} {best.line!==undefined?fmt(best.line):""} {fmt(best.price)}</strong></div><label>$<input type="number" min="1" max="100000" value={stake} onChange={e=>setStake(Number(e.target.value))}/></label><AddPaperBet eventId={first.eventId} sport={first.sport} matchup={first.away+" @ "+first.home} market={market} selection={best.selection} line={best.line} price={best.price} book={best.book} stake={stake} dataState={best.state}/></div>
+    </div>}
+   </div>})}</div>}
+  <p className="feedNote">Prices are compared only when the game, market, side and line match. Price gaps are not steam or reverse line movement. Paper tickets never place real wagers.</p>
+ </section>;
 }
