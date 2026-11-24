@@ -175,3 +175,16 @@ Test-mode setup (Stripe Dashboard with **Test mode** on):
 5. Apply migration 009. Pay with test card `4242 4242 4242 4242`.
 
 The iOS app has no purchases: any paid feature unlocked inside an iOS app must use Apple In-App Purchase, so the app shows Free-tier content and points to the website.
+
+### Stripe best-practice settings (from Stripe's integration planner, November 2026)
+
+The planner recommends exactly the shape already built: hosted Checkout in subscription mode, flat-rate monthly prices, a freemium Free tier with no card, the Customer Portal for upgrades, downgrades and cancel-at-period-end, and webhook-driven entitlements. Code alignment:
+- Requests pin `Stripe-Version: 2025-09-30.clover` (`STRIPE_API_VERSION` in `lib/billing/stripe.ts`), so account-level API upgrades cannot change response shapes.
+- Checkout creates subscriptions in **flexible billing mode** and allows promotion codes; the success URL carries `{CHECKOUT_SESSION_ID}`.
+
+Dashboard settings (test mode first, then again in live mode before launch):
+1. **Products:** "Rounders Pro" and "Rounders Edge", each with a monthly USD price; tax code *Software as a service (SaaS), personal use*.
+2. **Customer portal:** allow switching between the two prices (prorate), payment-method updates, invoice history, and cancellation **at period end**.
+3. **Revenue recovery:** turn on Smart Retries, failed-payment and expiring-card emails, and automatic card updates; after all retries fail, cancel the subscription (the app then falls back to Free).
+4. **Tax:** confirm the head-office address; Stripe Tax threshold monitoring is free and alerts before you owe sales tax anywhere.
+5. **Business profile:** describe the product as NBA/NFL analytics software and research tools; no wagering, no prizes. Stripe reviews sports-prediction businesses, so confirm the account is approved before enabling live mode.
