@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {stripe,subscriptionRow,verifyStripeSignature,type StripeSubscription} from "../../../../lib/billing/stripe";
 import {recordStripeEvent,saveSubscription,userForCustomer} from "../../../../lib/billing/server";
+import {subscriptionIdFromEvent} from "../../../../lib/billing/events";
 
 export const dynamic="force-dynamic";
 const HANDLED=new Set(["checkout.session.completed","customer.subscription.created","customer.subscription.updated","customer.subscription.deleted","invoice.paid","invoice.payment_failed"]);
@@ -17,7 +18,7 @@ export async function POST(req:Request){
  if(event.livemode)return NextResponse.json({error:"Live-mode events are not accepted"},{status:400});
  if(!HANDLED.has(event.type))return NextResponse.json({received:true,ignored:event.type});
  const o=event.data.object;
- const subscriptionId=typeof o.subscription==="string"?o.subscription:event.type.startsWith("customer.subscription.")?String(o.id):null;
+ const subscriptionId=subscriptionIdFromEvent(event.type,o);
  if(!subscriptionId||!/^sub_[A-Za-z0-9]+$/.test(subscriptionId))return NextResponse.json({received:true,skipped:"no subscription"});
  try{
   const sub=await stripe<StripeSubscription>("GET","subscriptions/"+subscriptionId,{"expand[]":"items.data.price"});

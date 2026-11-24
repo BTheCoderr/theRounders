@@ -32,8 +32,8 @@ export default function MarketBoard({sport}:{sport:ProductSport}){
  const selections=useMemo(()=>{const map=new Map<string,MarketQuote[]>();quotes.filter(q=>q.market===market).forEach(q=>{const key=JSON.stringify([q.eventId,q.market,q.selection,q.line??null,q.state]);map.set(key,[...(map.get(key)||[]),q])});return [...map.entries()]},[quotes,market]);
  // Model numbers come only from stored engine predictions for the same real game.
  const pickFor=(q:MarketQuote)=>picks.find(p=>teamKey(p.home)===teamKey(q.home)&&teamKey(p.away)===teamKey(q.away)&&p.status==="pending");
- return <section className="market" id="markets"><div className="marketHead"><div><p className="tag">{live?"LIVE ODDS":"DEMO ODDS"} · {sport}</p><h2>Line shop.</h2>
-  <div className="feedStatus"><span className={"feedDot "+(feed.fresh?"ok":"stale")}/><b>{live?(feed.fresh?"Live feed current":"Live feed stale"):"Simulated demo prices, not real sportsbooks"}</b><small>{feed.provider} · {Math.round(feed.ageMs/1000)}s old{feed.fallback?" · FALLBACK":""}</small><button className="refreshFeed" onClick={()=>setRefresh(v=>v+1)}>Refresh</button></div></div></div>
+ return <section className="block market" id="markets"><div className="blockHead"><h2>Line shop</h2><span className={"chip "+(live?"liveChip":"warnChip")}>{live?"LIVE ODDS":"DEMO ODDS"}</span></div>
+  <div className="feedStatus"><span className={"feedDot "+(feed.fresh?"ok":"stale")}/><span>{live?(feed.fresh?"Live prices":"Live prices are stale"):"Demo prices until the odds feed is connected"}{feed.ageMs&&live?" · "+Math.round(feed.ageMs/1000)+"s ago":""}</span><button className="refreshFeed" onClick={()=>setRefresh(v=>v+1)}>Refresh</button></div>
   <div className="marketTabs">{markets.map(([id,label])=><button className={market===id?"active":""} onClick={()=>setMarket(id)} key={id}>{label}</button>)}</div>
   {loading?<p className="muted">Loading market feed…</p>:feedError?<p className="muted" role="status">Unable to load markets. Try Refresh.</p>:selections.length===0?<p className="muted">No matching markets available.</p>:
   <div className="gameList">{selections.map(([key,group])=>{

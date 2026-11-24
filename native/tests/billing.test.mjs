@@ -90,3 +90,12 @@ test("server-side gating removes paid fields for free users",()=>{
 test("CSV quoting and formula-injection protection",()=>{
  assert.equal(toCsv(["a","b"],[["x,y",'say "hi"'],["=SUM(A1)",-3.5],[null,true]]),'a,b\r\n"x,y","say ""hi"""\r\n\'=SUM(A1),-3.5\r\n,true\r\n');
 });
+
+import {subscriptionIdFromEvent} from "../lib/billing/events.ts";
+test("webhook finds the subscription on every handled event shape",()=>{
+ assert.equal(subscriptionIdFromEvent("customer.subscription.updated",{id:"sub_1"}),"sub_1");
+ assert.equal(subscriptionIdFromEvent("checkout.session.completed",{subscription:"sub_2"}),"sub_2");
+ assert.equal(subscriptionIdFromEvent("invoice.paid",{parent:{type:"subscription_details",subscription_details:{subscription:"sub_3"}}}),"sub_3");
+ assert.equal(subscriptionIdFromEvent("invoice.payment_failed",{subscription:"sub_4"}),"sub_4","older API versions");
+ assert.equal(subscriptionIdFromEvent("invoice.paid",{parent:null}),null);
+});
