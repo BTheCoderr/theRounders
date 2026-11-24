@@ -104,7 +104,7 @@ test("promotion gate recommends a clearly better challenger with enough evidence
 });
 
 test("champion defaults follow the gate and only accept candidate models",()=>{
- assert.equal(championFor("NBA",{}),"power-v2");assert.equal(championFor("NFL",{}),"rounders-v1");
+ assert.equal(championFor("NBA",{}),"power-v2");assert.equal(championFor("NFL",{}),"power-v2");
  assert.equal(championFor("NFL",{ROUNDERS_CHAMPION_NFL:"power-v2"}),"power-v2");
  assert.equal(championFor("NBA",{ROUNDERS_CHAMPION_NBA:"home-baseline"}),"power-v2");
 });
