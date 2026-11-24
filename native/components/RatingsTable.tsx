@@ -8,7 +8,7 @@ import SportBar from "./SportBar";
 type Row={rank:number;change:number|null;team:string;slug:string;wins:number;losses:number;ties:number;games:number;
  rating:number;offense:number|null;defense:number|null;sos:number|null;last10:{wins:number;losses:number};streak:string;
  pointsFor:number|null;pointsAgainst:number|null;remaining?:number;projWins?:number;projLosses?:number};
-type Table={projected?:boolean;ready:boolean;reason?:string;sport:string;season:number;asOf:string;games:number;homeAdvantage:number;leaguePoints:number|null;rows:Row[];notes?:string[]};
+type Table={projected?:boolean;historical?:boolean;seasons?:number[];ready:boolean;reason?:string;sport:string;season:number;asOf:string;games:number;homeAdvantage:number;leaguePoints:number|null;rows:Row[];notes?:string[]};
 type Key="rank"|"rating"|"offense"|"defense"|"sos"|"record"|"change"|"proj";
 const COLS:Array<{key:Key;label:string;title:string}>=[
  {key:"rank",label:"Rk",title:"Power Index rank"},{key:"record",label:"W-L",title:"This season's record"},
@@ -23,30 +23,36 @@ const seasonLabel=(s:ProductSport,y:number)=>s==="NFL"||s==="NCAAF"||s==="MLB"?S
 const sgn=(x:number|null,d=1)=>x===null?"—":(x>0?"+":"")+x.toFixed(d);
 const value=(r:Row,k:Key)=>k==="proj"?(r.projWins??-1):k==="record"?(r.wins+r.ties/2)/Math.max(1,r.games):k==="rank"?-r.rank:(r[k]??-999);
 
-export default function RatingsTable(){
+export default function RatingsTable({historical=false}:{historical?:boolean}){
  const [sport,setSport]=useSport();
+ const [season,setSeason]=useState<number|null>(null),[seasons,setSeasons]=useState<number[]>([]);
  const [t,setT]=useState<Table|null>(null),[error,setError]=useState(""),[sort,setSort]=useState<{key:Key;desc:boolean}>({key:"rank",desc:true});
  useEffect(()=>{
   const c=new AbortController();setT(null);setError("");
-  fetch("/api/team-ratings?sport="+sport,{signal:c.signal})
-   .then(async r=>{const x=await r.json() as Table;if(c.signal.aborted)return;if(!x.ready)setError(x.reason||"Ratings are unavailable right now.");else setT(x)})
+  fetch(historical?`/api/history?sport=${sport}${season?"&season="+season:""}`:"/api/team-ratings?sport="+sport,{signal:c.signal})
+   .then(async r=>{const x=await r.json() as Table;if(c.signal.aborted)return;
+    if(x.seasons)setSeasons(x.seasons);
+    if(!x.ready)setError(x.reason||"Ratings are unavailable right now.");else{setT(x);if(historical&&x.season!==season)setSeason(x.season);}})
    .catch(()=>{if(!c.signal.aborted)setError("Ratings are unavailable right now.")});
   return()=>c.abort();
- },[sport]);
+ },[sport,season,historical]);
+ const pickSport=(s:ProductSport)=>{setSeason(null);setSeasons([]);setSport(s);};
  const dp=UNIT[sport]==="pts"?1:2;
  const rows=useMemo(()=>t?[...t.rows].sort((a,b)=>(value(b,sort.key)-value(a,sort.key))*(sort.desc?1:-1)||a.rank-b.rank):[],[t,sort]);
  const click=(key:Key)=>setSort(s=>({key,desc:s.key===key?!s.desc:true}));
  return <>
-  <SportBar sport={sport} onChange={setSport}/>
+  <SportBar sport={sport} onChange={pickSport}/>
+  {historical&&seasons.length?<label className="seasonPick">Season <select value={season??""} onChange={e=>setSeason(Number(e.target.value))}>
+   {seasons.map(y=><option key={y} value={y}>{seasonLabel(sport,y)}</option>)}</select></label>:null}
   <section className="block">
-   <div className="blockHead"><h2>{SPORT_NAME[sport]} ratings{t?" · "+seasonLabel(sport,t.season):""}</h2><span className="chip free">FREE</span></div>
+   <div className="blockHead"><h2>{SPORT_NAME[sport]} {t?.historical?"final ratings":"ratings"}{t?" · "+seasonLabel(sport,t.season):""}</h2><span className="chip free">FREE</span></div>
    {error?<p className="empty">{error}</p>:!t?<div className="rankList skeleton"/>:<>
     <p className="swipeHint">Swipe the table for offense, defense and schedule →</p>
     <div className="tableWrap"><table className="ratingsTable">
-     <thead><tr><th className="teamCol">Team</th>{COLS.filter(c=>c.key!=="proj"||t.projected).map(c=><th key={c.key} title={c.title} aria-sort={sort.key===c.key?(sort.desc?"descending":"ascending"):"none"}>
+     <thead><tr><th className="teamCol">Team</th>{COLS.filter(c=>(c.key!=="proj"||t.projected)&&(c.key!=="change"||!t.historical)).map(c=><th key={c.key} title={c.title} aria-sort={sort.key===c.key?(sort.desc?"descending":"ascending"):"none"}>
       <button onClick={()=>click(c.key)}>{c.label}{sort.key===c.key?(sort.desc?" ↓":" ↑"):""}</button></th>)}</tr></thead>
      <tbody>{rows.map(r=>{const b=team(sport,r.team);return <tr key={r.team}>
-      <td className="teamCol"><a href={`/teams/${sport.toLowerCase()}/${r.slug}`}>
+      <td className="teamCol"><a href={t.historical?undefined:`/teams/${sport.toLowerCase()}/${r.slug}`}>
        <span className="teamBadge sm" style={{background:b.color,color:onColor(b.color)}} aria-hidden="true">{b.abbr}</span>
        <span className="full">{r.team}</span><span className="short">{nickname(r.team,sport)}</span></a></td>
       <td className="num">{r.rank}</td>
@@ -56,10 +62,10 @@ export default function RatingsTable(){
       <td className="num">{sgn(r.offense,dp)}</td>
       <td className="num">{sgn(r.defense,dp)}</td>
       <td className="num">{sgn(r.sos,dp)}</td>
-      <td className={"num "+(r.change&&r.change>0?"pos":r.change&&r.change<0?"neg":"")}>{r.change===null||r.change===0?"–":(r.change>0?"▲":"▼")+Math.abs(r.change)}</td>
+{t.historical?null:<td className={"num "+(r.change&&r.change>0?"pos":r.change&&r.change<0?"neg":"")}>{r.change===null||r.change===0?"–":(r.change>0?"▲":"▼")+Math.abs(r.change)}</td>}
      </tr>})}</tbody>
     </table></div>
-    <p className="fine">Rating = how much better than an average team on a neutral site, adjusted for opponents and weighted toward recent games. Ratings in {UNIT[sport]}. Home edge {t.homeAdvantage.toFixed(t.homeAdvantage<1?2:1)} {UNIT[sport]}{t.leaguePoints?` · league average ${(t.leaguePoints).toFixed(1)} ${UNIT[sport]} per team`:""}{t.projected?" · Proj = projected final record":""} · {t.games} games this season · updated {new Date(t.asOf).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}.</p>
+    <p className="fine">Rating = how much better than an average team on a neutral site, adjusted for opponents and weighted toward recent games. Ratings in {UNIT[sport]}. Home edge {t.homeAdvantage.toFixed(t.homeAdvantage<1?2:1)} {UNIT[sport]}{t.leaguePoints?` · league average ${(t.leaguePoints).toFixed(1)} ${UNIT[sport]} per team`:""}{t.projected?" · Proj = projected final record":""} · {t.games} games{t.historical?"":" this season · updated"} {t.historical?"":new Date(t.asOf).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}.</p>
     {t.notes?.length?<p className="fine">{t.notes.join(" ")}</p>:null}
    </>}
   </section>

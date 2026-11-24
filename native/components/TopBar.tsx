@@ -15,7 +15,7 @@ export default function TopBar(){
  return <header className="topBar">
   <a className="brand" href="/" aria-label="The Rounders home"><span className="brandMark" aria-hidden="true">R</span><span>ROUNDERS</span></a>
   <nav className="topNav" aria-label="Sections">
-   <a href="/#predictions">Picks</a><a href="/ratings">Ratings</a><a href="/record">Record</a><a href="/pricing">Plans</a>
+   <a href="/#predictions">Picks</a><a href="/ratings">Ratings</a><a href="/record">Record</a><a href="/history">History</a><a href="/pricing">Plans</a>
   </nav>
   <a className="topAction" href="/account">{signedIn?"Account":"Sign in"}</a>
  </header>;

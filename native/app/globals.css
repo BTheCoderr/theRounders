@@ -341,3 +341,5 @@ details.more summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--
 .swipeHint{display:none;color:var(--dim);font-size:.75rem;margin:0 0 8px}
 @media (max-width:640px){.swipeHint{display:block}}
 .ratingsTable thead th.teamCol{background:var(--card2);z-index:2}
+.seasonPick{display:inline-flex;align-items:center;gap:8px;margin:8px 0 0 10px;color:var(--muted);font-size:.85rem;font-weight:700}
+.seasonPick select{background:var(--card);color:var(--text);border:1px solid var(--line2);border-radius:10px;padding:7px 10px;font:inherit}

@@ -274,3 +274,18 @@ test("team badges and names across leagues",async()=>{
  assert.equal(nickname("Duke Blue Devils","NCAAM"),"Duke Blue Devils");
  assert.equal(nickname("Boston Celtics"),"Celtics");
 });
+
+test("deep history walks back in-season months only and stops after 12 empty ones",async()=>{
+ const {deepHistoryPlan}=await import("../lib/deepHistory.ts");
+ const now=new Date(Date.UTC(2026,10,24));
+ const first=deepHistoryPlan("NFL",now,new Map());
+ assert.equal(first.next,"202010");                       // window is 73 months; Nov 2020 onward is already covered
+ const done=new Map([["202010",60]]);
+ assert.equal(deepHistoryPlan("NFL",now,done).next,"202009");   // skips Feb-Aug
+ assert.equal(deepHistoryPlan("NFL",now,new Map([["202010",60],["202009",50]])).next,"202001");
+ // 12 empty in-season months in a row => floor
+ const empty=new Map();let d=new Date(Date.UTC(2020,9,1));let n=0;
+ while(n<12){const m=d.getUTCMonth()+1;if([9,10,11,12,1].includes(m)){empty.set(String(d.getUTCFullYear())+String(m).padStart(2,"0"),0);n++;}d=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()-1,1));}
+ const p=deepHistoryPlan("NFL",now,empty);
+ assert.equal(p.next,null);assert.equal(p.floorReached,true);
+});
