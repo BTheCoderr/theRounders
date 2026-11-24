@@ -17,10 +17,10 @@ export default function MarketBoard({sport}:{sport:ProductSport}){
  const [feed,setFeed]=useState<Feed>({mode:"unavailable",fresh:false,provider:"",fallback:true,ageMs:0});
  const [picks,setPicks]=useState<PredictionView[]>([]);
  useEffect(()=>{
-  const c=new AbortController();setLoading(true);setFeedError(false);setOpen(null);setQuotes([]);
+  const c=new AbortController();setLoading(true);setFeedError(false);setOpen(null);setQuotes([]);setPicks([]);
   fetch("/api/markets?sport="+sport,{signal:c.signal,cache:"no-store"})
    .then(async r=>{if(!r.ok)throw new Error("Feed unavailable");return r.json()})
-   .then(d=>{if(c.signal.aborted)return;setQuotes(d.mode==="live"&&Array.isArray(d.markets)?d.markets.filter((q:MarketQuote)=>q.state==="live"):[]);
+   .then(d=>{if(c.signal.aborted)return;setQuotes(d.mode==="live"&&Array.isArray(d.markets)?d.markets.filter((q:MarketQuote)=>q.state==="live"&&q.sport===sport&&Date.parse(q.startTime)>Date.now()):[]);
     setFeed({mode:d.mode||"unavailable",fresh:d.mode==="live"&&d.fresh===true,provider:d.provider||"",fallback:d.fallback!==false,ageMs:Number.isFinite(d.ageMs)?d.ageMs:0})})
    .catch(()=>{if(!c.signal.aborted)setFeedError(true)})
    .finally(()=>{if(!c.signal.aborted)setLoading(false)});
@@ -31,7 +31,7 @@ export default function MarketBoard({sport}:{sport:ProductSport}){
  const live=!feedError&&feed.mode==="live"&&!feed.fallback;
  const selections=useMemo(()=>{const map=new Map<string,MarketQuote[]>();quotes.filter(q=>q.market===market).forEach(q=>{const key=JSON.stringify([q.eventId,q.market,q.selection,q.line??null,q.state]);map.set(key,[...(map.get(key)||[]),q])});return [...map.entries()]},[quotes,market]);
  // Model numbers come only from stored engine predictions for the same real game.
- const pickFor=(q:MarketQuote)=>picks.find(p=>teamKey(p.home)===teamKey(q.home)&&teamKey(p.away)===teamKey(q.away)&&p.status==="pending");
+ const pickFor=(q:MarketQuote)=>picks.find(p=>teamKey(p.home)===teamKey(q.home)&&teamKey(p.away)===teamKey(q.away)&&Math.abs(Date.parse(p.startsAt)-Date.parse(q.startTime))<=3600000&&p.status==="pending");
  return <section className="block market" id="markets"><div className="blockHead"><h2>Line shop</h2><span className={"chip "+(live?"liveChip":"warnChip")}>{live?"LIVE ODDS":"ODDS UNAVAILABLE"}</span></div>
   <div className="feedStatus"><span className={"feedDot "+(feed.fresh?"ok":"stale")}/><span>{live?(feed.fresh?"Live prices":"Live prices are stale"):"Verified sportsbook prices are not available"}{feed.ageMs&&live?" · "+Math.round(feed.ageMs/1000)+"s ago":""}</span><button className="refreshFeed" onClick={()=>setRefresh(v=>v+1)}>Refresh</button></div>
   <div className="marketTabs">{markets.map(([id,label])=><button className={market===id?"active":""} onClick={()=>setMarket(id)} key={id}>{label}</button>)}</div>
