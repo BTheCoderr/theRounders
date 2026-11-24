@@ -158,3 +158,20 @@ The engine lives in `lib/engine/` and is the only path for stored predictions. N
 ## NBA/NFL web experience (November 2026)
 
 The home page is NBA/NFL only, with one sport switch shared by every section: stored predictions (daily NBA, weekly NFL) with grounded "Explain this pick", the Power Index (verified regular-season archive for NBA/NFL), the free public track record (`/api/performance`), the line shop, price gaps and the paper bankroll. The browser-only "Model Scorecard" and the old Model Lab were removed: the track record now comes from server-stored, graded predictions. Model numbers appear next to market prices only when the prices are live and a stored prediction exists for that real game. `/api/ratings` remains for older clients but is no longer used by the web or mobile apps. `/api/markets` is cached per sport (45 s in memory, 30 s at the CDN) so visitors cannot drain the odds provider's quota.
+
+## Plans and billing (Stripe TEST MODE)
+
+Plans live in `lib/billing/plans.ts`: **Free** (projected winners and win probabilities, Power Index, the full public track record, model explanations, line shop, paper bankroll), **Rounders Pro** at a proposed $19.99/month (adds projected spreads, totals and scores, generative matchup analysis when enabled, CSV export of graded predictions), and **Rounders Edge** at a proposed $39.99/month (adds model-versus-live-market lines and every candidate model's predictions side by side). Gating is server-side in `/api/predictions`, `/api/predictions/export` and `/api/ai/matchup`; any failure resolves to Free.
+
+Test mode is enforced three ways: `stripeKey()` refuses any key that is not `sk_test_`/`rk_test_`; the webhook rejects `livemode` events and subscriptions; migration `009_rounders_billing.sql` has `check (livemode = false)` on subscriptions and events.
+
+Flow: the signed-in user (Supabase magic link) calls `POST /api/billing/checkout {plan}` → Stripe Checkout. `POST /api/billing/webhook` verifies the signature, re-reads the subscription from Stripe (so retries and out-of-order events converge) and upserts `rounders_subscriptions`. Plan changes, card updates and cancellation go through `POST /api/billing/portal`. A cancellation keeps access until the paid period ends; `past_due` keeps access until the period ends; `canceled`, `unpaid`, `incomplete` and `paused` fall back to Free.
+
+Test-mode setup (Stripe Dashboard with **Test mode** on):
+1. Products → create "Rounders Pro" ($19.99 monthly) and "Rounders Edge" ($39.99 monthly); copy each price ID into `STRIPE_PRICE_PRO` / `STRIPE_PRICE_EDGE`.
+2. Developers → API keys → copy the test secret key into `STRIPE_SECRET_KEY` (Netlify, server scope only).
+3. Developers → Webhooks → add endpoint `https://therounders.netlify.app/api/billing/webhook` with events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`; copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
+4. Settings → Billing → Customer portal: allow switching between the two prices, payment-method updates and cancellation at period end.
+5. Apply migration 009. Pay with test card `4242 4242 4242 4242`.
+
+The iOS app has no purchases: any paid feature unlocked inside an iOS app must use Apple In-App Purchase, so the app shows Free-tier content and points to the website.
