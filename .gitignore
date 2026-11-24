@@ -1,72 +1,39 @@
-# Environment variables
+# Environment variables and secrets. Only the documented example files are tracked.
 .env
 .env.*
-!.env.template
+!.env.example
+secrets.json
+api_keys.json
 
-# Python
-__pycache__/
-# lib/ also matches native/lib, which is application source.
-!native/lib/
-!native/lib/**
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
+# Local databases (the legacy SQLite files are no longer tracked)
+*.db
+*.sqlite3
+
+# Node / Next.js / Expo
+node_modules/
+.next/
+out/
+.expo/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+web-build/
+*.tsbuildinfo
+.netlify/
 
-# Virtual Environment
+# Python bytecode, in case any local research scripts are run
+__pycache__/
+*.py[cod]
+.venv/
 venv/
-env/
-ENV/
 
-# IDE
+# Logs and coverage
+*.log
+logs/
+coverage/
+htmlcov/
+
+# Editors and OS
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# Logs
-*.log
-logs/
-
-# Database
-*.db
-*.sqlite3
-
-# Models
-models/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# macOS
 .DS_Store
-
-# Coverage reports
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-*.cover
-
-# Node
-node_modules/
-
-# Project specific
-config.ini
-secrets.json
-api_keys.json 

@@ -1,171 +1,48 @@
-# therounders
+# The Rounders
 
-## Current release tracks (October 2026)
+NBA and NFL predictive analytics: power rankings, pregame projections, and a public record of how those projections performed.
 
-- **`mobile/`** is the new first-party **Expo React Native iOS/Android app**, with simulated/demo-safe market comparison, API-fed ratings, on-device paper bets and iOS/Android Expo export CI. It is not yet signed, built through EAS or submitted to TestFlight. See [mobile/README.md](mobile/README.md).
-- **`native/`** is the mobile-responsive **Next.js research/API service**, not a native mobile binary. It serves provider-separated markets, ratings, paper-mode views and explicit live-versus-demo labeling. See [native/README.md](native/README.md).
-- The **legacy Python Streamlit research system** remains in this repository and is not the native release experience.
-- Source changes are staged in PR #4 until reviewed. Neither production Netlify deploy nor Supabase migrations are implicitly performed by CI.
+> **Security notice (November 2026):** Provider API keys were previously committed to this public repository. Removing them from the code does not revoke them, and they remain in Git history. Revoke and reissue the exposed Odds API, Tomorrow.io weather and MySportsFeeds credentials before relying on those accounts. Never commit credentials; use Netlify environment variables and the `.env.example` files.
+>
+> **Release status:** The web app and the iOS/Android app are implemented but not yet released to the App Store. Prediction performance has not been independently validated. Do not describe the predictions as profitable or proven.
 
-# The Rounders Sports Betting Analytics Platform 🎯
+## Repository layout
 
-<!-- repo-intro:start -->
-**Project snapshot:** A sports analytics research platform exploring odds aggregation, statistical modeling, line movement, bankroll math, and multi-sport data workflows.
+| Path | What it is |
+| --- | --- |
+| `native/` | Next.js 15 web app and API, deployed to Netlify (`netlify.toml` sets `native` as the base). Also holds the Netlify scheduled functions and Supabase migrations. See [native/README.md](native/README.md). |
+| `mobile/` | Expo (SDK 54) React Native app for iOS and Android. It reads the deployed web API. See [mobile/README.md](mobile/README.md). |
+| `.github/workflows/` | CI for `native/` and `mobile/`, the manual TestFlight workflow, and the scheduled Supabase health check. |
 
-**What it demonstrates:** Python · data analysis · predictive-model concepts · API integration · analytical dashboards.
-<!-- repo-intro:end -->
+The legacy Python and Streamlit research code was removed in November 2026. The last commit that contains it is tagged `legacy-python-final`.
 
-A comprehensive sports betting analytics platform that provides advanced statistics, predictions, and tracking for NBA, NFL, NHL, and MLB betting. Built with Bill Walters' principles in mind, focusing on data-driven decisions, line shopping, and proper bankroll management.
+## Run locally
 
-## Features 🌟
+Web app and API:
 
-### Core Analytics
-- Real-time odds collection from multiple sportsbooks
-- Advanced statistical analysis and predictions
-- Power rankings and team strength metrics
-- Line movement tracking and steam move detection
-- Arbitrage opportunity detection
-- Kelly Criterion-based bankroll management
-
-### Sports Coverage
-- NBA: Spreads, moneylines, totals, player props
-- NFL: Game lines, player props, team totals
-- MLB: Moneylines, run lines, player props
-- NHL: Puck lines, moneylines, totals
-
-### AI/ML Integration
-- LSTM models for player prop predictions
-- Ensemble models for game predictions
-- Power rankings based on multiple factors
-- Bayesian optimization for model tuning
-
-### Betting Strategy Tools
-- Kelly Criterion calculator
-- Hedging calculator
-- Arbitrage finder
-- Line movement alerts
-- Best odds comparison
-
-## Installation 🚀
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/theRounders.git
-cd theRounders
+```sh
+cd native
+npm install
+cp .env.example .env.local   # fill in server-side values; never commit them
+npm run dev
 ```
 
-2. Create and activate a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+Mobile app:
+
+```sh
+cd mobile
+npm ci --legacy-peer-deps
+cp .env.example .env         # EXPO_PUBLIC_ROUNDERS_API_URL only; no secrets on the device
+npx expo start
 ```
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
+## Checks
+
+```sh
+cd native && npm run typecheck && node --experimental-strip-types --test tests/*.test.mjs && npm run build
+cd mobile && npm run typecheck && node --experimental-strip-types --test tests/*.test.mjs
 ```
 
-4. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your API keys and configuration
-```
+## Data and disclaimers
 
-## Configuration ⚙️
-
-1. Add your API keys to `.env`:
-```
-ODDS_API_KEY=your_key_here
-SPORTSDATA_API_KEY=your_key_here
-BETFAIR_API_KEY=your_key_here
-```
-
-2. Configure supported sportsbooks in `sports_betting/config/settings.py`
-
-3. Adjust model parameters and betting strategies in the configuration files
-
-## Usage 📊
-
-### Starting the API Server
-```bash
-uvicorn sports_betting.web_interface.app:app --reload
-```
-
-### Starting the Web Interface
-```bash
-streamlit run sports_betting.web_interface.streamlit_app.py
-```
-
-### Running Tests
-```bash
-pytest tests/
-```
-
-## Features in Detail 📈
-
-### Odds Collection
-- Real-time odds from multiple sportsbooks
-- Line movement tracking
-- Steam move detection
-- Best odds comparison
-
-### Predictions
-- Game predictions with confidence levels
-- Player prop predictions using LSTM
-- Power rankings and team strength metrics
-- Weather impact analysis
-
-### Bet Tracking
-- Detailed bet history
-- Performance analytics
-- ROI tracking
-- Confidence level analysis
-- Time-based performance analysis
-
-### Risk Management
-- Kelly Criterion implementation
-- Bankroll management
-- Hedging calculator
-- Risk exposure analysis
-
-## API Documentation 📚
-
-The API documentation is available at `http://localhost:8000/docs` when running the server.
-
-### Key Endpoints
-- `/api/odds/{sport}`: Get current odds
-- `/api/predictions/game`: Get game predictions
-- `/api/predictions/props`: Get player prop predictions
-- `/api/arbitrage/{sport}`: Get arbitrage opportunities
-- `/api/bets/analytics`: Get betting analytics
-
-## Web Interface 🖥️
-
-The Streamlit interface provides:
-1. Dashboard with key metrics
-2. Live odds monitoring
-3. Prediction interface
-4. Bet tracking and analysis
-5. Settings management
-
-## Contributing 🤝
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License 📝
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments 🙏
-
-- Built with principles from professional sports bettors
-- Inspired by Bill Walters' systematic approach
-- Uses various open-source sports data APIs
-
-## Disclaimer ⚠️
-
-This software is for educational purposes only. Please be aware of and comply with your local laws and regulations regarding sports betting.
+Historical results come from ESPN's public scoreboard endpoint, which is unofficial and carries no completeness guarantee or commercial-use license. Market prices are clearly labeled live or simulated. The product is for research and paper tracking only; it does not place wagers.

@@ -1,6 +1,6 @@
 # therounders native mobile (Expo)
 
-This is an actual Expo React Native iOS/Android client, separate from the legacy Streamlit analytics and the responsive Next.js service in \`native/\`.
+This is the Expo React Native iOS/Android client. It reads the Next.js API in `native/`, deployed at https://therounders.netlify.app.
 
 ## Available now
 

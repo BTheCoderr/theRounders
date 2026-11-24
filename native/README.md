@@ -1,6 +1,6 @@
 # The Rounders Native
 
-This directory is the controlled product shell replacing Streamlit as the primary user experience. The legacy Python analytics remain available while functionality moves behind explicit APIs.
+This directory is the Next.js web app and API for The Rounders. It is the only server-side code in the repository; the legacy Python/Streamlit research system was removed (see the `legacy-python-final` tag).
 
 ## Principles
 
@@ -9,7 +9,6 @@ This directory is the controlled product shell replacing Streamlit as the primar
 - Every datum is labeled live, model, or simulated
 - Paper mode is the safe default
 - No provider secret is exposed to the browser
-- Streamlit can remain an internal analytics/admin surface during migration
 
 ## Local run
 
