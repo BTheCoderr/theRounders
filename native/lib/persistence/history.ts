@@ -5,7 +5,8 @@ import {getEspnResults} from "../results/espn";
 import {fetchRegularArchiveMonth} from "../results/espnArchive";
 import {franchiseTeamIds} from "../results/franchises";
 
-import {ALL_SPORTS,SPORT_CONFIG,type Sport} from "../sports";
+import {ALL_SPORTS,SPORT_CONFIG,seasonFor,type Sport} from "../sports";
+import {deepHistoryPlan} from "../deepHistory";
 export type {Sport};
 const validSports=new Set<string>(ALL_SPORTS);
 const origin=()=>process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -167,10 +168,10 @@ export function recentMonthKeys(now:Date,count=25):string[]{
  * Revision 2 causes old monthly receipts to be reprocessed automatically.
  */
 export const REGULAR_ARCHIVE_REVISION=2;
-export async function archiveEspnMonth(sport:Sport,yearMonth:string):Promise<{games:number;excluded:number}>{
- if(!validSports.has(sport)||!/^20\d{2}(0[1-9]|1[0-2])$/.test(yearMonth))
+export async function archiveEspnMonth(sport:Sport,yearMonth:string,opts:{lenient?:boolean}={}):Promise<{games:number;excluded:number}>{
+ if(!validSports.has(sport)||!/^(19|20)\d{2}(0[1-9]|1[0-2])$/.test(yearMonth))
   throw new Error("Invalid sport or month");
- const parsed=await fetchRegularArchiveMonth(sport,yearMonth);
+ const parsed=await fetchRegularArchiveMonth(sport,yearMonth,opts);
  for(let i=0;i<parsed.games.length;i+=250){
   const group=parsed.games.slice(i,i+250);
   const payload=group.map(g=>({
@@ -202,7 +203,7 @@ export async function archiveEspnMonth(sport:Sport,yearMonth:string):Promise<{ga
  await rest("rounders_history_months?on_conflict=sport,year_month,source",{
   method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},
   body:JSON.stringify({sport,year_month:yearMonth,source:"espn-scoreboard",
-    imported_games:parsed.games.length,excluded_games:parsed.excluded,
+    imported_games:parsed.games.length,excluded_games:parsed.excluded+(opts.lenient?parsed.unknown:0),
     ingestion_revision:REGULAR_ARCHIVE_REVISION,fetched_at:new Date().toISOString()})
  });
  return {games:parsed.games.length,excluded:parsed.excluded};
@@ -284,3 +285,64 @@ export async function readTeamRegistry(sport:Sport):Promise<Map<string,string>>{
  return new Map(rows.map(x=>[x.provider_team_id,x.canonical_name]));
 }
 
+
+/**
+ * One-time deep history (for the History pages; models only read their recent window).
+ * Walks each sport backward month by month, before its model window, toward DEEP_HISTORY_FLOOR.
+ * Offseason months are skipped without a request. A sport stops when the feed has
+ * returned no games for 12 straight in-season months (covers lockouts and strikes).
+ */
+export async function deepHistoryStep(now=new Date(),budgetMs=12000){
+ const started=Date.now(),out:Record<string,unknown>={};
+ // Rotate the starting sport each run so every league makes progress.
+ const k=Math.floor(now.getTime()/600000)%ALL_SPORTS.length;
+ for(const sport of [...ALL_SPORTS.slice(k),...ALL_SPORTS.slice(0,k)]){
+  const res=await rest("rounders_history_months?select=year_month,imported_games&sport=eq."+sport+"&source=eq.espn-scoreboard&limit=2000");
+  const done=new Map((await res.json() as Array<{year_month:string;imported_games:number}>).map(x=>[x.year_month,x.imported_games]));
+  let months=0,games=0;
+  for(;;){
+   if(Date.now()-started>budgetMs){out[sport]={months,games,paused:true};break;}
+   const plan=deepHistoryPlan(sport,now,done);
+   if(!plan.next){out[sport]={months,games,complete:true,floorReached:plan.floorReached};break;}
+   try{
+    const r=await archiveEspnMonth(sport,plan.next,{lenient:true});
+    done.set(plan.next,r.games);months++;games+=r.games;
+   }catch(error){
+    // A month the feed rejects counts as empty so the walk can finish; it is recorded for review.
+    await rest("rounders_history_months?on_conflict=sport,year_month,source",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},
+     body:JSON.stringify({sport,year_month:plan.next,source:"espn-scoreboard",imported_games:0,excluded_games:0,ingestion_revision:REGULAR_ARCHIVE_REVISION,fetched_at:new Date().toISOString()})});
+    done.set(plan.next,0);months++;
+    console.error("rounders deep history month failed",sport,plan.next,error instanceof Error?error.message:"error");
+   }
+  }
+  if(Date.now()-started>budgetMs)break;
+ }
+ return out;
+}
+
+/** Seasons with archived regular-season games (from import receipts), newest first. */
+export async function availableSeasons(sport:Sport):Promise<number[]>{
+ const res=await rest("rounders_history_months?select=year_month&sport=eq."+sport+"&source=eq.espn-scoreboard&imported_games=gt.0&limit=2000");
+ const rows=await res.json() as Array<{year_month:string}>;
+ return [...new Set(rows.map(r=>seasonFor(sport,`${r.year_month.slice(0,4)}-${r.year_month.slice(4,6)}-15T00:00:00Z`)))].sort((a,b)=>b-a);
+}
+/** Every regular-season game of one season, with the team names used at the time. */
+export async function getSeasonGames(sport:Sport,season:number):Promise<TeamGame[]>{
+ const cal=SPORT_CONFIG[sport].calendarSeason;
+ const from=new Date(Date.UTC(season,cal?0:6,1)).toISOString(),to=new Date(Date.UTC(season+1,cal?0:6,1)).toISOString();
+ const page=async(p:number)=>{
+  const r=await rest("rounders_games?select=occurred_at,home,away,home_score,away_score,neutral,home_team_id,away_team_id&sport=eq."+sport+
+   "&season_phase=eq.regular&home_team_id=not.is.null&away_team_id=not.is.null&occurred_at=gte."+encodeURIComponent(from)+"&occurred_at=lt."+encodeURIComponent(to)+
+   "&order=occurred_at.asc,id.asc&limit=1000&offset="+(p*1000));
+  return await r.json() as Array<ArchiveRow&{home_team_id:string;away_team_id:string}>;
+ };
+ const rows:Array<ArchiveRow&{home_team_id:string;away_team_id:string}>=[];
+ let complete=false;
+ for(let p=0;p<12&&!complete;p+=6){
+  const batches=await Promise.all([0,1,2,3,4,5].map(i=>page(p+i)));
+  for(const b of batches){rows.push(...b);if(b.length<1000){complete=true;break;}}
+ }
+ const eligible=franchiseTeamIds(rows,SPORT_CONFIG[sport].seasonMinGames);
+ return rows.flatMap(g=>!eligible.has(g.home_team_id)||!eligible.has(g.away_team_id)||g.home===g.away?[]:
+  [{date:g.occurred_at,team:g.home,opponent:g.away,teamScore:g.home_score,opponentScore:g.away_score,location:g.neutral?"neutral" as const:"home" as const}]);
+}

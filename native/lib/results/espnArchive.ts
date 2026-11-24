@@ -62,9 +62,10 @@ export function monthChunks(yearMonth:string,chunkDays:number):string[]{
  for(let a=1;a<=last;a+=chunkDays)out.push(chunkDays>=last?yearMonth:`${d(a)}-${d(Math.min(last,a+chunkDays-1))}`);
  return out;
 }
-export async function fetchRegularArchiveMonth(sport:string,yearMonth:string):Promise<ArchiveMonth>{
+/** `lenient` (deep history only): skip games without a trustworthy phase instead of failing the month. */
+export async function fetchRegularArchiveMonth(sport:string,yearMonth:string,opts:{lenient?:boolean}={}):Promise<ArchiveMonth>{
  const key=sport.toUpperCase();
- if(!isSport(key)||!/^20\d{2}(0[1-9]|1[0-2])$/.test(yearMonth))
+ if(!isSport(key)||!/^(19|20)\d{2}(0[1-9]|1[0-2])$/.test(yearMonth))
   throw new Error("Invalid sport or month");
  // ESPN caps a response at 1000 events, so busy months (college basketball) are fetched in chunks.
  const lists=await Promise.all(monthChunks(yearMonth,SPORT_CONFIG[key].chunkDays).map(async range=>{
@@ -76,7 +77,7 @@ export async function fetchRegularArchiveMonth(sport:string,yearMonth:string):Pr
   return data.events;
  }));
  const parsed=parseArchiveMonth(lists.flat(),yearMonth);
- if(parsed.unknown>0)
+ if(parsed.unknown>0&&!opts.lenient)
   throw new Error(`Archive provider had ${parsed.unknown} completed regular/unknown games without trustworthy phase or identity`);
  return parsed;
 }
