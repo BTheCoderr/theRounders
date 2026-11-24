@@ -1,17 +1,18 @@
 import Dashboard from "../components/Dashboard";
 import PaperBankroll from "../components/PaperBankroll";
 import SharpSignals from "../components/SharpSignals";
-import AccountAccess from "../components/AccountAccess";
 
 export default function Home(){
- return <main>
-  <header><div><p className="eyebrow">THE ROUNDERS · NBA & NFL</p><h1>Predictions with a public record.</h1>
-   <p className="muted">Daily NBA and weekly NFL projections: winners, win probabilities, spreads and totals. Every prediction is frozen before the game and graded after it, and the full track record is free to inspect.</p></div>
-   <div className="headerActions"><span className="pill">RESEARCH · NO WAGERING</span><a className="navAction" href="/pricing">Plans</a></div></header>
-  <AccountAccess/>
-  <section className="status"><span>Data labels: <b className="state model">MODEL</b> projection · <b className="state live">LIVE</b> provider price · <b className="state simulated">SIMULATED</b> demo data</span></section>
+ return <main className="home">
+  <section className="hero">
+   <p className="eyebrow">NBA · NFL · MODEL PROJECTIONS</p>
+   <h1>Every pick on the record.</h1>
+   <p className="heroSub">Winners, win probabilities, spreads and totals, locked before tip-off and graded after the final.</p>
+  </section>
   <Dashboard/>
-  <SharpSignals/>
-  <PaperBankroll/>
+  <section className="tools" aria-label="Tools">
+   <details><summary><span>Price gaps across books</span><small>Same game, same line, different prices</small></summary><SharpSignals/></details>
+   <details><summary><span>Paper bankroll</span><small>Track picks without real money</small></summary><PaperBankroll/></details>
+  </section>
  </main>;
 }

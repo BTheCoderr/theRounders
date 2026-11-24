@@ -1,9 +1,10 @@
 "use client";
 import {useEffect,useState} from "react";
 import type {ProductSport} from "../lib/clientTypes";
+import {nickname,onColor,team} from "../lib/teams";
 
-type Rank={rank:number;team:string;rating:number;games:number;record:{wins:number;losses:number;ties:number};averageOpponentRating:number;recentForm:number};
-type Board={dataState:"external"|"simulated";provider:string;fallback:boolean;coverage:string;rankings:Rank[];notes:string[];retrievedAt:string};
+type Rank={rank:number;team:string;rating:number;games:number;averageOpponentRating:number;recentForm:number};
+type Board={dataState:"external"|"simulated";provider:string;fallback:boolean;rankings:Rank[];notes:string[]};
 export default function PowerRankings({sport}:{sport:ProductSport}){
  const [b,setB]=useState<Board|null>(null),[error,setError]=useState(""),[all,setAll]=useState(false);
  useEffect(()=>{
@@ -13,16 +14,20 @@ export default function PowerRankings({sport}:{sport:ProductSport}){
    .catch(()=>{if(!c.signal.aborted)setError("Rankings are unavailable right now.")});
   return()=>c.abort();
  },[sport]);
+ const max=b?Math.max(1,...b.rankings.map(r=>Math.abs(r.rating))):1;
  const rows=b?(all?b.rankings:b.rankings.slice(0,10)):[];
- return <section className="panel stack" id="rankings">
-  <div className="sectionHead"><div><p className="tag">POWER INDEX · {sport}</p><h2>Who is actually good.</h2>
-   <p className="muted">Schedule-adjusted point margin per game, weighted toward recent results. A rating of +5 means about five points better than an average team on a neutral floor.</p></div>
-   {b?<span className={"state "+(b.dataState==="simulated"?"simulated":"model")}>{b.dataState==="simulated"?"SIMULATED":"MODEL"}</span>:null}</div>
-  {error?<p className="muted">{error}</p>:!b?<p className="muted" role="status">Loading rankings…</p>:<>
-   <table className="dataTable"><thead><tr><th>#</th><th>Team</th><th>Rating</th><th>Opp. strength</th><th>Last 5</th></tr></thead>
-    <tbody>{rows.map(r=><tr key={r.team}><td>{r.rank}</td><td>{r.team}</td><td>{r.rating>0?"+":""}{r.rating.toFixed(1)}</td><td>{r.averageOpponentRating>0?"+":""}{r.averageOpponentRating.toFixed(1)}</td><td>{r.recentForm>0?"+":""}{r.recentForm.toFixed(1)}</td></tr>)}</tbody></table>
-   {b.rankings.length>10?<button className="linkButton" onClick={()=>setAll(v=>!v)}>{all?"Show top 10":"Show all "+b.rankings.length}</button>:null}
-   <p className="feedNote">{b.provider}{b.fallback?" · FALLBACK":""} · older games count less (recency half-life). {b.notes[b.notes.length-1]}</p>
+ return <section className="block" id="rankings">
+  <div className="blockHead"><h2>Power Index</h2>{b?.dataState==="simulated"?<span className="chip warnChip">SIMULATED</span>:null}</div>
+  {error?<p className="empty">{error}</p>:!b?<div className="rankList skeleton"/>:<>
+   <ol className="rankList">{rows.map(r=>{const t=team(sport,r.team);return <li key={r.team}>
+    <span className="rankNo">{r.rank}</span>
+    <span className="teamBadge sm" style={{background:t.color,color:onColor(t.color)}} aria-hidden="true">{t.abbr}</span>
+    <span className="rankName">{nickname(r.team)}</span>
+    <span className="rankBar" aria-hidden="true"><i className={r.rating>=0?"pos":"neg"} style={{width:Math.abs(r.rating)/max*50+"%"}}/></span>
+    <span className={"rankVal "+(r.rating>=0?"pos":"neg")}>{r.rating>0?"+":""}{r.rating.toFixed(1)}</span>
+   </li>})}</ol>
+   {b.rankings.length>10?<button className="textButton" onClick={()=>setAll(v=>!v)}>{all?"Top 10 only":"All "+b.rankings.length+" teams"}</button>:null}
+   <p className="fine">Points better than an average team on a neutral floor, adjusted for schedule and weighted toward recent games.</p>
   </>}
  </section>;
 }

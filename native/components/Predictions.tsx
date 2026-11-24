@@ -1,11 +1,16 @@
 "use client";
 import {useEffect,useState} from "react";
-import {kickoff,pct,signed,type PredictionView,type PredictionsResponse,type ProductSport} from "../lib/clientTypes";
+import {kickoff,signed,type PredictionView,type PredictionsResponse,type ProductSport} from "../lib/clientTypes";
 import {authHeaders} from "../lib/clientAuth";
+import {nickname,onColor,team} from "../lib/teams";
 
 type Insight={mode:"ai"|"model-summary";answer:string;notice:string};
-function Explain({sport,p}:{sport:ProductSport;p:PredictionView}){
- const [open,setOpen]=useState(false),[q,setQ]=useState("Why does the model lean this way, and what could it be missing?");
+function Badge({sport,name}:{sport:string;name:string}){
+ const t=team(sport,name);
+ return <span className="teamBadge" style={{background:t.color,color:onColor(t.color)}} aria-hidden="true">{t.abbr}</span>;
+}
+function Explain({sport,p,onClose}:{sport:ProductSport;p:PredictionView;onClose:()=>void}){
+ const [q,setQ]=useState("Why does the model lean this way, and what could it be missing?");
  const [busy,setBusy]=useState(false),[result,setResult]=useState<Insight|null>(null),[error,setError]=useState("");
  async function ask(){
   setBusy(true);setError("");setResult(null);
@@ -17,33 +22,47 @@ function Explain({sport,p}:{sport:ProductSport;p:PredictionView}){
    setResult(d as Insight);
   }catch(e){setError(e instanceof Error?e.message:"Analysis unavailable")}finally{setBusy(false)}
  }
- if(!open)return <button className="linkButton" onClick={()=>setOpen(true)}>Explain this pick ›</button>;
  return <div className="explain">
-  <label htmlFor={"q-"+p.eventId}>Ask about this matchup</label>
-  <div className="explainRow"><input id={"q-"+p.eventId} value={q} maxLength={240} onChange={e=>setQ(e.target.value)}/><button disabled={busy||q.trim().length<3} onClick={ask}>{busy?"Thinking…":"Ask"}</button></div>
+  <div className="explainRow"><input aria-label="Question about this matchup" value={q} maxLength={240} onChange={e=>setQ(e.target.value)}/>
+   <button disabled={busy||q.trim().length<3} onClick={ask}>{busy?"…":"Ask"}</button></div>
   {error&&<p className="warn" role="alert">{error}</p>}
-  {result&&<div className="insight"><span className="modelBadge">{result.mode==="ai"?"AI EXPLANATION":"MODEL SUMMARY"}</span><p>{result.answer}</p><small>{result.notice}</small></div>}
+  {result&&<div className="insight"><span className="chip">{result.mode==="ai"?"AI ANALYSIS":"MODEL SUMMARY"}</span><p>{result.answer}</p><small>{result.notice}</small></div>}
+  <button className="textButton" onClick={onClose}>Close</button>
  </div>;
 }
-function Card({sport,p}:{sport:ProductSport;p:PredictionView}){
- const favP=p.projectedWinner===p.home?p.homeWinProbability:1-p.homeWinProbability;
+function Row({sport,name,score,win,final,isFinal}:{sport:string;name:string;score:number|null;win:boolean;final?:number;isFinal:boolean}){
+ return <div className={"teamRow"+(win?" fav":"")}>
+  <Badge sport={sport} name={name}/>
+  <span className="teamName"><b>{nickname(name)}</b><small>{name.replace(" "+nickname(name),"")}</small></span>
+  <span className="teamScore">{isFinal&&final!==undefined?final:score===null?"":Math.round(score)}</span>
+ </div>;
+}
+function GameCard({sport,p}:{sport:ProductSport;p:PredictionView}){
+ const [explain,setExplain]=useState(false);
+ const homeFav=p.projectedWinner===p.home;
+ const favP=homeFav?p.homeWinProbability:1-p.homeWinProbability;
  const locked=new Set(p.locked||[]);
- return <article className="pickCard">
-  <div className="pickHead"><span className="gameTime">{kickoff(p.startsAt)}</span>
-   {p.status==="graded"&&p.final?<span className="state graded">FINAL {p.away} {p.final.away} · {p.home} {p.final.home}</span>:p.status==="void"?<span className="state">VOID</span>:<span className="state model">MODEL</span>}
+ const graded=p.status==="graded"&&p.final;
+ const correct=graded?((p.final!.home>p.final!.away)===homeFav):null;
+ const spread=p.projectedSpreadHome;
+ const favLine=spread===null?null:homeFav?spread:-spread;
+ return <article className="gameCard2">
+  <header className="cardHead">
+   <span>{graded?"Final":kickoff(p.startsAt)}</span>
+   {graded?<span className={"result "+(correct?"hit":"miss")}>{correct?"✓ Correct":"✗ Missed"}</span>:p.status==="void"?<span className="result">Void</span>:<span className="lockTag" title={"Locked "+new Date(p.predictedAt).toLocaleString()}>Locked</span>}
+  </header>
+  <Row sport={sport} name={p.away} score={p.projectedAway} win={!homeFav} final={p.final?.away} isFinal={Boolean(graded)}/>
+  <Row sport={sport} name={p.home} score={p.projectedHome} win={homeFav} final={p.final?.home} isFinal={Boolean(graded)}/>
+  <div className="probRow" aria-label={`${p.projectedWinner} ${Math.round(favP*100)} percent`}>
+   <div className="probTrack"><i style={{width:(1-p.homeWinProbability)*100+"%",background:team(sport,p.away).color}}/><i style={{width:p.homeWinProbability*100+"%",background:team(sport,p.home).color}}/></div>
+   <div className="probLabels"><span>{Math.round((1-p.homeWinProbability)*100)}%</span><span>{Math.round(p.homeWinProbability*100)}%</span></div>
   </div>
-  <h3>{p.away} <span>@</span> {p.home}{p.neutral?<small> (neutral)</small>:null}</h3>
-  <div className="pickMain"><div><small>Projected winner</small><strong>{p.projectedWinner}</strong><span>{pct(favP)} model win probability</span></div>
-   <div className="probBar" aria-hidden="true"><i style={{width:(p.homeWinProbability*100).toFixed(1)+"%"}}/></div></div>
-  <div className="pickStats">
-   <div><small>Spread ({p.home})</small><strong>{p.projectedSpreadHome===null?(locked.has("spread")?"Pro":"—"):signed(p.projectedSpreadHome)}</strong></div>
-   <div><small>Total</small><strong>{p.projectedTotal===null?(locked.has("total")?"Pro":"—"):p.projectedTotal.toFixed(1)}</strong></div>
-   <div><small>Projected score</small><strong>{p.projectedAway===null||p.projectedHome===null?(locked.has("score")?"Pro":"—"):`${p.projectedAway.toFixed(0)}–${p.projectedHome.toFixed(0)}`}</strong></div>
-   <div><small>Market (live)</small><strong>{p.market?`${p.market.spreadHome===null?"—":signed(p.market.spreadHome)} / ${p.market.total??"—"}`:locked.has("market")?"Edge":"Not captured"}</strong></div>
+  <div className="lines">
+   <div><small>Spread</small><b>{favLine===null?(locked.has("spread")?<a href="/pricing" className="proTag">PRO</a>:"—"):`${team(sport,p.projectedWinner).abbr} ${favLine>0?"+":""}${favLine.toFixed(1)}`}</b></div>
+   <div><small>Total</small><b>{p.projectedTotal===null?(locked.has("total")?<a href="/pricing" className="proTag">PRO</a>:"—"):p.projectedTotal.toFixed(1)}</b></div>
+   <div><small>Market</small><b>{p.market?`${p.market.spreadHome===null?"—":signed(p.market.spreadHome)} / ${p.market.total??"—"}`:locked.has("market")?<a href="/pricing" className="proTag">EDGE</a>:"—"}</b></div>
   </div>
-  <p className="provenance">{p.modelVersion} · frozen {new Date(p.predictedAt).toLocaleString()} · trained on {p.trainingGames} completed games</p>
-  {locked.size?<p className="lockNote">Spreads, totals and scores are part of <a href="/pricing">Rounders Pro</a>. Winners and probabilities stay free.</p>:null}
-  {p.status==="pending"?<Explain sport={sport} p={p}/>:null}
+  {p.status==="pending"?(explain?<Explain sport={sport} p={p} onClose={()=>setExplain(false)}/>:<button className="textButton" onClick={()=>setExplain(true)}>Why this pick? ›</button>):null}
  </article>;
 }
 export default function Predictions({sport}:{sport:ProductSport}){
@@ -55,15 +74,15 @@ export default function Predictions({sport}:{sport:ProductSport}){
    .catch(()=>{if(!c.signal.aborted)setError("Predictions are unavailable right now.")});
   return()=>c.abort();
  },[sport]);
- const cadence=sport==="NBA"?"Today's NBA slate, frozen before tip-off each day.":"This week's NFL games, frozen on Tuesday (later additions within two days of kickoff).";
- return <section className="panel stack" id="predictions">
-  <div className="sectionHead"><div><p className="tag">{sport} PREDICTIONS</p><h2>{sport==="NBA"?"Today's projections.":"This week's projections."}</h2>
-   <p className="muted">{cadence} Every prediction is stored with its timestamp and never edited, then graded after the game.</p></div>
-   {data?.modelLabel?<span className="modelBadge">{data.modelLabel}</span>:null}</div>
-  {error?<p className="muted" role="status">{error}</p>:!data?<p className="muted" role="status">Loading predictions…</p>:
-   !data.ready?<p className="muted">{data.reason||"Predictions are not available yet."}</p>:
-   data.predictions.length===0?<p className="muted">No {sport} games in the current window. {sport==="NFL"?"The week's slate is stored on Tuesday.":"The day's slate is stored each morning (Eastern)."}</p>:
-   <div className="pickGrid">{data.predictions.map(p=><Card key={p.eventId} sport={sport} p={p}/>)}</div>}
-  {data?.notice?<p className="feedNote">{data.notice}</p>:null}
+ const locked=data?.predictions.some(p=>p.locked?.includes("spread"));
+ return <section className="block" id="predictions">
+  <div className="blockHead"><h2>{sport==="NBA"?"Today's slate":"This week"}</h2>
+   {data?.modelLabel?<span className="chip">{data.modelLabel}</span>:null}</div>
+  {error?<p className="empty">{error}</p>:!data?<div className="pickGrid">{[0,1,2].map(i=><div key={i} className="gameCard2 skeleton"/>)}</div>:
+   !data.ready?<p className="empty">{data.reason||"Predictions are not available yet."}</p>:
+   data.predictions.length===0?<p className="empty">No {sport} games locked yet. {sport==="NFL"?"The week's slate locks on Tuesday morning.":"Today's slate locks at 10:20 AM ET."}</p>:
+   <div className="pickGrid">{data.predictions.map(p=><GameCard key={p.eventId} sport={sport} p={p}/>)}</div>}
+  {locked?<a className="upsell" href="/pricing"><b>See every spread, total and projected score</b><span>Rounders Pro · $19.99/mo ›</span></a>:null}
+  <p className="fine">Projections are locked before each game and never edited. Win probabilities are model estimates; see the track record below for how they have held up.</p>
  </section>;
 }

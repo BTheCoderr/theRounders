@@ -12,11 +12,12 @@ export default function Dashboard(){
  useEffect(()=>{try{const s=localStorage.getItem("rounders.sport");if(s==="NBA"||s==="NFL")setSport(s)}catch{/* default NBA */}},[]);
  const choose=(s:ProductSport)=>{setSport(s);try{localStorage.setItem("rounders.sport",s)}catch{/* not persisted */}};
  return <>
-  <nav className="sportSwitch" aria-label="Sport">{PRODUCT_SPORTS.map(s=><button key={s} className={s===sport?"active":""} aria-pressed={s===sport} onClick={()=>choose(s)}>{s}</button>)}
-   <a href="#predictions">Predictions</a><a href="#rankings">Power Index</a><a href="#performance">Track record</a><a href="#markets">Line shop</a></nav>
+  <div className="sportBar" role="tablist" aria-label="Sport">
+   {PRODUCT_SPORTS.map(s=><button key={s} role="tab" aria-selected={s===sport} className={s===sport?"on":""} onClick={()=>choose(s)}>{s}</button>)}
+  </div>
   <Predictions sport={sport}/>
-  <PowerRankings sport={sport}/>
   <Performance sport={sport}/>
+  <PowerRankings sport={sport}/>
   <MarketBoard sport={sport}/>
  </>;
 }
