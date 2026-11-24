@@ -40,6 +40,7 @@ export default function Performance({sport}:{sport:ProductSport}){
   {error?<p className="empty">{error}</p>:!d?<div className="statStrip skeleton"/>:!d.ready?<p className="empty">{d.reason}</p>:<>
    {champ&&champ.summary.games>0?<><Strip s={champ.summary}/><Calibration s={champ.summary}/></>
     :<div className="emptyRecord"><b>Record starts with the first locked slate.</b><span>Every {sport} game is graded after the final and added here automatically.</span></div>}
+   <a className="textButton" href={"/record?sport="+sport}>Every graded pick →</a>
    {bt&&btChamp?<details className="more"><summary>Backtest: {bt.evaluatedGames.toLocaleString()} past games · {pct(btChamp.summary.winnerAccuracy,1)} accuracy</summary>
     <p className="fine">Weekly walk-forward over seasons {bt.seasons.join(", ")}: each week every model is refit on earlier games only. Simulated on history, not published at the time.</p>
     <table className="dataTable"><thead><tr><th>Model</th><th>Acc.</th><th>Brier</th><th>Spread err.</th></tr></thead>

@@ -254,7 +254,9 @@ details.more summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--
 
 /* Responsive */
 @media(max-width:860px){
- .topNav{display:none}
+ .topBar{flex-wrap:wrap;row-gap:8px;padding-bottom:6px}
+ .topNav{order:3;width:100%;margin:0 -6px;overflow-x:auto;scrollbar-width:none}
+ .topNav a{font-size:.85rem;padding:6px 10px;white-space:nowrap}
  .planGrid{grid-template-columns:1fr}
  .analytics{grid-template-columns:1fr 1fr}.paperTicket{grid-column:span 2}
  .gameCard{grid-template-columns:1fr}.fresh{flex-direction:row;align-items:center;justify-content:space-between}
@@ -277,3 +279,62 @@ details.more summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--
  .home .eyebrow{margin-bottom:6px}
  .block{margin-top:22px}
 }
+
+/* Ratings table */
+.pos{color:var(--win)}.neg{color:var(--loss)}
+.tableWrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);-webkit-overflow-scrolling:touch}
+.ratingsTable{width:100%;border-collapse:collapse;font-size:.86rem;font-variant-numeric:tabular-nums;min-width:560px}
+.ratingsTable th,.ratingsTable td{padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ratingsTable tbody tr:last-child td{border-bottom:0}
+.ratingsTable tbody tr:nth-child(odd){background:rgba(255,255,255,.02)}
+.ratingsTable tbody tr:hover{background:rgba(76,141,255,.08)}
+.ratingsTable th{position:sticky;top:0;background:var(--card2);text-align:right}
+.ratingsTable th button{background:none;color:var(--dim);font-size:.66rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:0}
+.ratingsTable th[aria-sort="ascending"] button,.ratingsTable th[aria-sort="descending"] button{color:var(--accent2)}
+.ratingsTable th.teamCol{text-align:left;color:var(--dim);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
+.ratingsTable td.num{text-align:right}
+.ratingsTable td.strong{font-weight:800}
+.ratingsTable .teamCol{position:sticky;left:0;background:var(--card);z-index:1}
+.ratingsTable tbody tr:nth-child(odd) .teamCol{background:#121F3A}
+.ratingsTable .teamCol a{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:700}
+.ratingsTable .teamCol .short{display:none}
+@media (max-width:640px){.ratingsTable .teamCol .full{display:none}.ratingsTable .teamCol .short{display:inline}.ratingsTable{font-size:.8rem}}
+.rankName{color:var(--text)}
+
+/* Team page */
+.back{display:inline-block;margin:18px 0 4px;font-size:.85rem;font-weight:700}
+.teamHero{display:flex;align-items:center;gap:16px;margin:10px 0 18px}
+.teamHero h1{font-size:clamp(1.6rem,5vw,2.4rem)}
+.teamHero .heroSub{margin:6px 0 0}
+.teamBadge.xl{width:64px;height:64px;font-size:1.05rem;border-radius:18px;flex:none}
+.trend{margin:0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px}
+.trend svg{width:100%;height:auto;display:block}
+.trend .zero{stroke:var(--line2);stroke-dasharray:4 4}
+.trend .line{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.trend .dot{fill:var(--accent2)}
+.trend figcaption{display:flex;justify-content:space-between;color:var(--dim);font-size:.72rem;margin-top:6px}
+.sched{list-style:none;margin:0;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius)}
+.sched li{display:grid;grid-template-columns:62px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 10px;border-radius:10px;font-size:.88rem;font-variant-numeric:tabular-nums}
+.sched li:nth-child(odd){background:rgba(255,255,255,.02)}
+.sched .when{color:var(--dim);font-size:.78rem}
+.sched .opp{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sched .opp small{color:var(--dim);font-weight:600}
+.sched .score{font-weight:800}
+.sched .pickCell{text-align:right;font-size:.8rem;color:var(--muted);white-space:nowrap}
+.sched .pickCell small{color:var(--dim)}
+@media (max-width:640px){.sched li{grid-template-columns:52px minmax(0,1fr) auto}.sched li .pickCell{grid-column:2 / -1;text-align:left}}
+
+/* Ledger */
+.ledger{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.ledger li{display:grid;grid-template-columns:minmax(0,1fr) auto auto 28px;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.lgMain{display:grid;gap:3px;min-width:0}
+.lgGame{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lgMeta{color:var(--dim);font-size:.74rem}
+.lgPick,.lgFinal{display:grid;gap:2px;text-align:right;font-variant-numeric:tabular-nums}
+.lgPick small,.lgFinal small{color:var(--dim);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase}
+.lgPick span{color:var(--muted);font-size:.74rem}
+.lgMark{font-size:1.1rem;font-weight:900;text-align:center}
+@media (max-width:640px){.ledger li{grid-template-columns:minmax(0,1fr) auto 24px}.lgPick{grid-column:1 / 2;text-align:left}.lgFinal{grid-row:1;grid-column:2}.lgMark{grid-row:1;grid-column:3}}
+.swipeHint{display:none;color:var(--dim);font-size:.75rem;margin:0 0 8px}
+@media (max-width:640px){.swipeHint{display:block}}
+.ratingsTable thead th.teamCol{background:var(--card2);z-index:2}

@@ -11,7 +11,7 @@ export const ENGINE_SPORTS:readonly EngineSport[]=["NBA","NFL"];
 export const isEngineSport=(s:string):s is EngineSport=>s==="NBA"||s==="NFL";
 
 /** Bump when the shared engine pipeline (totals, probability mapping, inputs) changes. */
-export const ENGINE_REVISION="engine-1";
+export const ENGINE_REVISION="engine-2";   // engine-2: win probability σ calibrated from out-of-sample errors
 
 export type ModelId="home-baseline"|"elo-margin"|"massey-ridge"|"rounders-v1"|"power-v2"|"rpi-v2.1"|"rounders-v3"|"ensemble";
 /** Candidates that can be champion. Baselines are benchmarks only. */
@@ -33,7 +33,7 @@ export const isModelId=(s:string):s is ModelId=>(ALL_MODELS as readonly string[]
 /** Fixed, documented sport settings. Not tuned on the evaluation window. */
 export const SPORT_SETTINGS:Record<EngineSport,{homeAdvantage:number;eloPointScale:number;v1Baseline:number;marginSigma:number}>={
  // marginSigma: typical standard deviation of final margin around a point forecast.
- // Used only to map a projected margin to a win probability; calibration is reported, not assumed.
+ // Default only: live and backtest σ is calibrated from out-of-sample errors (calibration.ts).
  NBA:{homeAdvantage:2.2,eloPointScale:0.04,v1Baseline:112,marginSigma:12},
  NFL:{homeAdvantage:2.2,eloPointScale:0.03,v1Baseline:23,marginSigma:13.5}
 };

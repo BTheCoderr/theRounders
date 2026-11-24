@@ -35,7 +35,7 @@ export async function GET(req:Request){
   return NextResponse.json({sport,model,modelLabel:MODEL_LABELS[model],ready:true,dataState:"model",plan,
    upgrade:plan==="free"?"/pricing":null,
    predictions:rows.map(view),challengers,
-   notice:"Predictions are frozen at the time shown and never edited. Win probabilities come from a fixed margin-to-probability mapping; see /api/performance for how they have actually performed."
+   notice:"Predictions are frozen at the time shown and never edited. Win probabilities are calibrated on each model's out-of-sample errors; see /api/performance for how they have actually performed."
   },{headers:{"Cache-Control":"private, no-store","Vary":"Authorization"}});
  }catch{
   return NextResponse.json({sport,model,ready:false,predictions:[],reason:"Predictions are temporarily unavailable."},{status:503,headers:{"Cache-Control":"no-store"}});

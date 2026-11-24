@@ -3,6 +3,7 @@ import type {TeamGame} from "../ratings";
 import {ALL_MODELS,ENGINE_REVISION,SPORT_SETTINGS,fitMarginModel,type EngineSport,type MarginPredictor,type ModelId} from "./models.ts";
 import {TOTALS_MODEL,fitTotals,leagueAverageTotal} from "./totals.ts";
 import {buildSchedule} from "./v3.ts";
+import {calibratedSigma} from "./calibration.ts";
 import {summarizeForecasts,winProbability,type ForecastSummary,type GradedForecast} from "./metrics.ts";
 
 /**
@@ -10,9 +11,11 @@ import {summarizeForecasts,winProbability,type ForecastSummary,type GradedForeca
  * At each Monday 00:00 UTC origin every model is refit on games that finished
  * before the origin, then predicts that week's games. Results of the week are
  * never visible to its own forecasts. All models are scored on the same games.
+ * Win probabilities use σ calibrated from each model's own earlier out-of-sample
+ * errors (weeks before the origin only), exactly as live predictions do.
  * These are simulated pregame forecasts on history, not live recorded predictions.
  */
-export type ModelBacktest={model:ModelId;summary:ForecastSummary};
+export type ModelBacktest={model:ModelId;summary:ForecastSummary;sigma:number};
 export type BacktestReport={
  method:"weekly-walk-forward";engineRevision:string;sport:EngineSport;
  asOf:string;from:string|null;through:string|null;
@@ -39,7 +42,8 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
  const groups=new Map<number,CompletedGame[]>();
  for(const g of history){const k=weekStart(Date.parse(g.date));groups.set(k,[...(groups.get(k)||[]),g]);}
  const weeks=[...groups.keys()].sort((a,b)=>a-b).slice(-maxWeeks);
- const sigma=SPORT_SETTINGS[sport].marginSigma;
+ // Running out-of-sample squared margin errors per model, updated after each week.
+ const sse=new Map<ModelId,number>(models.map(m=>[m,0])),sseN=new Map<ModelId,number>(models.map(m=>[m,0]));
  const forecasts=new Map<ModelId,GradedForecast[]>(models.map(m=>[m,[]]));
  const paired=Object.fromEntries(models.map(m=>[m,[] as number[]])) as Record<ModelId,number[]>;
  const pairedBrier=Object.fromEntries(models.map(m=>[m,[] as number[]])) as Record<ModelId,number[]>;
@@ -59,6 +63,8 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
    :fitOnce(m)]));
   const totals=fitTotals(train,sport,originDate);
   const leagueTotal=leagueAverageTotal(train,sport,originDate);
+  const sigmas=new Map<ModelId,number>(models.map(m=>[m,calibratedSigma(sport,sse.get(m)!,sseN.get(m)!)]));
+  const weekErr:Array<[ModelId,number]>=[];
   let used=0;
   for(const g of upcoming){
    const margins=models.map(m=>predictors.get(m)!(g.home,g.away,g.neutral,g.date));
@@ -70,12 +76,14 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
    totN++;totAbs+=Math.abs(total.total-actualTotal);totBias+=total.total-actualTotal;
    if(leagueTotal!==null){baseN++;baseAbs+=Math.abs(leagueTotal-actualTotal);baseBias+=leagueTotal-actualTotal;}
    models.forEach((m,i)=>{
-    const margin=margins[i]!,p=winProbability(margin,sigma);
+    const margin=margins[i]!,p=winProbability(margin,sigmas.get(m)!);
+    weekErr.push([m,(margin-actualMargin)**2]);
     forecasts.get(m)!.push({homeWinProbability:p,projectedMargin:margin,projectedTotal:total.total,homeScore:g.homeScore,awayScore:g.awayScore});
     paired[m].push(Math.abs(margin-actualMargin));
     pairedBrier[m].push(actualMargin===0?NaN:(p-(actualMargin>0?1:0))**2);
    });
   }
+  for(const [m,e] of weekErr){sse.set(m,sse.get(m)!+e);sseN.set(m,sseN.get(m)!+1);}
   if(used)evaluatedWeeks++;
  }
  const r=(x:number)=>Number(x.toFixed(4));
@@ -83,7 +91,7 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
   method:"weekly-walk-forward",engineRevision:ENGINE_REVISION,sport,asOf:asOf.toISOString(),from,through,
   historicalGames:history.length,evaluatedGames:evaluated,evaluatedWeeks,skippedColdStart:skipped,
   seasons:[...seasons].sort((a,b)=>a-b),
-  models:models.map(m=>({model:m,summary:summarizeForecasts(forecasts.get(m)!)})),
+  models:models.map(m=>({model:m,summary:summarizeForecasts(forecasts.get(m)!),sigma:r(calibratedSigma(sport,sse.get(m)!,sseN.get(m)!))})),
   totals:{model:TOTALS_MODEL,
    summary:{games:totN,mae:totN?r(totAbs/totN):null,bias:totN?r(totBias/totN):null},
    baseline:{games:baseN,mae:baseN?r(baseAbs/baseN):null,bias:baseN?r(baseBias/baseN):null}},
