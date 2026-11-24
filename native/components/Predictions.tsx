@@ -1,4 +1,5 @@
 "use client";
+import {SLATE,SPORT_LABEL,OFFSEASON} from "../lib/clientTypes";
 import {useEffect,useState} from "react";
 import {kickoff,signed,type PredictionView,type PredictionsResponse,type ProductSport} from "../lib/clientTypes";
 import {authHeaders} from "../lib/clientAuth";
@@ -33,7 +34,7 @@ function Explain({sport,p,onClose}:{sport:ProductSport;p:PredictionView;onClose:
 function Row({sport,name,score,win,final,isFinal}:{sport:string;name:string;score:number|null;win:boolean;final?:number;isFinal:boolean}){
  return <div className={"teamRow"+(win?" fav":"")}>
   <Badge sport={sport} name={name}/>
-  <span className="teamName"><b>{nickname(name)}</b><small>{name.replace(" "+nickname(name),"")}</small></span>
+  <span className="teamName"><b>{nickname(name,sport)}</b><small>{nickname(name,sport)===name?"":name.replace(" "+nickname(name,sport),"")}</small></span>
   <span className="teamScore">{isFinal&&final!==undefined?final:score===null?"":Math.round(score)}</span>
  </div>;
 }
@@ -76,11 +77,11 @@ export default function Predictions({sport}:{sport:ProductSport}){
  },[sport]);
  const locked=data?.predictions.some(p=>p.locked?.includes("spread"));
  return <section className="block" id="predictions">
-  <div className="blockHead"><h2>{sport==="NBA"?"Today's slate":"This week"}</h2>
+  <div className="blockHead"><h2>{SLATE[sport]==="daily"?"Today's slate":"This week"}</h2>
    {data?.modelLabel?<span className="chip">{data.modelLabel}</span>:null}</div>
   {error?<p className="empty">{error}</p>:!data?<div className="pickGrid">{[0,1,2].map(i=><div key={i} className="gameCard2 skeleton"/>)}</div>:
    !data.ready?<p className="empty">{data.reason||"Predictions are not available yet."}</p>:
-   data.predictions.length===0?<p className="empty">No {sport} games locked yet. {sport==="NFL"?"The week's slate locks on Tuesday morning.":"Today's slate locks at 10:20 AM ET."}</p>:
+   data.predictions.length===0?<p className="empty">No {SPORT_LABEL[sport]} games locked yet. {SLATE[sport]==="weekly"?"The week's slate locks on Tuesday morning.":OFFSEASON[sport]?OFFSEASON[sport]:"Today's slate locks each morning around 10 AM ET."}</p>:
    <div className="pickGrid">{data.predictions.map(p=><GameCard key={p.eventId} sport={sport} p={p}/>)}</div>}
   {locked?<a className="upsell" href="/pricing"><b>See every spread, total and projected score</b><span>Rounders Pro · $19.99/mo ›</span></a>:null}
   <p className="fine">Projections are locked before each game and never edited. Win probabilities are model estimates; see the track record below for how they have held up.</p>

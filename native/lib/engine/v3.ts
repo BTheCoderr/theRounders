@@ -2,6 +2,7 @@ import type {TeamGame} from "../ratings";
 import type {CompletedGame} from "../powerRatings";
 import {fitResearchRpi} from "../researchRpi.ts";
 import type {EngineSport} from "./models";
+import {SPORT_CONFIG,seasonFor} from "../sports.ts";
 
 /**
  * Rounders v3 (Massey-style refinements on the research RPI fit):
@@ -13,13 +14,10 @@ import type {EngineSport} from "./models";
  * are used for rest because schedules are published before games are played.
  */
 const DAY=86400000;
-export const V3_SETTINGS:Record<EngineSport,{retention:number;restCapDays:number;restRidge:number}>={
- NBA:{retention:0.5,restCapDays:3,restRidge:200},
- NFL:{retention:0.5,restCapDays:14,restRidge:40}
-};
-/** Season label: the calendar year in which the season began (both leagues start after July). */
-export const seasonOf=(t:number)=>{const d=new Date(t);return d.getUTCMonth()>=6?d.getUTCFullYear():d.getUTCFullYear()-1;};
-const seasonStart=(season:number)=>Date.UTC(season,6,1);
+export const V3_SETTINGS=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,c.v3])) as Record<EngineSport,{retention:number;restCapDays:number;restRidge:number}>;
+/** Season label: the year the season began; MLB uses the calendar year. */
+export const seasonOf=(t:number,sport?:EngineSport)=>seasonFor(sport,t);
+const seasonStart=(season:number,sport?:EngineSport)=>sport&&SPORT_CONFIG[sport].calendarSeason?Date.UTC(season,0,1):Date.UTC(season,6,1);
 
 /** Team -> sorted game timestamps, from schedule dates only (no results). */
 export type Schedule=Map<string,number[]>;
@@ -45,7 +43,7 @@ const homeRows=(games:CompletedGame[]):TeamGame[]=>games.map(g=>({
 const priorCache=new Map<string,Map<string,number>>();
 /** Final ratings of every earlier season, fitted only on games before this season began. */
 function seasonPrior(history:CompletedGame[],sport:EngineSport,season:number):Map<string,number>|undefined{
- const start=seasonStart(season);
+ const start=seasonStart(season,sport);
  const before=history.filter(g=>Date.parse(g.date)<start);
  if(before.length<50)return undefined;
  const key=`${sport}:${season}:${before.length}:${before[before.length-1].date}`;
@@ -59,7 +57,7 @@ export type V3Fit={predict(home:string,away:string,neutral:boolean,date?:string)
 export function fitV3(history:CompletedGame[],sport:EngineSport,asOf:Date,schedule?:Schedule):V3Fit{
  const cfg=V3_SETTINGS[sport],cutoff=asOf.getTime();
  const games=history.filter(g=>Date.parse(g.date)<cutoff);
- const prior=seasonPrior(games,sport,seasonOf(cutoff));
+ const prior=seasonPrior(games,sport,seasonOf(cutoff,sport));
  const fit=fitResearchRpi(homeRows(games),sport,asOf,prior?{priorRatings:prior,priorRetention:cfg.retention}:{});
  const sched=schedule??buildSchedule(games);
  // Rest coefficient: ridge regression of training residuals on the rest-day difference.

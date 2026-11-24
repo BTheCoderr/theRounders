@@ -1,5 +1,6 @@
 import type {TeamGame} from "./ratings";
 import {uniqueCompletedGames,type Sport,type CompletedGame} from "./powerRatings.ts";
+import {SPORT_CONFIG} from "./sports.ts";
 
 export type ResearchOptions={
  halfLifeDays:number;
@@ -17,12 +18,7 @@ export type ResearchFit={
  options:Omit<ResearchOptions,"priorRatings">;
  warning:string;
 };
-const defaults:Record<Sport,Omit<ResearchOptions,"priorRatings">>={
- NBA:{halfLifeDays:45,ridge:1.25,huberDelta:12,homeRidge:20,priorHomeAdvantage:2.2,priorRetention:0},
- NFL:{halfLifeDays:60,ridge:1.25,huberDelta:9,homeRidge:20,priorHomeAdvantage:2.2,priorRetention:0},
- NHL:{halfLifeDays:50,ridge:1.25,huberDelta:1.5,homeRidge:20,priorHomeAdvantage:0.18,priorRetention:0},
- MLB:{halfLifeDays:35,ridge:1.25,huberDelta:2.5,homeRidge:20,priorHomeAdvantage:0.25,priorRetention:0}
-};
+const defaults=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,{...c.rpi,priorHomeAdvantage:c.homeAdvantage,priorRetention:0}])) as Record<Sport,Omit<ResearchOptions,"priorRatings">>;
 const msDay=86400000;
 const dot=(a:number[],b:number[])=>a.reduce((s,v,i)=>s+v*b[i],0);
 const clamp=(n:number,a:number,b:number)=>Math.max(a,Math.min(b,n));

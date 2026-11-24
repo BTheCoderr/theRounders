@@ -236,3 +236,41 @@ test("ratings table: season record, offense/defense signs, slugs and SoS",async(
  assert.ok(h.length>=2&&h.every(x=>x.rank>=1&&x.rank<=8));
  assert.ok(h.at(-1).rating>0);
 });
+
+test("six sports: config, seasons, chunked ESPN ranges, division groups",async()=>{
+ const {ALL_SPORTS,SPORT_CONFIG,seasonFor,seasonEndDate,espnScoreboardUrl}=await import("../lib/sports.ts");
+ const {monthChunks}=await import("../lib/results/espnArchive.ts");
+ const {dayRanges}=await import("../lib/results/espnSchedule.ts");
+ assert.deepEqual([...ALL_SPORTS],["NBA","NFL","NCAAM","NCAAF","NHL","MLB"]);
+ for(const s of ALL_SPORTS){const c=SPORT_CONFIG[s];assert.ok(c.marginSigma>0&&c.chunkDays>=1&&c.minFranchiseGames>=20,s);}
+ assert.equal(seasonFor("MLB","2026-04-02T00:00:00Z"),2026);
+ assert.equal(seasonFor("NBA","2026-04-02T00:00:00Z"),2025);
+ assert.equal(seasonFor("NCAAF","2026-11-28T00:00:00Z"),2026);
+ assert.equal(seasonEndDate("NFL",2026).toISOString().slice(0,10),"2027-01-12");
+ assert.equal(seasonEndDate("NCAAF",2026).toISOString().slice(0,10),"2026-12-14");
+ assert.match(espnScoreboardUrl("NCAAM","20261201-20261207"),/mens-college-basketball\/scoreboard\?dates=20261201-20261207&limit=1000&groups=50$/);
+ assert.doesNotMatch(espnScoreboardUrl("NBA","202612"),/groups/);
+ assert.deepEqual(monthChunks("202612",31),["202612"]);
+ assert.deepEqual(monthChunks("202602",7),["20260201-20260207","20260208-20260214","20260215-20260221","20260222-20260228"]);
+ assert.deepEqual(dayRanges(new Date("2026-12-01T05:00:00Z"),new Date("2026-12-10T05:00:00Z"),7),["20261201-20261207","20261208-20261210"]);
+});
+test("projected records add remaining win probabilities; unrated opponents are near-certain wins",async()=>{
+ const {buildRatingsTable,addProjections}=await import("../lib/engine/ratingsTable.ts");
+ const games=uniqueCompletedGames(league(300),new Date(Date.UTC(2024,6,1)));
+ const t=buildRatingsTable(games,"NBA",new Date(Date.UTC(2024,6,1)));
+ const p=addProjections(t,[{home:"A",away:"H",neutral:false},{home:"H",away:"A",neutral:false},{home:"A",away:"Division II U",neutral:false}],12);
+ const a=p.rows.find(r=>r.team==="A"),h=p.rows.find(r=>r.team==="H");
+ assert.equal(a.remaining,3);assert.equal(h.remaining,2);
+ const added=a.projWins-a.wins-a.ties/2;assert.ok(added>2.2&&added<3,String(added));
+ assert.ok(Math.abs(a.projWins+a.projLosses-(a.games+3))<0.11);
+ assert.ok(p.projected);
+});
+test("team badges and names across leagues",async()=>{
+ const {team,nickname}=await import("../lib/teams.ts");
+ assert.equal(team("NHL","Toronto Maple Leafs").abbr,"TOR");
+ assert.equal(team("MLB","New York Yankees").abbr,"NYY");
+ assert.equal(team("NCAAM","Duke Blue Devils").abbr,"DUKE");
+ assert.equal(nickname("Boston Red Sox","MLB"),"Red Sox");
+ assert.equal(nickname("Duke Blue Devils","NCAAM"),"Duke Blue Devils");
+ assert.equal(nickname("Boston Celtics"),"Celtics");
+});

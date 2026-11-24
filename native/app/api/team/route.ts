@@ -1,9 +1,9 @@
 import {NextResponse} from "next/server";
 import {MODEL_LABELS,isEngineSport} from "../../../lib/engine/models";
 import {championFor} from "../../../lib/engine/promotion";
-import {buildRatingsTable,ratingHistory,teamGames} from "../../../lib/engine/ratingsTable";
+import {ratingHistory,teamGames} from "../../../lib/engine/ratingsTable";
 import {seasonOf} from "../../../lib/engine/backtest";
-import {verifiedHistory} from "../../../lib/persistence/ratingsData";
+import {ratingsWithProjections} from "../../../lib/persistence/ratingsData";
 import {listTeamPredictions} from "../../../lib/persistence/predictions";
 import {archiveConfigured} from "../../../lib/persistence/history";
 
@@ -20,8 +20,7 @@ export async function GET(req:Request){
  if(!archiveConfigured())return NextResponse.json({ready:false,reason:"Ratings storage is not configured."},{status:503});
  try{
   const now=new Date();
-  const {games}=await verifiedHistory(sport,now);
-  const table=buildRatingsTable(games,sport,now);
+  const {games,table}=await ratingsWithProjections(sport,now);
   const row=table.rows.find(r=>r.slug===slug);
   if(!row)return NextResponse.json({ready:false,reason:"Team not found."},{status:404});
   const model=championFor(sport);
@@ -29,7 +28,7 @@ export async function GET(req:Request){
   const season=table.season;
   const byKey=new Map(stored.map(p=>[p.starts_at.slice(0,10)+"|"+(p.home===row.team?p.away:p.home),p]));
   const rankOf=new Map(table.rows.map(r=>[r.team,r.rank]));
-  const results=teamGames(games.filter(g=>seasonOf(g.date)===season),row.team).map(g=>{
+  const results=teamGames(games.filter(g=>seasonOf(g.date,sport)===season),row.team).map(g=>{
    const p=byKey.get(g.date.slice(0,10)+"|"+g.opponent)??null;
    const pickedTeam=p?p.projected_winner===row.team:null;
    return {...g,opponentRank:rankOf.get(g.opponent)??null,

@@ -8,7 +8,7 @@ export const dynamic="force-dynamic";
 /** Public ledger: every graded pick the live model stored before its game, newest first. */
 export async function GET(req:Request){
  const sport=(new URL(req.url).searchParams.get("sport")||"NBA").toUpperCase();
- if(!isEngineSport(sport))return NextResponse.json({error:"NBA and NFL only"},{status:400});
+ if(!isEngineSport(sport))return NextResponse.json({error:"Unsupported sport"},{status:400});
  if(!archiveConfigured())return NextResponse.json({sport,ready:false,reason:"Storage is not configured."},{status:503});
  try{
   const model=championFor(sport);

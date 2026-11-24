@@ -36,9 +36,9 @@ export default function TrackRecord(){
     </div>
     <div className="marketTabs" role="tablist">{(["all","right","wrong"] as const).map(f=><button key={f} role="tab" aria-selected={filter===f} className={filter===f?"active":""} onClick={()=>setFilter(f)}>{f==="all"?"All":f==="right"?"Hits":"Misses"}</button>)}</div>
     <ul className="ledger">{picks.map(p=><li key={p.eventId}>
-     <div className="lgMain"><span className="lgGame">{nickname(p.away)} @ {nickname(p.home)}</span>
+     <div className="lgMain"><span className="lgGame">{nickname(p.away,sport)} @ {nickname(p.home,sport)}</span>
       <span className="lgMeta">{when(p.startsAt)} · locked {when(p.predictedAt)}</span></div>
-     <div className="lgPick"><small>Pick</small><b>{nickname(p.winner)} {pct(p.probability,0)}</b><span>{p.projectedSpreadHome>0?nickname(p.away):nickname(p.home)} {(-Math.abs(p.projectedSpreadHome)).toFixed(1)} · O/U {p.projectedTotal.toFixed(1)}</span></div>
+     <div className="lgPick"><small>Pick</small><b>{nickname(p.winner,sport)} {pct(p.probability,0)}</b><span>{p.projectedSpreadHome>0?nickname(p.away,sport):nickname(p.home,sport)} {(-Math.abs(p.projectedSpreadHome)).toFixed(1)} · O/U {p.projectedTotal.toFixed(1)}</span></div>
      <div className="lgFinal"><small>Final</small><b>{p.final.away}-{p.final.home}</b></div>
      <span className={"lgMark "+(p.correct?"pos":p.correct===false?"neg":"")} aria-label={p.correct?"Correct":p.correct===false?"Wrong":"Tie"}>{p.correct?"✓":p.correct===false?"✗":"–"}</span>
     </li>)}</ul>

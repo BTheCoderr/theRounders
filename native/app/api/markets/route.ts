@@ -2,7 +2,8 @@ import {NextRequest,NextResponse} from "next/server";
 import {mockProvider} from "../../../lib/providers/mock";
 import {liveProvider} from "../../../lib/providers/live";
 const STALE_MS=120000;
-const SPORTS=new Set(["NBA","NFL","NHL","MLB"]);
+import {ALL_SPORTS} from "../../../lib/sports";
+const SPORTS=new Set<string>(ALL_SPORTS);
 // Per-instance cache so visitors cannot drain the odds provider's quota; the CDN caches too.
 const cache=new Map<string,{at:number;body:unknown}>();
 const CACHE_MS=45000;

@@ -23,7 +23,7 @@ export default function PowerRankings({sport}:{sport:ProductSport}){
    <ol className="rankList">{rows.map(r=>{const t=team(sport,r.team);return <li key={r.team}>
     <span className="rankNo">{r.rank}</span>
     <span className="teamBadge sm" style={{background:t.color,color:onColor(t.color)}} aria-hidden="true">{t.abbr}</span>
-    <a className="rankName" href={`/teams/${sport.toLowerCase()}/${teamSlug(r.team)}`}>{nickname(r.team)}</a>
+    <a className="rankName" href={`/teams/${sport.toLowerCase()}/${teamSlug(r.team)}`}>{nickname(r.team,sport)}</a>
     <span className="rankBar" aria-hidden="true"><i className={r.rating>=0?"pos":"neg"} style={{width:Math.abs(r.rating)/max*50+"%"}}/></span>
     <span className={"rankVal "+(r.rating>=0?"pos":"neg")}>{r.rating>0?"+":""}{r.rating.toFixed(1)}</span>
    </li>})}</ol>

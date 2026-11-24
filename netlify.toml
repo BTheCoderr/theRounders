@@ -26,6 +26,10 @@
   schedule = "30 */3 * * *"
 [functions."rounders-history-mlb"]
   schedule = "45 */3 * * *"
+[functions."rounders-history-ncaam"]
+  schedule = "5,25,45 * * * *"
+[functions."rounders-history-ncaaf"]
+  schedule = "10,30,50 * * * *"
 
 [functions."rounders-evaluation-nba"]
   schedule = "0 14 * * *"
@@ -36,7 +40,7 @@
 [functions."rounders-evaluation-mlb"]
   schedule = "45 14 * * *"
 
-# NBA/NFL prediction engine: snapshots before games, grading after, daily backtests.
+# Prediction engine (all six sports): snapshots before games, grading after, daily backtests.
 [functions."rounders-predict-nba"]
   schedule = "20 15 * * *"
 [functions."rounders-predict-nfl"]
@@ -47,6 +51,22 @@
   schedule = "5 13 * * *"
 [functions."rounders-backtest-nfl"]
   schedule = "20 13 * * *"
+[functions."rounders-predict-ncaam"]
+  schedule = "10 15 * * *"
+[functions."rounders-predict-ncaaf"]
+  schedule = "30 15 * * *"
+[functions."rounders-predict-nhl"]
+  schedule = "35 15 * * *"
+[functions."rounders-predict-mlb"]
+  schedule = "40 15 * * *"
+[functions."rounders-backtest-ncaam"]
+  schedule = "35 13 * * *"
+[functions."rounders-backtest-ncaaf"]
+  schedule = "50 13 * * *"
+[functions."rounders-backtest-nhl"]
+  schedule = "35 12 * * *"
+[functions."rounders-backtest-mlb"]
+  schedule = "50 12 * * *"
 
 [build.environment]
   NODE_VERSION = "20"

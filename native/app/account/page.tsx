@@ -1,4 +1,5 @@
 "use client";
+import {PRODUCT_SPORTS,SPORT_LABEL} from "../../lib/clientTypes";
 import {useEffect,useState} from "react";
 import {authHeaders} from "../../lib/clientAuth";
 import PlanButton from "../../components/PlanButton";
@@ -25,7 +26,7 @@ export default function AccountPage(){
     {a.plan==="free"?<a className="btn" href="/pricing">See plans</a>:<PlanButton portal label="Manage billing"/>}
    </section>
    {a.plan!=="free"?<section className="panel2"><h3>Exports</h3><p className="muted">Every graded prediction as a spreadsheet.</p>
-    <div className="btnRow"><button className="btn ghost" onClick={()=>void download("NBA")}>NBA CSV</button><button className="btn ghost" onClick={()=>void download("NFL")}>NFL CSV</button></div></section>:null}
+    <div className="btnRow">{PRODUCT_SPORTS.map(s=><button key={s} className="btn ghost" onClick={()=>void download(s)}>{SPORT_LABEL[s]} CSV</button>)}</div></section>:null}
    <AccountAccess/>
    {a.testMode?<p className="fine center">Billing is in Stripe test mode.</p>:null}
   </>}

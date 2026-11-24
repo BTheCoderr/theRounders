@@ -38,7 +38,7 @@ export const mockProvider: OddsProvider = {
   },
   async getMarkets(sport) {
     const now = new Date();
-    const games = fixtures[sport] ?? fixtures.NBA;
+    const games = fixtures[sport] ?? [];   // no demo fixtures for sports without them
     const quotes: MarketQuote[] = [];
     games.forEach(([away, home], game) => {
       const eventId = sport.toLowerCase() + "-" + (game + 1);

@@ -39,15 +39,48 @@ const NFL:Record<string,Team>={
  "Seattle Seahawks":{abbr:"SEA",color:"#002244"},"Tampa Bay Buccaneers":{abbr:"TB",color:"#D50A0A"},
  "Tennessee Titans":{abbr:"TEN",color:"#4B92DB"},"Washington Commanders":{abbr:"WSH",color:"#5A1414"}
 };
+const NHL:Record<string,Team>={
+ "Anaheim Ducks":{abbr:"ANA",color:"#F47A38"},"Boston Bruins":{abbr:"BOS",color:"#FFB81C"},"Buffalo Sabres":{abbr:"BUF",color:"#003087"},
+ "Calgary Flames":{abbr:"CGY",color:"#C8102E"},"Carolina Hurricanes":{abbr:"CAR",color:"#CE1126"},"Chicago Blackhawks":{abbr:"CHI",color:"#CF0A2C"},
+ "Colorado Avalanche":{abbr:"COL",color:"#6F263D"},"Columbus Blue Jackets":{abbr:"CBJ",color:"#002654"},"Dallas Stars":{abbr:"DAL",color:"#006847"},
+ "Detroit Red Wings":{abbr:"DET",color:"#CE1126"},"Edmonton Oilers":{abbr:"EDM",color:"#041E42"},"Florida Panthers":{abbr:"FLA",color:"#C8102E"},
+ "Los Angeles Kings":{abbr:"LA",color:"#111111"},"Minnesota Wild":{abbr:"MIN",color:"#154734"},"Montreal Canadiens":{abbr:"MTL",color:"#AF1E2D"},
+ "Montréal Canadiens":{abbr:"MTL",color:"#AF1E2D"},"Nashville Predators":{abbr:"NSH",color:"#FFB81C"},"New Jersey Devils":{abbr:"NJ",color:"#CE1126"},
+ "New York Islanders":{abbr:"NYI",color:"#00539B"},"New York Rangers":{abbr:"NYR",color:"#0038A8"},"Ottawa Senators":{abbr:"OTT",color:"#C52032"},
+ "Philadelphia Flyers":{abbr:"PHI",color:"#F74902"},"Pittsburgh Penguins":{abbr:"PIT",color:"#FCB514"},"San Jose Sharks":{abbr:"SJ",color:"#006D75"},
+ "Seattle Kraken":{abbr:"SEA",color:"#001628"},"St. Louis Blues":{abbr:"STL",color:"#002F87"},"Tampa Bay Lightning":{abbr:"TB",color:"#002868"},
+ "Toronto Maple Leafs":{abbr:"TOR",color:"#00205B"},"Utah Mammoth":{abbr:"UTA",color:"#6CACE4"},"Utah Hockey Club":{abbr:"UTA",color:"#6CACE4"},
+ "Vancouver Canucks":{abbr:"VAN",color:"#00205B"},"Vegas Golden Knights":{abbr:"VGK",color:"#B4975A"},"Washington Capitals":{abbr:"WSH",color:"#C8102E"},
+ "Winnipeg Jets":{abbr:"WPG",color:"#041E42"}
+};
+const MLB:Record<string,Team>={
+ "Arizona Diamondbacks":{abbr:"ARI",color:"#A71930"},"Atlanta Braves":{abbr:"ATL",color:"#CE1141"},"Baltimore Orioles":{abbr:"BAL",color:"#DF4601"},
+ "Boston Red Sox":{abbr:"BOS",color:"#BD3039"},"Chicago Cubs":{abbr:"CHC",color:"#0E3386"},"Chicago White Sox":{abbr:"CHW",color:"#27251F"},
+ "Cincinnati Reds":{abbr:"CIN",color:"#C6011F"},"Cleveland Guardians":{abbr:"CLE",color:"#00385D"},"Colorado Rockies":{abbr:"COL",color:"#333366"},
+ "Detroit Tigers":{abbr:"DET",color:"#0C2340"},"Houston Astros":{abbr:"HOU",color:"#EB6E1F"},"Kansas City Royals":{abbr:"KC",color:"#004687"},
+ "Los Angeles Angels":{abbr:"LAA",color:"#BA0021"},"Los Angeles Dodgers":{abbr:"LAD",color:"#005A9C"},"Miami Marlins":{abbr:"MIA",color:"#00A3E0"},
+ "Milwaukee Brewers":{abbr:"MIL",color:"#12284B"},"Minnesota Twins":{abbr:"MIN",color:"#002B5C"},"New York Mets":{abbr:"NYM",color:"#002D72"},
+ "New York Yankees":{abbr:"NYY",color:"#0C2340"},"Athletics":{abbr:"ATH",color:"#003831"},"Oakland Athletics":{abbr:"OAK",color:"#003831"},
+ "Philadelphia Phillies":{abbr:"PHI",color:"#E81828"},"Pittsburgh Pirates":{abbr:"PIT",color:"#27251F"},"San Diego Padres":{abbr:"SD",color:"#2F241D"},
+ "San Francisco Giants":{abbr:"SF",color:"#FD5A1E"},"Seattle Mariners":{abbr:"SEA",color:"#0C2C56"},"St. Louis Cardinals":{abbr:"STL",color:"#C41E3A"},
+ "Tampa Bay Rays":{abbr:"TB",color:"#092C5C"},"Texas Rangers":{abbr:"TEX",color:"#003278"},"Toronto Blue Jays":{abbr:"TOR",color:"#134A8E"},
+ "Washington Nationals":{abbr:"WSH",color:"#AB0003"}
+};
+const COLLEGE=new Set(["NCAAM","NCAAF"]);
+const BY_SPORT:Record<string,Record<string,Team>>={NBA,NFL,NHL,MLB};
 export function team(sport:string,name:string):Team{
- const hit=(sport==="NFL"?NFL:NBA)[name];
+ const hit=BY_SPORT[sport]?.[name];
  if(hit)return hit;
- const words=name.split(/\s+/).filter(Boolean);
- return {abbr:(words.length>1?words.map(w=>w[0]).join(""):name).slice(0,3).toUpperCase(),color:"#334A6E"};
+ const words=name.replace(/[^A-Za-z0-9&' ]/g," ").split(/\s+/).filter(Boolean);
+ // College: the school's first word ("DUKE", "OHIO"); otherwise initials. Neutral color, no logos.
+ const abbr=COLLEGE.has(sport)?(words[0]||name).slice(0,4):(words.length>1?words.map(w=>w[0]).join(""):name).slice(0,3);
+ return {abbr:abbr.toUpperCase(),color:COLLEGE.has(sport)?"#2B4B7C":"#334A6E"};
 }
-/** Nickname for compact rows: "Boston Celtics" -> "Celtics", "Portland Trail Blazers" -> "Trail Blazers". */
-export function nickname(name:string):string{
- if(/Trail Blazers$/.test(name))return "Trail Blazers";
+const TWO_WORD=/(Trail Blazers|Red Sox|White Sox|Blue Jays|Maple Leafs|Golden Knights|Blue Jackets|Red Wings)$/;
+/** Nickname for compact rows: "Boston Celtics" -> "Celtics". College teams keep their full name (school + mascot). */
+export function nickname(name:string,sport?:string):string{
+ if(sport&&COLLEGE.has(sport))return name;
+ const two=name.match(TWO_WORD);if(two)return two[1];
  const w=name.split(/\s+/);return w.length>1?w[w.length-1]:name;
 }
 /** Readable text color on a badge background. */

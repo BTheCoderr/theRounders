@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {SPORT_CONFIG,isSport} from "../../../lib/sports";
 import {getVerifiedResearchGames} from "../../../lib/persistence/history";
 import {auditGameHistory} from "../../../lib/researchDataQuality";
 import type {Sport} from "../../../lib/powerRatings";
@@ -6,7 +7,7 @@ import type {Sport} from "../../../lib/powerRatings";
 export const dynamic="force-dynamic";
 export async function GET(request:Request){
  const sport=(new URL(request.url).searchParams.get("sport")||"NBA").toUpperCase();
- if(!["NBA","NFL","NHL","MLB"].includes(sport))
+ if(!isSport(sport))
   return NextResponse.json({error:"Unsupported sport"},{status:400});
  try{
   const data=await getVerifiedResearchGames(sport as Sport);

@@ -1,5 +1,6 @@
 import type {CompletedGame} from "../powerRatings";
 import type {EngineSport} from "./models";
+import {SPORT_CONFIG} from "../sports.ts";
 
 /**
  * Rounders Totals v1: recency-weighted, ridge-regularized offense/defense scoring model.
@@ -9,10 +10,7 @@ import type {EngineSport} from "./models";
  * Fitted by Gauss-Seidel on weighted least squares; only games before `asOf` are used.
  */
 export const TOTALS_MODEL="totals-v1";
-const settings:Record<EngineSport,{halfLifeDays:number;ridge:number;homeEdge:number}>={
- NBA:{halfLifeDays:45,ridge:4,homeEdge:2.2},
- NFL:{halfLifeDays:90,ridge:2,homeEdge:2.2}
-};
+const settings=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,{...c.totals,homeEdge:c.homeAdvantage}])) as Record<EngineSport,{halfLifeDays:number;ridge:number;homeEdge:number}>;
 const DAY=86400000;
 export type TotalsFit={
  mu:number;games:number;

@@ -3,9 +3,8 @@ import type {TeamGame} from "../ratings";
 export type ResultsSource="external"|"simulated";
 export type ResultsBatch={games:TeamGame[];source:ResultsSource;provider:string;fetchedAt:string;message?:string};
 
-const league:Record<string,[string,string]>={
- NBA:["basketball","nba"],NFL:["football","nfl"],NHL:["hockey","nhl"],MLB:["baseball","mlb"]
-};
+import {SPORT_CONFIG} from "../sports.ts";
+const league:Record<string,[string,string]>=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,[c.espn.kind,c.espn.slug]]));
 type Competitor={homeAway:"home"|"away";score?:string;team?:{displayName?:string;abbreviation?:string}};
 type Event={date?:string;status?:{type?:{completed?:boolean}};competitions?:Array<{competitors?:Competitor[]}>};
 

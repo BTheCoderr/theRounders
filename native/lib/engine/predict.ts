@@ -3,6 +3,7 @@ import {CANDIDATE_MODELS,ENGINE_REVISION,SPORT_SETTINGS,fitMarginModel,type Engi
 import {TOTALS_MODEL,fitTotals} from "./totals.ts";
 import {buildSchedule} from "./v3.ts";
 import {winProbability} from "./metrics.ts";
+import {SPORT_CONFIG} from "../sports.ts";
 
 export type UpcomingGame={
  eventId:string;startsAt:string;season:number;
@@ -73,8 +74,8 @@ export function gradePrediction(p:{projected_margin:number;projected_total:numbe
 }
 
 const HOUR=3600000,DAY=24*HOUR;
-/** NBA: about one day ahead (today's slate). NFL: the coming week on Tuesdays, otherwise a two-day catch-up. */
+/** Daily sports: about one day ahead. Weekly (football): the coming week on Tuesdays, otherwise a two-day catch-up. */
 export function snapshotWindow(sport:EngineSport,now:Date):{from:Date;to:Date}{
- const ahead=sport==="NBA"?26*HOUR:now.getUTCDay()===2?7*DAY:2*DAY;
+ const ahead=SPORT_CONFIG[sport].slate==="daily"?26*HOUR:now.getUTCDay()===2?7*DAY:2*DAY;
  return {from:now,to:new Date(now.getTime()+ahead)};
 }

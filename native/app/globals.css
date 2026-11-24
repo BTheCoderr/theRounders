@@ -45,8 +45,9 @@ main{max-width:1120px;margin:0 auto;padding:0 16px 64px}
 .heroSub{color:var(--muted);font-size:1.02rem;line-height:1.55;max-width:56ch;margin:12px 0 0}
 
 /* Sport switch */
-.sportBar{position:sticky;top:55px;z-index:10;display:inline-flex;gap:4px;padding:4px;margin:10px 0 4px;background:var(--bg2);border:1px solid var(--line);border-radius:999px}
-.sportBar button{background:transparent;color:var(--muted);font-weight:800;font-size:.9rem;padding:8px 22px;border-radius:999px;letter-spacing:.04em}
+.sportBar{position:sticky;top:55px;z-index:10;display:inline-flex;max-width:100%;overflow-x:auto;scrollbar-width:none;gap:4px;padding:4px;margin:10px 0 4px;background:var(--bg2);border:1px solid var(--line);border-radius:999px}
+.sportBar::-webkit-scrollbar{display:none}
+.sportBar button{flex:none;background:transparent;color:var(--muted);font-weight:800;font-size:.9rem;padding:8px 18px;border-radius:999px;letter-spacing:.04em}
 .sportBar button.on{background:var(--accent);color:#fff;box-shadow:0 4px 16px rgba(76,141,255,.35)}
 
 /* Sections */
@@ -257,6 +258,8 @@ details.more summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--
  .topBar{flex-wrap:wrap;row-gap:8px;padding-bottom:6px}
  .topNav{order:3;width:100%;margin:0 -6px;overflow-x:auto;scrollbar-width:none}
  .topNav a{font-size:.85rem;padding:6px 10px;white-space:nowrap}
+ .sportBar{top:98px}
+ .sportBar button{padding:8px 12px;font-size:.84rem}
  .planGrid{grid-template-columns:1fr}
  .analytics{grid-template-columns:1fr 1fr}.paperTicket{grid-column:span 2}
  .gameCard{grid-template-columns:1fr}.fresh{flex-direction:row;align-items:center;justify-content:space-between}

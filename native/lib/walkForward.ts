@@ -1,6 +1,7 @@
 import type {TeamGame} from "./ratings";
 import {computePowerBoard,uniqueCompletedGames,type CompletedGame,type Sport} from "./powerRatings.ts";
 import {fitResearchRpi} from "./researchRpi.ts";
+import {SPORT_CONFIG} from "./sports.ts";
 
 /**
  * Historical-only expanding-window benchmark, recomputed at each UTC Monday.
@@ -29,12 +30,7 @@ export type WalkForwardReport={
  warning:string;
 };
 
-const settings:Record<Sport,{hfa:number;eloPointScale:number}> = {
- NBA:{hfa:2.2,eloPointScale:0.04},
- NFL:{hfa:2.2,eloPointScale:0.03},
- NHL:{hfa:0.18,eloPointScale:0.0035},
- MLB:{hfa:0.25,eloPointScale:0.005}
-};
+const settings=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,{hfa:c.homeAdvantage,eloPointScale:c.eloPointScale}])) as Record<Sport,{hfa:number;eloPointScale:number}>;
 const competitors:Competitor[]=["home-baseline","massey-ridge","elo-margin","rounders-power-v2","rounders-research-v2.1"];
 const week=7*86400000;
 const round=(n:number)=>Number(n.toFixed(3));
