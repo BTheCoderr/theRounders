@@ -3,6 +3,7 @@ import {buildRatings,projectMatchup} from "../ratings.ts";
 import {computePowerBoard,type CompletedGame} from "../powerRatings.ts";
 import {fitResearchRpi} from "../researchRpi.ts";
 import {fitElo,fitMasseyRidge} from "../walkForward.ts";
+import {fitV3,type Schedule} from "./v3.ts";
 
 /** The product covers NBA and NFL. MLB/NHL history stays archived but is not modeled here. */
 export type EngineSport="NBA"|"NFL";
@@ -12,9 +13,9 @@ export const isEngineSport=(s:string):s is EngineSport=>s==="NBA"||s==="NFL";
 /** Bump when the shared engine pipeline (totals, probability mapping, inputs) changes. */
 export const ENGINE_REVISION="engine-1";
 
-export type ModelId="home-baseline"|"elo-margin"|"massey-ridge"|"rounders-v1"|"power-v2"|"rpi-v2.1";
+export type ModelId="home-baseline"|"elo-margin"|"massey-ridge"|"rounders-v1"|"power-v2"|"rpi-v2.1"|"rounders-v3"|"ensemble";
 /** Candidates that can be champion. Baselines are benchmarks only. */
-export const CANDIDATE_MODELS:readonly ModelId[]=["rounders-v1","power-v2","rpi-v2.1"];
+export const CANDIDATE_MODELS:readonly ModelId[]=["rounders-v1","power-v2","rpi-v2.1","rounders-v3","ensemble"];
 export const BENCHMARK_MODELS:readonly ModelId[]=["home-baseline","elo-margin","massey-ridge"];
 export const ALL_MODELS:readonly ModelId[]=[...BENCHMARK_MODELS,...CANDIDATE_MODELS];
 export const MODEL_LABELS:Record<ModelId,string>={
@@ -23,7 +24,9 @@ export const MODEL_LABELS:Record<ModelId,string>={
  "massey-ridge":"Least-squares ridge (benchmark)",
  "rounders-v1":"Rounders v1",
  "power-v2":"Rounders Power Index v2",
- "rpi-v2.1":"Research RPI v2.1"
+ "rpi-v2.1":"Research RPI v2.1",
+ "rounders-v3":"Rounders v3",
+ "ensemble":"Rounders Ensemble"
 };
 export const isModelId=(s:string):s is ModelId=>(ALL_MODELS as readonly string[]).includes(s);
 
@@ -36,7 +39,8 @@ export const SPORT_SETTINGS:Record<EngineSport,{homeAdvantage:number;eloPointSca
 };
 
 /** Returns the projected home-minus-away margin, or null when a team has no history. */
-export type MarginPredictor=(home:string,away:string,neutral:boolean)=>number|null;
+/** `date` (scheduled start) lets schedule-aware models use rest days; results are never needed. */
+export type MarginPredictor=(home:string,away:string,neutral:boolean,date?:string)=>number|null;
 
 const bothSides=(games:CompletedGame[]):TeamGame[]=>games.flatMap(g=>[
  {date:g.date,team:g.home,opponent:g.away,teamScore:g.homeScore,opponentScore:g.awayScore,location:g.neutral?"neutral" as const:"home" as const},
@@ -51,7 +55,7 @@ const homeRows=(games:CompletedGame[]):TeamGame[]=>games.map(g=>({
  * Fit one model on games that finished strictly before `asOf`.
  * Callers must pass only past games; this function also refuses later ones.
  */
-export function fitMarginModel(model:ModelId,history:CompletedGame[],sport:EngineSport,asOf:Date):MarginPredictor{
+export function fitMarginModel(model:ModelId,history:CompletedGame[],sport:EngineSport,asOf:Date,schedule?:Schedule):MarginPredictor{
  const cutoff=asOf.getTime();
  const games=history.filter(g=>Date.parse(g.date)<cutoff);
  const s=SPORT_SETTINGS[sport];
@@ -88,6 +92,19 @@ export function fitMarginModel(model:ModelId,history:CompletedGame[],sport:Engin
    return (home,away,neutral)=>{
     const h=r.get(home),a=r.get(away);
     return h===undefined||a===undefined?null:h-a+(neutral?0:board.parameters.homeAdvantage);
+   };
+  }
+  case "rounders-v3":{
+   const v3=fitV3(games,sport,asOf,schedule);
+   return (home,away,neutral,date)=>v3.predict(home,away,neutral,date);
+  }
+  case "ensemble":{
+   // Equal-weight average of the strongest independent fits; null unless every member covers the game.
+   const members=(["power-v2","rpi-v2.1","elo-margin","rounders-v3"] as const).map(m=>fitMarginModel(m,games,sport,asOf,schedule));
+   return (home,away,neutral,date)=>{
+    let sum=0;
+    for(const f of members){const v=f(home,away,neutral,date);if(v===null||!Number.isFinite(v))return null;sum+=v;}
+    return sum/members.length;
    };
   }
   case "rpi-v2.1":{

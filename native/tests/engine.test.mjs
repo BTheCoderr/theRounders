@@ -103,10 +103,10 @@ test("promotion gate recommends a clearly better challenger with enough evidence
  assert.equal(evaluatePromotion(worseBrier,"rounders-v1","power-v2").recommend,false);
 });
 
-test("champion defaults to Rounders v1 and only accepts candidate models",()=>{
- assert.equal(championFor("NBA",{}),"rounders-v1");
+test("champion defaults follow the gate and only accept candidate models",()=>{
+ assert.equal(championFor("NBA",{}),"power-v2");assert.equal(championFor("NFL",{}),"rounders-v1");
  assert.equal(championFor("NFL",{ROUNDERS_CHAMPION_NFL:"power-v2"}),"power-v2");
- assert.equal(championFor("NBA",{ROUNDERS_CHAMPION_NBA:"home-baseline"}),"rounders-v1");
+ assert.equal(championFor("NBA",{ROUNDERS_CHAMPION_NBA:"home-baseline"}),"power-v2");
 });
 
 test("snapshots are strictly pregame, use only past games, and stay internally consistent",()=>{
@@ -177,4 +177,31 @@ test("snapshot windows: NBA about a day, NFL a week on Tuesdays",()=>{
  assert.equal(hours(snapshotWindow("NBA",new Date("2026-11-24T15:20:00Z"))),26);
  assert.equal(hours(snapshotWindow("NFL",new Date("2026-11-24T15:25:00Z"))),168);
  assert.equal(hours(snapshotWindow("NFL",new Date("2026-11-26T15:25:00Z"))),48);
+});
+
+import {buildSchedule,restDays,fitV3,seasonOf} from "../lib/engine/v3.ts";
+test("rest days come from the schedule, ignore offseason gaps, and are capped",()=>{
+ const s=buildSchedule([{date:"2025-01-01T00:00:00Z",home:"A",away:"B"},{date:"2025-01-02T00:00:00Z",home:"A",away:"C"},{date:"2025-03-30T00:00:00Z",home:"B",away:"A"}]);
+ assert.equal(restDays(s,"A",Date.parse("2025-01-02T00:00:00Z"),3),1);
+ assert.equal(restDays(s,"B",Date.parse("2025-01-02T00:00:00Z"),3),1);
+ assert.equal(restDays(s,"C",Date.parse("2025-01-02T00:00:00Z"),3),null,"first game in data");
+ assert.equal(restDays(s,"A",Date.parse("2025-03-30T00:00:00Z"),3),null,"gap over 40 days is not rest");
+ assert.equal(seasonOf(Date.parse("2025-10-21T00:00:00Z")),2025);assert.equal(seasonOf(Date.parse("2026-02-01T00:00:00Z")),2025);
+});
+test("v3 learns a rest effect from data and never uses later results",()=>{
+ // Synthetic: equal teams, home team wins by 3 more points per extra day of rest.
+ const teams=["A","B","C","D","E","F"],rows=[];let day=0,k=0;
+ const start=Date.UTC(2024,9,1);
+ // Two games a day among six teams, so rest differs between opponents.
+ let seed=7;const rnd=()=>(seed=(seed*1103515245+12345)%2147483648)/2147483648;
+ for(let r=0;r<240;r++){day+=1;const order=[...teams].sort(()=>rnd()-0.5);
+  for(let i=0;i<2;i++){const h=order[i*2],a=order[i*2+1];k++;
+   rows.push({date:new Date(start+day*86400000+i*1000).toISOString(),home:h,away:a,homeScore:100,awayScore:100,neutral:false});}}
+ const sched=buildSchedule(rows);
+ const withRest=rows.map(g=>{const t=Date.parse(g.date);const rh=restDays(sched,g.home,t,3),ra=restDays(sched,g.away,t,3);const m=2+(rh!==null&&ra!==null?3*(rh-ra):0)+((k++%5)-2);return {...g,homeScore:100+Math.max(0,m),awayScore:100+Math.max(0,-m)};});
+ const asOf=new Date(start+(day-20)*86400000);
+ const fit=fitV3(withRest,"NBA",asOf,sched);
+ assert.ok(fit.restPointsPerDay>1.5&&fit.restPointsPerDay<3.5,String(fit.restPointsPerDay));
+ const future=[...withRest,{date:new Date(asOf.getTime()+86400000).toISOString(),home:"A",away:"B",homeScore:300,awayScore:0,neutral:false}];
+ assert.equal(fitV3(future,"NBA",asOf,sched).predict("A","B",false),fit.predict("A","B",false));
 });

@@ -42,8 +42,13 @@ export function evaluatePromotion(report:BacktestReport,champion:ModelId,challen
   maeDifference:r(mae.mean),standardError:r(mae.se),brierDifference:r(brier.mean),
   reasons:reasons.length?reasons:["Passes the out-of-sample gate. Review, then set the champion explicitly."]};
 }
-/** Champion per sport. Defaults to Rounders v1, the model customers have been shown. */
+/**
+ * Live model per sport when ROUNDERS_CHAMPION_<SPORT> is unset. Changed only after the
+ * promotion gate recommended it on real out-of-sample games:
+ *  NBA 2026-11-24: power-v2 beat rounders-v1 over 4,890 games (Brier 0.2145 vs 0.2439).
+ */
+export const DEFAULT_CHAMPION:Record<EngineSport,ModelId>={NBA:"power-v2",NFL:"rounders-v1"};
 export function championFor(sport:EngineSport,env:Record<string,string|undefined>=typeof process!=="undefined"?process.env:{}):ModelId{
  const configured=env["ROUNDERS_CHAMPION_"+sport];
- return configured&&(CANDIDATE_MODELS as readonly string[]).includes(configured)?configured as ModelId:"rounders-v1";
+ return configured&&(CANDIDATE_MODELS as readonly string[]).includes(configured)?configured as ModelId:DEFAULT_CHAMPION[sport];
 }

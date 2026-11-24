@@ -1,6 +1,7 @@
 import type {CompletedGame} from "../powerRatings";
 import {CANDIDATE_MODELS,ENGINE_REVISION,SPORT_SETTINGS,fitMarginModel,type EngineSport,type ModelId} from "./models.ts";
 import {TOTALS_MODEL,fitTotals} from "./totals.ts";
+import {buildSchedule} from "./v3.ts";
 import {winProbability} from "./metrics.ts";
 
 export type UpcomingGame={
@@ -32,13 +33,15 @@ export function predictUpcoming(history:CompletedGame[],upcoming:UpcomingGame[],
  const past=history.filter(g=>Date.parse(g.date)<now.getTime());
  const through=past.length?past[past.length-1].date:null;
  const totals=fitTotals(past,sport,now);
+ // Schedule = past game dates + the upcoming slate (dates only), for rest features.
+ const schedule=buildSchedule([...past,...upcoming.map(g=>({date:g.startsAt,home:g.home,away:g.away}))]);
  const sigma=SPORT_SETTINGS[sport].marginSigma;
  const out:PredictionRecord[]=[];
  for(const m of models){
-  const predict=fitMarginModel(m,past,sport,now);
+  const predict=fitMarginModel(m,past,sport,now,schedule);
   for(const g of upcoming){
    if(!(Date.parse(g.startsAt)-now.getTime()>=lead))continue;
-   const margin=predict(g.home,g.away,g.neutral),t=totals.predict(g.home,g.away,g.neutral);
+   const margin=predict(g.home,g.away,g.neutral,g.startsAt),t=totals.predict(g.home,g.away,g.neutral);
    if(margin===null||!Number.isFinite(margin)||!t)continue;
    // Scores are split around the totals model so margin and total stay consistent.
    const home=(t.total+margin)/2,away=(t.total-margin)/2;
