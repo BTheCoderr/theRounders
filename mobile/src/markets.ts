@@ -1,8 +1,8 @@
 /** The product covers NBA and NFL. MLB/NHL history is preserved on the server but not shown. */
-export const SPORTS=["NBA","NFL"] as const;
+export const SPORTS=["NBA","NFL","NCAAM","NCAAF","NHL","MLB"] as const;
 export type Sport=typeof SPORTS[number];
 /** Abbreviations from the deployed demo feed, mapped to ESPN display names the ratings model uses. */
-const TEAM_NAMES:Record<Sport,Record<string,string>>={
+const TEAM_NAMES:Partial<Record<Sport,Record<string,string>>>={
  NBA:{BOS:"Boston Celtics",NYK:"New York Knicks",LAL:"Los Angeles Lakers",GSW:"Golden State Warriors",MIL:"Milwaukee Bucks",CLE:"Cleveland Cavaliers"},
  NFL:{BUF:"Buffalo Bills",NYJ:"New York Jets",DAL:"Dallas Cowboys",PHI:"Philadelphia Eagles",KC:"Kansas City Chiefs",DEN:"Denver Broncos"},
 };
@@ -54,13 +54,13 @@ export function getPriceGaps(quotes:Quote[]):PriceGap[]{
  }
  return result.sort((a,b)=>b.gap-a.gap);
 }
-const DEMO_BOARD:Record<Sport,{games:[string,string][];spread:number;total:number}>={
+const DEMO_BOARD:Partial<Record<Sport,{games:[string,string][];spread:number;total:number}>>={
  NBA:{games:[["Boston Celtics","New York Knicks"],["Los Angeles Lakers","Golden State Warriors"]],spread:-3.5,total:220.5},
  NFL:{games:[["Buffalo Bills","New York Jets"],["Dallas Cowboys","Philadelphia Eagles"]],spread:-3.5,total:45.5},
 };
 export function demoQuotes(sport:Sport):Quote[]{
  const ts=new Date().toISOString();
- const board=DEMO_BOARD[sport];
+ const board=DEMO_BOARD[sport];if(!board)return [];
  const books=[["Sample Book A",-7],["Sample Book B",7]] as const;
  return board.games.flatMap(([away,home],i)=>{
   const homeSpread=board.spread+i;
