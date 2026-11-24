@@ -1,9 +1,10 @@
 import type {Metadata} from "next";
 import Link from "next/link";
-export const metadata:Metadata={title:"FAQ | The Rounders",description:"Ratings, picks, grading, plans and data sources."};
+const description="Ratings, picks, grading, plans and data sources.";
+export const metadata:Metadata={title:"FAQ · The Rounders",description,alternates:{canonical:"/faq"},openGraph:{title:"FAQ · The Rounders",description,url:"/faq"},twitter:{title:"FAQ · The Rounders",description}};
 const questions=[
 ["What does a rating mean?","The Power Index estimates scoring margin relative to an average team on a neutral site, adjusted for opponent strength and recency. Higher is stronger. Offense and defense describe scoring contributions; strength of schedule describes opponent quality."],
-["When do picks lock?","The first prediction for a game and model is stored before its scheduled start. The engine normally skips games less than ten minutes away when generating predictions. Publication timing depends on the schedule and available data; not every game is covered."],
+["When do picks lock?","The first prediction for a game and model is stored before its scheduled start. The schedule is checked every hour, and games less than ten minutes away are skipped. Publication timing depends on the schedule and available data; not every game is covered."],
 ["How are picks graded?","After a verified final score, we compare the stored winner, probability, margin and total with the result. Pending games remain pending until resolved; unresolved games may be voided. Ties do not count toward binary winner accuracy. Market comparisons require a captured pregame line."],
 ["What is included in Free?","Projected winners, win probabilities, Power Index ratings and public performance records."],
 ["What is included in Pro and Edge?","Pro is proposed at $19.99 per month and adds projected spreads, totals, scores, CSV history and generative matchup analysis when enabled. Edge is proposed at $39.99 per month and adds challenger-model comparisons and captured market-line comparisons where available."],
