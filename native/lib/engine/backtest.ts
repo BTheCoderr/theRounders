@@ -1,9 +1,10 @@
 import {uniqueCompletedGames,type CompletedGame} from "../powerRatings.ts";
 import type {TeamGame} from "../ratings";
-import {ALL_MODELS,ENGINE_REVISION,SPORT_SETTINGS,fitMarginModel,type EngineSport,type MarginPredictor,type ModelId} from "./models.ts";
+import {ALL_MODELS,ENGINE_REVISION,fitMarginModel,type EngineSport,type MarginPredictor,type ModelId} from "./models.ts";
 import {TOTALS_MODEL,fitTotals,leagueAverageTotal} from "./totals.ts";
 import {buildSchedule} from "./v3.ts";
 import {calibratedSigma} from "./calibration.ts";
+import {SPORT_CONFIG,seasonFor} from "../sports.ts";
 import {summarizeForecasts,winProbability,type ForecastSummary,type GradedForecast} from "./metrics.ts";
 
 /**
@@ -29,12 +30,12 @@ export type BacktestReport={
 };
 const DAY=86400000;
 export const weekStart=(t:number)=>{const d=new Date(t);return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-((d.getUTCDay()+6)%7)*DAY;};
-/** Season label: the calendar year in which the season began (NBA Oct, NFL Sep). */
-export const seasonOf=(date:string)=>{const y=Number(date.slice(0,4)),m=Number(date.slice(5,7));return m>=7?y:y-1;};
+/** Season label: the year the season began (MLB: the calendar year). */
+export const seasonOf=(date:string,sport?:EngineSport)=>seasonFor(sport,date);
 
 export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{maxWeeks?:number;minTrainGames?:number;models?:readonly ModelId[]}={}):BacktestReport{
  const models=opts.models??ALL_MODELS;
- const maxWeeks=opts.maxWeeks??104,minTrain=opts.minTrainGames??(sport==="NFL"?120:300);
+ const maxWeeks=opts.maxWeeks??104,minTrain=opts.minTrainGames??SPORT_CONFIG[sport].minTrainGames;
  if(!(Number.isInteger(maxWeeks)&&maxWeeks>=1&&maxWeeks<=260))throw new Error("Invalid evaluation window");
  const history:CompletedGame[]=uniqueCompletedGames(rows,new Date(asOf.getTime()-1));
  // Schedule (dates only) for rest features: known before games are played, so not leakage.
@@ -70,7 +71,7 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
    const margins=models.map(m=>predictors.get(m)!(g.home,g.away,g.neutral,g.date));
    const total=totals.predict(g.home,g.away,g.neutral);
    if(margins.some(x=>x===null||!Number.isFinite(x))||!total){skipped++;continue;}
-   used++;evaluated++;seasons.add(seasonOf(g.date));
+   used++;evaluated++;seasons.add(seasonOf(g.date,sport));
    from??=g.date;through=g.date;
    const actualTotal=g.homeScore+g.awayScore,actualMargin=g.homeScore-g.awayScore;
    totN++;totAbs+=Math.abs(total.total-actualTotal);totBias+=total.total-actualTotal;

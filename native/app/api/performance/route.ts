@@ -12,7 +12,7 @@ export const dynamic="force-dynamic";
  */
 export async function GET(req:Request){
  const sport=(new URL(req.url).searchParams.get("sport")||"NBA").toUpperCase();
- if(!isEngineSport(sport))return NextResponse.json({error:"NBA and NFL only"},{status:400});
+ if(!isEngineSport(sport))return NextResponse.json({error:"Unsupported sport"},{status:400});
  const champion=championFor(sport);
  if(!archiveConfigured())return NextResponse.json({sport,champion,ready:false,reason:"Performance storage is not configured."},{status:503});
  try{

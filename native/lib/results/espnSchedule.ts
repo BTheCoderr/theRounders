@@ -1,7 +1,7 @@
 import type {UpcomingGame} from "../engine/predict";
 
 /** Upcoming regular-season games from ESPN's public scoreboard (unofficial; no license implied). */
-const league:Record<string,[string,string]>={NBA:["basketball","nba"],NFL:["football","nfl"]};
+import {SPORT_CONFIG,espnScoreboardUrl,type Sport} from "../sports.ts";
 type Competitor={homeAway?:string;team?:{id?:string;displayName?:string;abbreviation?:string}};
 type Event={
  id?:string;date?:string;season?:{type?:number|string;year?:number};
@@ -29,17 +29,28 @@ export function parseUpcoming(events:Event[],from:Date,to:Date):UpcomingGame[]{
  }
  return out.sort((a,b)=>Date.parse(a.startsAt)-Date.parse(b.startsAt));
 }
-export async function fetchUpcoming(sport:"NBA"|"NFL",from:Date,to:Date):Promise<UpcomingGame[]>{
- const pair=league[sport];if(!pair)throw new Error("Unsupported sport");
- const [kind,slug]=pair;
+/** Inclusive [from,to] day ranges no longer than `days`, as ESPN YYYYMMDD-YYYYMMDD strings. */
+export function dayRanges(from:Date,to:Date,days:number):string[]{
+ const out:string[]=[],DAYMS=86400000;
+ for(let t=Date.UTC(from.getUTCFullYear(),from.getUTCMonth(),from.getUTCDate());t<=to.getTime();t+=days*DAYMS)
+  out.push(ymd(new Date(t))+"-"+ymd(new Date(Math.min(to.getTime(),t+(days-1)*DAYMS))));
+ return out;
+}
+async function scoreboardEvents(sport:Sport,from:Date,to:Date,opts:{revalidate?:number}={}):Promise<Event[]>{
+ const lists=await Promise.all(dayRanges(from,to,SPORT_CONFIG[sport].chunkDays).map(async range=>{
+  const res=await fetch(espnScoreboardUrl(sport,range),opts.revalidate
+   ?{signal:AbortSignal.timeout(10000),next:{revalidate:opts.revalidate}}:{signal:AbortSignal.timeout(10000),cache:"no-store"});
+  if(!res.ok)throw new Error("Schedule provider HTTP "+res.status);
+  const data=await res.json() as {events?:Event[]};
+  if(!Array.isArray(data.events)||data.events.length>=1000)throw new Error("Schedule provider returned an invalid or truncated event list");
+  return data.events;
+ }));
+ return lists.flat();
+}
+export async function fetchUpcoming(sport:Sport,from:Date,to:Date,opts:{revalidate?:number}={}):Promise<UpcomingGame[]>{
  // ESPN dates are US calendar days; widen by a day each side and filter by timestamp.
  const a=new Date(from.getTime()-86400000),b=new Date(to.getTime()+86400000);
- const res=await fetch(`https://site.api.espn.com/apis/site/v2/sports/${kind}/${slug}/scoreboard?dates=${ymd(a)}-${ymd(b)}&limit=1000`,
-  {signal:AbortSignal.timeout(10000),cache:"no-store"});
- if(!res.ok)throw new Error("Schedule provider HTTP "+res.status);
- const data=await res.json() as {events?:Event[]};
- if(!Array.isArray(data.events)||data.events.length>=1000)throw new Error("Schedule provider returned an invalid or truncated event list");
- return parseUpcoming(data.events,from,to);
+ return parseUpcoming(await scoreboardEvents(sport,a,b,opts),from,to);
 }
 
 export type FinalScore={eventId:string;homeId:string;awayId:string;homeScore:number;awayScore:number};
@@ -57,13 +68,6 @@ export function parseFinals(events:Event[]):Map<string,FinalScore>{
  }
  return out;
 }
-export async function fetchFinals(sport:"NBA"|"NFL",from:Date,to:Date):Promise<Map<string,FinalScore>>{
- const pair=league[sport];if(!pair)throw new Error("Unsupported sport");
- const [kind,slug]=pair;
- const res=await fetch(`https://site.api.espn.com/apis/site/v2/sports/${kind}/${slug}/scoreboard?dates=${ymd(from)}-${ymd(to)}&limit=1000`,
-  {signal:AbortSignal.timeout(10000),cache:"no-store"});
- if(!res.ok)throw new Error("Results provider HTTP "+res.status);
- const data=await res.json() as {events?:Event[]};
- if(!Array.isArray(data.events)||data.events.length>=1000)throw new Error("Results provider returned an invalid or truncated event list");
- return parseFinals(data.events);
+export async function fetchFinals(sport:Sport,from:Date,to:Date):Promise<Map<string,FinalScore>>{
+ return parseFinals(await scoreboardEvents(sport,from,to));
 }

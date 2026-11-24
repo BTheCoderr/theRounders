@@ -12,7 +12,7 @@ export async function GET(req:Request){
  const {plan}=await planForRequest(req);
  if(!hasFeature(plan,"export.history"))return NextResponse.json({error:"CSV export is part of Rounders Pro.",upgrade:"/pricing"},{status:402});
  const sport=(new URL(req.url).searchParams.get("sport")||"NBA").toUpperCase();
- if(!isEngineSport(sport))return NextResponse.json({error:"NBA and NFL only"},{status:400});
+ if(!isEngineSport(sport))return NextResponse.json({error:"Unsupported sport"},{status:400});
  const model=hasFeature(plan,"predictions.challengers")?null:championFor(sport);
  const rows=await listGradedPredictions(sport,model,5000);
  const csv=toCsv(["sport","event_id","starts_at","away","home","model_version","predicted_at","projected_winner","home_win_probability",

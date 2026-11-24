@@ -3,13 +3,14 @@ import {getTrainingGames,getVerifiedResearchGames} from "../../../lib/persistenc
 import {computePowerBoard,holdoutMarginEvaluation,type Sport} from "../../../lib/powerRatings";
 
 export const dynamic="force-dynamic";
-const SPORTS=new Set(["NBA","NFL","NHL","MLB"]);
+import {ALL_SPORTS} from "../../../lib/sports";
+const SPORTS=new Set<string>(ALL_SPORTS);
 
 export async function GET(req:Request){
   const sport=(new URL(req.url).searchParams.get("sport")||"NBA").toUpperCase();
   if(!SPORTS.has(sport))return NextResponse.json({error:"Unsupported sport"},{status:400});
   // NBA/NFL rank from the verified regular-season archive (provider IDs); the preview path is the fallback.
-  const verified=sport==="NBA"||sport==="NFL"?await getVerifiedResearchGames(sport).catch(()=>null):null;
+  const verified=await getVerifiedResearchGames(sport as Sport).catch(()=>null);
   const batch=verified&&verified.games.length>=50
     ?{games:verified.games,source:"external" as const,provider:verified.provider,fallback:false,message:verified.message}
     :await getTrainingGames(sport as Sport);

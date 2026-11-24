@@ -1,6 +1,14 @@
 /** Response shapes of the public NBA/NFL APIs, shared by web components. */
-export type ProductSport="NBA"|"NFL";
-export const PRODUCT_SPORTS:readonly ProductSport[]=["NBA","NFL"];
+export type ProductSport="NBA"|"NFL"|"NCAAM"|"NCAAF"|"NHL"|"MLB";
+export const PRODUCT_SPORTS:readonly ProductSport[]=["NBA","NFL","NCAAM","NCAAF","NHL","MLB"];
+export const isProductSport=(s:string|null|undefined):s is ProductSport=>!!s&&(PRODUCT_SPORTS as readonly string[]).includes(s);
+/** Short labels for tabs and headings. */
+export const SPORT_LABEL:Record<ProductSport,string>={NBA:"NBA",NFL:"NFL",NCAAM:"CBB",NCAAF:"CFB",NHL:"NHL",MLB:"MLB"};
+export const SPORT_NAME:Record<ProductSport,string>={NBA:"NBA",NFL:"NFL",NCAAM:"College Basketball",NCAAF:"College Football",NHL:"NHL",MLB:"MLB"};
+export const SLATE:Record<ProductSport,"daily"|"weekly">={NBA:"daily",NFL:"weekly",NCAAM:"daily",NCAAF:"weekly",NHL:"daily",MLB:"daily"};
+export const UNIT:Record<ProductSport,string>={NBA:"pts",NFL:"pts",NCAAM:"pts",NCAAF:"pts",NHL:"goals",MLB:"runs"};
+/** Shown when a league is between seasons (no games to lock). */
+export const OFFSEASON:Partial<Record<ProductSport,string>>={MLB:"MLB is in the offseason; picks return with Opening Day."};
 
 export type PredictionView={
  eventId:string;startsAt:string;home:string;away:string;neutral:boolean;

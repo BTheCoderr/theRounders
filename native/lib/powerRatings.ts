@@ -1,7 +1,8 @@
 import type {TeamGame} from "./ratings";
 
 /** A Massey-inspired, regularized margin model. This is NOT Kenneth Massey's proprietary ratings. */
-export type Sport="NBA"|"NFL"|"NHL"|"MLB";
+import {SPORT_CONFIG,type Sport} from "./sports.ts";
+export type {Sport};
 export type CompletedGame={
   date:string;home:string;away:string;homeScore:number;awayScore:number;neutral:boolean;
 };
@@ -14,12 +15,7 @@ export type PowerBoard={
   parameters:{ridge:number;halfLifeDays:number;marginCap:number;homeAdvantage:number};
   rankings:PowerRank[];
 };
-const parameters:Record<Sport,{ridge:number;halfLifeDays:number;marginCap:number;homeAdvantage:number}>={
-  NBA:{ridge:1.25,halfLifeDays:45,marginCap:25,homeAdvantage:2.2},
-  NFL:{ridge:1.25,halfLifeDays:60,marginCap:17,homeAdvantage:2.2},
-  NHL:{ridge:1.25,halfLifeDays:50,marginCap:3,homeAdvantage:0.18},
-  MLB:{ridge:1.25,halfLifeDays:35,marginCap:5,homeAdvantage:0.25}
-};
+const parameters=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,{...c.power,homeAdvantage:c.homeAdvantage}])) as Record<Sport,{ridge:number;halfLifeDays:number;marginCap:number;homeAdvantage:number}>;
 const round=(n:number,d=2)=>Number(n.toFixed(d));
 const average=(nums:number[])=>nums.length?nums.reduce((a,b)=>a+b,0)/nums.length:0;
 const dot=(a:number[],b:number[])=>a.reduce((v,x,i)=>v+x*b[i],0);

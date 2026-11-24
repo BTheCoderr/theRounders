@@ -5,10 +5,11 @@ import {fitResearchRpi} from "../researchRpi.ts";
 import {fitElo,fitMasseyRidge} from "../walkForward.ts";
 import {fitV3,type Schedule} from "./v3.ts";
 
-/** The product covers NBA and NFL. MLB/NHL history stays archived but is not modeled here. */
-export type EngineSport="NBA"|"NFL";
-export const ENGINE_SPORTS:readonly EngineSport[]=["NBA","NFL"];
-export const isEngineSport=(s:string):s is EngineSport=>s==="NBA"||s==="NFL";
+/** NBA, NFL, college basketball and football, NHL and MLB (settings in lib/sports.ts). */
+import {ALL_SPORTS,SPORT_CONFIG,isSport,type Sport} from "../sports.ts";
+export type EngineSport=Sport;
+export const ENGINE_SPORTS:readonly EngineSport[]=ALL_SPORTS;
+export const isEngineSport=isSport;
 
 /** Bump when the shared engine pipeline (totals, probability mapping, inputs) changes. */
 export const ENGINE_REVISION="engine-2";   // engine-2: win probability σ calibrated from out-of-sample errors
@@ -31,12 +32,7 @@ export const MODEL_LABELS:Record<ModelId,string>={
 export const isModelId=(s:string):s is ModelId=>(ALL_MODELS as readonly string[]).includes(s);
 
 /** Fixed, documented sport settings. Not tuned on the evaluation window. */
-export const SPORT_SETTINGS:Record<EngineSport,{homeAdvantage:number;eloPointScale:number;v1Baseline:number;marginSigma:number}>={
- // marginSigma: typical standard deviation of final margin around a point forecast.
- // Default only: live and backtest σ is calibrated from out-of-sample errors (calibration.ts).
- NBA:{homeAdvantage:2.2,eloPointScale:0.04,v1Baseline:112,marginSigma:12},
- NFL:{homeAdvantage:2.2,eloPointScale:0.03,v1Baseline:23,marginSigma:13.5}
-};
+export const SPORT_SETTINGS=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,{homeAdvantage:c.homeAdvantage,eloPointScale:c.eloPointScale,v1Baseline:c.v1Baseline,marginSigma:c.marginSigma}])) as Record<EngineSport,{homeAdvantage:number;eloPointScale:number;v1Baseline:number;marginSigma:number}>;
 
 /** Returns the projected home-minus-away margin, or null when a team has no history. */
 /** `date` (scheduled start) lets schedule-aware models use rest days; results are never needed. */

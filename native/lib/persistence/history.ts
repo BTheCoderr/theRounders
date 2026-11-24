@@ -5,8 +5,9 @@ import {getEspnResults} from "../results/espn";
 import {fetchRegularArchiveMonth} from "../results/espnArchive";
 import {franchiseTeamIds} from "../results/franchises";
 
-export type Sport="NBA"|"NFL"|"NHL"|"MLB";
-const validSports=new Set(["NBA","NFL","NHL","MLB"]);
+import {ALL_SPORTS,SPORT_CONFIG,type Sport} from "../sports";
+export type {Sport};
+const validSports=new Set<string>(ALL_SPORTS);
 const origin=()=>process.env.SUPABASE_URL||process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey=()=>process.env.SUPABASE_SERVICE_ROLE_KEY;
 export const archiveConfigured=()=>Boolean(origin()&&serviceKey());
@@ -170,8 +171,8 @@ export async function archiveEspnMonth(sport:Sport,yearMonth:string):Promise<{ga
  if(!validSports.has(sport)||!/^20\d{2}(0[1-9]|1[0-2])$/.test(yearMonth))
   throw new Error("Invalid sport or month");
  const parsed=await fetchRegularArchiveMonth(sport,yearMonth);
- for(let i=0;i<parsed.games.length;i+=75){
-  const group=parsed.games.slice(i,i+75);
+ for(let i=0;i<parsed.games.length;i+=250){
+  const group=parsed.games.slice(i,i+250);
   const payload=group.map(g=>({
    source:"espn-scoreboard",
    source_event_id:createHash("sha256").update([sport,g.date,g.home,g.away].join("|")).digest("hex"),
@@ -207,8 +208,8 @@ export async function archiveEspnMonth(sport:Sport,yearMonth:string):Promise<{ga
  return {games:parsed.games.length,excluded:parsed.excluded};
 }
 export async function refreshHistoricalArchive(sport:Sport,now=new Date()):Promise<{months:string[];games:number}>{
- // 73 months covers a six-year research backfill if the source actually offers it.
- const keys=recentMonthKeys(now,73);
+ // Up to six years of months (fewer for college basketball, where rosters turn over fast).
+ const keys=recentMonthKeys(now,SPORT_CONFIG[sport].historyMonths);
  const response=await rest("rounders_history_months?select=year_month,fetched_at,ingestion_revision&sport=eq."+
   encodeURIComponent(sport)+"&source=eq.espn-scoreboard");
  const completed=await response.json() as Array<{year_month:string;fetched_at:string;ingestion_revision:number}>;
@@ -217,39 +218,50 @@ export async function refreshHistoricalArchive(sport:Sport,now=new Date()):Promi
    .map(x=>[x.year_month,Date.parse(x.fetched_at)]));
  const current=now.getTime();
  const fresh=(key:string)=>historical.has(key)&&current-(historical.get(key)??0)<20*60*60*1000;
- const backfill=keys.slice(1).reverse().filter(key=>!historical.has(key)).slice(0,1);
+ // Newest missing months first, so a newly added sport has its current season soonest.
+ const backfill=keys.slice(1).filter(key=>!historical.has(key)).slice(0,4);
  // Keep a scheduled invocation bounded to ONE provider month: the historical
  // importer must leave enough of Netlify's 30-second window for database writes.
  const targets=!fresh(keys[0])?[keys[0]]:
   now.getUTCDate()<=5&&!fresh(keys[1])?[keys[1]]:backfill;
- let games=0;
+ // Several backfill months per run, but stop well inside Netlify's 30-second limit.
+ let games=0;const done:string[]=[],started=Date.now();
  for(const month of [...new Set(targets)]){
+  if(done.length&&Date.now()-started>12000)break;
   const imported=await archiveEspnMonth(sport,month);
-  games+=imported.games;
+  games+=imported.games;done.push(month);
  }
- return {months:[...new Set(targets)],games};
+ return {months:done,games};
 }
 export type VerifiedArchive={games:TeamGame[];provider:string;source:"external";sampleGames:number;message:string};
 /** Strict research input: never draw training examples from old unclassified archive rows. */
-export async function getVerifiedResearchGames(sport:Sport,maxPages=22):Promise<VerifiedArchive>{
+export async function getVerifiedResearchGames(sport:Sport,maxPages=SPORT_CONFIG[sport].maxArchivePages):Promise<VerifiedArchive>{
  if(!archiveConfigured())throw new Error("Verified research archive is not configured");
  const rows:Array<ArchiveRow & {home_team_id:string;away_team_id:string}>=[];
- for(let p=0;p<maxPages;p++){
+ // Only the archive window the sport is configured for (bounded reads for big college leagues).
+ const now=new Date();
+ const since="&occurred_at=gte."+encodeURIComponent(new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-SPORT_CONFIG[sport].historyMonths+1,1)).toISOString());
+ // Pages are fetched six at a time (stable order: time, then id) to keep big leagues fast.
+ const page=async(p:number)=>{
   const response=await rest("rounders_games?select=occurred_at,home,away,home_score,away_score,neutral,home_team_id,away_team_id"+
-   "&sport=eq."+encodeURIComponent(sport)+"&season_phase=eq.regular"+
+   "&sport=eq."+encodeURIComponent(sport)+"&season_phase=eq.regular"+since+
    "&home_team_id=not.is.null&away_team_id=not.is.null"+
-   "&order=occurred_at.desc&limit=1000&offset="+(p*1000));
+   "&order=occurred_at.desc,id.desc&limit=1000&offset="+(p*1000));
   const batch=await response.json() as typeof rows;
   if(!Array.isArray(batch))throw new Error("Invalid verified archive response");
-  rows.push(...batch);
-  if(batch.length<1000)break;
-  if(p===maxPages-1)throw new Error("Verified archive exceeds research pagination limit");
+  return batch;
+ };
+ let complete=false;
+ for(let p=0;p<maxPages&&!complete;p+=6){
+  const batches=await Promise.all([...Array(Math.min(6,maxPages-p))].map((_,i)=>page(p+i)));
+  for(const b of batches){rows.push(...b);if(b.length<1000){complete=true;break;}}
  }
+ if(!complete)throw new Error("Verified archive exceeds research pagination limit");
  const names=await readTeamRegistry(sport);
  // Group by ID, so an historical rename is a single team in the rating matrix.
  // ESPN tags NBA All-Star and Rising Stars games as regular season. Their one-off teams
  // ("Team LeBron", "World") play a handful of games; real clubs play dozens a season.
- const eligible=franchiseTeamIds(rows);
+ const eligible=franchiseTeamIds(rows,SPORT_CONFIG[sport].minFranchiseGames);
  const games:TeamGame[]=rows.flatMap(g=>{
   if(!eligible.has(g.home_team_id)||!eligible.has(g.away_team_id))return [];
   const home=names.get(g.home_team_id)||g.home;

@@ -57,7 +57,7 @@ test("reject malformed completed event batches rather than mark a missing archiv
  }finally{globalThis.fetch=original}
 });
 test("reject invalid historical queries and truncated provider pages",async()=>{
- await assert.rejects(()=>fetchRegularArchiveMonth("NCAAF","202502"),/Invalid sport or month/);
+ await assert.rejects(()=>fetchRegularArchiveMonth("XFL","202502"),/Invalid sport or month/);
  await assert.rejects(()=>fetchRegularArchiveMonth("NBA","202513"),/Invalid sport or month/);
  const original=globalThis.fetch;
  try{

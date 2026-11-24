@@ -50,8 +50,8 @@ async function receipt(name:string,detail:Record<string,unknown>,task:()=>Promis
   return Response.json({...detail,ok:false,error:message},{status:503});
  }
 }
-/** Daily NBA slate / weekly NFL slate: first immutable pregame snapshot per game and model. */
-export async function runScheduledPredictions(sport:"NBA"|"NFL"):Promise<Response>{
+/** Daily slate (basketball, hockey, baseball) or weekly slate (football): first immutable pregame snapshot per game and model. */
+export async function runScheduledPredictions(sport:Sport):Promise<Response>{
  const {snapshotPredictions}=await import("./predictions");
  return receipt("rounders predictions",{sport},()=>snapshotPredictions(sport));
 }
@@ -59,7 +59,7 @@ export async function runScheduledGrading():Promise<Response>{
  const {gradePendingPredictions}=await import("./predictions");
  return receipt("rounders grading",{},()=>gradePendingPredictions());
 }
-export async function runScheduledBacktest(sport:"NBA"|"NFL"):Promise<Response>{
+export async function runScheduledBacktest(sport:Sport):Promise<Response>{
  const {recordBacktest}=await import("./predictions");
  return receipt("rounders backtest",{sport},()=>recordBacktest(sport));
 }

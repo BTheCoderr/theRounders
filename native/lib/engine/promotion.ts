@@ -1,5 +1,6 @@
 import type {BacktestReport} from "./backtest";
 import {CANDIDATE_MODELS,type EngineSport,type ModelId} from "./models.ts";
+import {SPORT_CONFIG} from "../sports.ts";
 
 /**
  * A challenger replaces the champion only when, on the SAME out-of-sample games:
@@ -9,7 +10,7 @@ import {CANDIDATE_MODELS,type EngineSport,type ModelId} from "./models.ts";
  * Passing the gate produces a recommendation; switching the live champion is a
  * deliberate configuration change (ROUNDERS_CHAMPION_<SPORT>), never automatic.
  */
-export const MIN_GATE_GAMES:Record<EngineSport,number>={NBA:600,NFL:250};
+export const MIN_GATE_GAMES=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,c.gateGames])) as Record<EngineSport,number>;
 export type PromotionDecision={
  champion:ModelId;challenger:ModelId;recommend:boolean;
  games:number;seasons:number;
@@ -47,8 +48,9 @@ export function evaluatePromotion(report:BacktestReport,champion:ModelId,challen
  * promotion gate recommended it on real out-of-sample games:
  *  NBA 2026-11-24: power-v2 beat rounders-v1 over 4,890 games (Brier 0.2145 vs 0.2439).
  *  NFL 2026-11-24: power-v2 beat rounders-v1 over 1,594 games (Brier 0.2307 vs 0.2399).
+ * New sports start on power-v2 (the strongest model so far) until their own gate says otherwise.
  */
-export const DEFAULT_CHAMPION:Record<EngineSport,ModelId>={NBA:"power-v2",NFL:"power-v2"};
+export const DEFAULT_CHAMPION:Record<EngineSport,ModelId>={NBA:"power-v2",NFL:"power-v2",NCAAM:"power-v2",NCAAF:"power-v2",NHL:"power-v2",MLB:"power-v2"};
 export function championFor(sport:EngineSport,env:Record<string,string|undefined>=typeof process!=="undefined"?process.env:{}):ModelId{
  const configured=env["ROUNDERS_CHAMPION_"+sport];
  return configured&&(CANDIDATE_MODELS as readonly string[]).includes(configured)?configured as ModelId:DEFAULT_CHAMPION[sport];

@@ -12,7 +12,7 @@ export const dynamic="force-dynamic";
 /** Champion-model pregame predictions for upcoming NBA/NFL games, exactly as stored before each game. */
 export async function GET(req:Request){
  const sport=(new URL(req.url).searchParams.get("sport")||"NBA").toUpperCase();
- if(!isEngineSport(sport))return NextResponse.json({error:"NBA and NFL only"},{status:400});
+ if(!isEngineSport(sport))return NextResponse.json({error:"Unsupported sport"},{status:400});
  const model=championFor(sport);
  if(!archiveConfigured())return NextResponse.json({sport,model,ready:false,predictions:[],reason:"Prediction storage is not configured."},{status:503});
  try{

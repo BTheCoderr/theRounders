@@ -1,4 +1,5 @@
 import {SPORT_SETTINGS,type EngineSport} from "./models.ts";
+import {SPORT_CONFIG} from "../sports.ts";
 
 /**
  * Win-probability calibration.
@@ -8,7 +9,7 @@ import {SPORT_SETTINGS,type EngineSport} from "./models.ts";
  * Until enough out-of-sample games exist, the documented sport default is used.
  * The result is clamped to a sane band around that default.
  */
-export const MIN_CALIBRATION_GAMES:Record<EngineSport,number>={NBA:300,NFL:150};
+export const MIN_CALIBRATION_GAMES=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,c.calibrationGames])) as Record<EngineSport,number>;
 export function calibratedSigma(sport:EngineSport,sumSquaredError:number,games:number):number{
  const fallback=SPORT_SETTINGS[sport].marginSigma;
  if(!(games>=MIN_CALIBRATION_GAMES[sport])||!(sumSquaredError>0))return fallback;

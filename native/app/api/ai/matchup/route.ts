@@ -10,7 +10,8 @@ import {planForRequest} from "../../../../lib/billing/server";
 import {hasFeature} from "../../../../lib/billing/plans";
 
 export const dynamic="force-dynamic";
-const SPORTS=new Set(["NBA","NFL","NHL","MLB"]);
+import {ALL_SPORTS,type Sport} from "../../../../lib/sports";
+const SPORTS=new Set<string>(ALL_SPORTS);
 // A best-effort per-instance guard. Set a provider-level quota / durable rate limit
 // before turning on billable public AI in production; serverless instances do not share this map.
 const recent=new Map<string,{count:number;reset:number}>();
@@ -54,7 +55,7 @@ export async function POST(req:Request){
     const e=evidenceFromPrediction(stored);
     evidence=e;summary=explainPrediction(e,question);
   }else{
-    const batch=await getTrainingGames(sport as "NBA"|"NFL"|"NHL"|"MLB");
+    const batch=await getTrainingGames(sport as Sport);
     const source={trainingDataState:batch.source,trainingProvider:batch.provider,
       fallback:batch.fallback,sampleGames:batch.sampleGames};
     const ratings=buildRatings(batch.games);

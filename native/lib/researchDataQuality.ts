@@ -1,5 +1,6 @@
 import type {TeamGame} from "./ratings";
 import {uniqueCompletedGames,type Sport} from "./powerRatings.ts";
+import {SPORT_CONFIG} from "./sports.ts";
 
 export type SeasonCoverage={season:number;games:number;teams:number;approximateShare:number;status:"partial"|"candidate";};
 export type DataQuality={
@@ -13,16 +14,11 @@ export type DataQuality={
  * playoff/preseason contamination and source omissions must still be ruled out.
  * Calendar-year archives differ from league season boundaries.
  */
-const expected:Record<Sport,{teams:number;regularSeasonGames:number}>={
- NBA:{teams:30,regularSeasonGames:1230},
- NFL:{teams:32,regularSeasonGames:272},
- NHL:{teams:32,regularSeasonGames:1312},
- MLB:{teams:30,regularSeasonGames:2430}
-};
+const expected=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,c.expected])) as Record<Sport,{teams:number;regularSeasonGames:number}>;
 export function seasonYear(sport:Sport,date:string):number{
  const year=Number(date.slice(0,4)),month=Number(date.slice(5,7));
  if(!Number.isInteger(year)||month<1||month>12)throw new Error("Invalid date");
- return sport==="MLB"?year:month>=7?year:year-1;
+ return SPORT_CONFIG[sport].calendarSeason?year:month>=7?year:year-1;
 }
 export function auditGameHistory(rows:TeamGame[],sport:Sport,provider="unknown",state:"external"|"simulated"="external",asOf=new Date()):DataQuality{
  const cfg=expected[sport];if(!cfg)throw new Error("Unsupported sport");

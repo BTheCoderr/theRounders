@@ -4,7 +4,8 @@ import {fetchFinals,fetchUpcoming} from "../results/espnSchedule";
 import {predictUpcoming,gradePrediction,snapshotWindow,type PredictionRecord,type UpcomingGame} from "../engine/predict";
 import {runBacktest} from "../engine/backtest";
 import {evaluatePromotion,championFor} from "../engine/promotion";
-import {CANDIDATE_MODELS,ENGINE_REVISION,type EngineSport,type ModelId} from "../engine/models";
+import {CANDIDATE_MODELS,ENGINE_REVISION,ENGINE_SPORTS,type EngineSport,type ModelId} from "../engine/models";
+import {SPORT_CONFIG} from "../sports";
 import {consensusLine} from "../engine/market";
 import {liveProvider} from "../providers/live";
 import {summarizeForecasts,type ForecastSummary} from "../engine/metrics";
@@ -68,7 +69,7 @@ export async function gradePendingPredictions(now=new Date(),limit=300){
   for(const g of await r.json() as Array<{provider_event_id:string;home_team_id:string;away_team_id:string;home_score:number;away_score:number}>)
    finals.set(g.provider_event_id,{homeId:g.home_team_id,awayId:g.away_team_id,homeScore:g.home_score,awayScore:g.away_score});
  }
- for(const sport of ["NBA","NFL"] as const){
+ for(const sport of ENGINE_SPORTS){
   const missing=pending.filter(p=>p.sport===sport&&!finals.has(p.provider_event_id));
   if(!missing.length)continue;
   const times=missing.map(p=>Date.parse(p.starts_at));
@@ -120,7 +121,7 @@ export function summarizeStored(rows:StoredPrediction[]):ForecastSummary{
 export async function recordBacktest(sport:EngineSport,now=new Date()){
  const started=Date.now();
  const archive=await getVerifiedResearchGames(sport);
- const report=runBacktest(archive.games,sport,now,{maxWeeks:sport==="NBA"?80:156});
+ const report=runBacktest(archive.games,sport,now,{maxWeeks:SPORT_CONFIG[sport].backtestWeeks});
  const champion=championFor(sport);
  const promotion=CANDIDATE_MODELS.filter(m=>m!==champion).map(m=>evaluatePromotion(report,champion,m));
  await rest("rounders_backtests?on_conflict=sport,engine_revision,run_day",{

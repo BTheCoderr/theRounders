@@ -9,9 +9,9 @@ export type Feature=
  |"export.history";           // CSV of graded prediction history
 export const PLANS:Record<PlanId,{name:string;monthlyUsd:number;priceEnv?:string;features:Feature[];pitch:string[]}>={
  free:{name:"Free",monthlyUsd:0,features:["predictions.winner"],
-  pitch:["Daily NBA and weekly NFL projected winners with win probabilities","Power Index rankings","The full public track record: accuracy, Brier score and calibration","Model explanations for every game","Line shop and paper bankroll"]},
+  pitch:["Projected winners with win probabilities: NBA, NFL, college basketball and football, NHL and MLB","Power Index rankings","The full public track record: accuracy, Brier score and calibration","Model explanations for every game","Line shop and paper bankroll"]},
  pro:{name:"Rounders Pro",monthlyUsd:19.99,priceEnv:"STRIPE_PRICE_PRO",features:["predictions.winner","predictions.lines","ai.generative","export.history"],
-  pitch:["Everything in Free","Projected spreads, totals and final scores for every NBA and NFL game","Generative matchup analysis grounded in the stored prediction (when enabled)","CSV export of every graded prediction"]},
+  pitch:["Everything in Free","Projected spreads, totals and final scores for every game we cover","Generative matchup analysis grounded in the stored prediction (when enabled)","CSV export of every graded prediction"]},
  edge:{name:"Rounders Edge",monthlyUsd:39.99,priceEnv:"STRIPE_PRICE_EDGE",features:["predictions.winner","predictions.lines","predictions.market","predictions.challengers","ai.generative","export.history"],
   pitch:["Everything in Pro","Model versus live market line on every prediction where a line was captured","Side-by-side predictions from every candidate model, including challengers not yet promoted","Exports include every model"]}
 };
