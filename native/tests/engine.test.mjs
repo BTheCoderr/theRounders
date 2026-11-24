@@ -300,3 +300,12 @@ test("live scoreboard parsing: pre, in-progress with clock, final",async()=>{
  assert.equal(g[1].detail,"Q3 4:12");assert.equal(g[1].homeScore,61);
  assert.equal(g[2].state,"post");assert.equal(g[2].awayScore,99);
 });
+
+test("ESPN request keys: single days or whole months, never multi-day ranges",async()=>{
+ const {scoreboardKeys}=await import("../lib/results/espnSchedule.ts");
+ const D=86400000,now=new Date("2026-11-24T15:20:00Z");
+ assert.deepEqual(scoreboardKeys("NBA",new Date(now-D),new Date(now.getTime()+2*D)),["20261123","20261124","20261125","20261126"]);
+ assert.deepEqual(scoreboardKeys("NBA",now,new Date("2027-04-15T00:00:00Z")),["202611","202612","202701","202702","202703","202704"]);
+ assert.equal(scoreboardKeys("NCAAM",now,new Date(now.getTime()+20*D)).length,21);
+ for(const s of ["NBA","NFL","NCAAM","NCAAF","NHL","MLB"])for(const k of scoreboardKeys(s,now,new Date(now.getTime()+40*D)))assert.match(k,/^\d{6}(\d{2})?$/);
+});

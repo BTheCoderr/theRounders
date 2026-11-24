@@ -1,7 +1,7 @@
 import {runScheduledPredictions} from "../../lib/persistence/scheduleRun";
 
-/** MLB pregame snapshots for the next day's games (none in the offseason). */
+/** Hourly: locks the first pregame prediction for each upcoming game in the window (idempotent). */
 export default async function handler(_request:Request):Promise<Response>{
  return runScheduledPredictions("MLB");
 }
-export const config={schedule:"40 15 * * *"};
+export const config={schedule:"40 * * * *"};

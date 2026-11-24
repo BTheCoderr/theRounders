@@ -36,11 +36,25 @@ export function dayRanges(from:Date,to:Date,days:number):string[]{
   {const a=ymd(new Date(t)),b=ymd(new Date(Math.min(to.getTime(),t+(days-1)*DAYMS)));out.push(a===b?a:a+"-"+b);}
  return out;
 }
+/**
+ * Request keys ESPN accepts: a single day (YYYYMMDD) or a whole month (YYYYMM).
+ * Multi-day ranges are rejected (HTTP 400). Short windows go day by day; long windows
+ * (projections) use whole months where a month fits under the per-request cap.
+ */
+export function scoreboardKeys(sport:Sport,from:Date,to:Date):string[]{
+ const days=dayRanges(from,to,1);
+ const monthly=SPORT_CONFIG[sport].chunkDays>=20;   // pro leagues: a month is under 1000 events
+ if(days.length<=10||!monthly)return days;
+ const months:string[]=[];
+ for(let d=new Date(Date.UTC(from.getUTCFullYear(),from.getUTCMonth(),1));d.getTime()<=to.getTime();d=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1)))
+  months.push(String(d.getUTCFullYear())+String(d.getUTCMonth()+1).padStart(2,"0"));
+ return months;
+}
 async function scoreboardEvents(sport:Sport,from:Date,to:Date,opts:{revalidate?:number;maxRequests?:number}={}):Promise<Event[]>{
- const ranges=dayRanges(from,to,SPORT_CONFIG[sport].chunkDays),limit=SPORT_CONFIG[sport].pageLimit;
- if(opts.maxRequests&&ranges.length>opts.maxRequests)throw new Error("Schedule range too long for this feed");
- const lists=await mapLimit(ranges,8,async range=>{
-  const res=await fetch(espnScoreboardUrl(sport,range),opts.revalidate
+ const keys=scoreboardKeys(sport,from,to),limit=SPORT_CONFIG[sport].pageLimit;
+ if(opts.maxRequests&&keys.length>opts.maxRequests)throw new Error("Schedule range too long for this feed");
+ const lists=await mapLimit(keys,8,async key=>{
+  const res=await fetch(espnScoreboardUrl(sport,key),opts.revalidate
    ?{signal:AbortSignal.timeout(10000),next:{revalidate:opts.revalidate}}:{signal:AbortSignal.timeout(10000),cache:"no-store"});
   if(!res.ok)throw new Error("Schedule provider HTTP "+res.status);
   const data=await res.json() as {events?:Event[]};
