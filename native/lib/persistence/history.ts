@@ -3,6 +3,7 @@ import type {TeamGame} from "../ratings";
 import {uniqueCompletedGames} from "../powerRatings";
 import {getEspnResults} from "../results/espn";
 import {fetchRegularArchiveMonth} from "../results/espnArchive";
+import {franchiseTeamIds} from "../results/franchises";
 
 export type Sport="NBA"|"NFL"|"NHL"|"MLB";
 const validSports=new Set(["NBA","NFL","NHL","MLB"]);
@@ -246,7 +247,11 @@ export async function getVerifiedResearchGames(sport:Sport,maxPages=22):Promise<
  }
  const names=await readTeamRegistry(sport);
  // Group by ID, so an historical rename is a single team in the rating matrix.
+ // ESPN tags NBA All-Star and Rising Stars games as regular season. Their one-off teams
+ // ("Team LeBron", "World") play a handful of games; real clubs play dozens a season.
+ const eligible=franchiseTeamIds(rows);
  const games:TeamGame[]=rows.flatMap(g=>{
+  if(!eligible.has(g.home_team_id)||!eligible.has(g.away_team_id))return [];
   const home=names.get(g.home_team_id)||g.home;
   const away=names.get(g.away_team_id)||g.away;
   if(home===away||!Number.isFinite(g.home_score)||!Number.isFinite(g.away_score))return [];
@@ -266,3 +271,4 @@ export async function readTeamRegistry(sport:Sport):Promise<Map<string,string>>{
  if(!Array.isArray(rows))throw new Error("Invalid team registry response");
  return new Map(rows.map(x=>[x.provider_team_id,x.canonical_name]));
 }
+
