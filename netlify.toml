@@ -49,7 +49,7 @@
 [functions."rounders-predict-nfl"]
   schedule = "25 15 * * *"
 [functions."rounders-grade"]
-  schedule = "50 */3 * * *"
+  schedule = "*/15 * * * *"
 [functions."rounders-backtest-nba"]
   schedule = "5 13 * * *"
 [functions."rounders-backtest-nfl"]

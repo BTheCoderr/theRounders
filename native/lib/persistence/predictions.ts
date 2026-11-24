@@ -57,7 +57,7 @@ type PendingRow={id:number;sport:EngineSport;provider_event_id:string;starts_at:
 /** Grade finished games from the verified archive, then directly from the scoreboard. Bounded per run. */
 export async function gradePendingPredictions(now=new Date(),limit=300){
  if(!archiveConfigured())throw new Error("Prediction storage is not configured");
- const cutoff=new Date(now.getTime()-3*HOUR).toISOString();
+ const cutoff=new Date(now.getTime()-90*60000).toISOString();   // games that started 90+ min ago; unfinished ones stay pending
  const res=await rest("rounders_predictions?select=id,sport,provider_event_id,starts_at,home_team_id,away_team_id,projected_margin,projected_total,home_win_probability"+
   "&grade_status=eq.pending&starts_at=lt."+encodeURIComponent(cutoff)+"&order=starts_at.asc&limit="+limit);
  const pending=await res.json() as PendingRow[];

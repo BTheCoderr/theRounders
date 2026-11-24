@@ -289,3 +289,14 @@ test("deep history walks back in-season months only and stops after 12 empty one
  const p=deepHistoryPlan("NFL",now,empty);
  assert.equal(p.next,null);assert.equal(p.floorReached,true);
 });
+
+test("live scoreboard parsing: pre, in-progress with clock, final",async()=>{
+ const {parseLive}=await import("../lib/results/espnSchedule.ts");
+ const ev=(id,state,detail,hs,as)=>({id,status:{type:{state,shortDetail:detail,completed:state==="post"}},competitions:[{competitors:[
+  {homeAway:"home",score:hs,team:{id:"1"}},{homeAway:"away",score:as,team:{id:"2"}}]}]});
+ const g=parseLive([ev("a","pre","7:30 PM ET","0","0"),ev("b","in","Q3 4:12","61","58"),ev("c","post","Final","101","99"),{id:"d"}]);
+ assert.equal(g.length,3);
+ assert.deepEqual([g[0].homeScore,g[0].awayScore],[null,null]);
+ assert.equal(g[1].detail,"Q3 4:12");assert.equal(g[1].homeScore,61);
+ assert.equal(g[2].state,"post");assert.equal(g[2].awayScore,99);
+});
