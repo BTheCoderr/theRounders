@@ -10,7 +10,7 @@ export type ArchiveMonth={
  games:ArchivedEvent[];
  excluded:number;unknown:number;completedSeen:number;
 };
-import {SPORT_CONFIG,espnScoreboardUrl,isSport} from "../sports.ts";
+import {SPORT_CONFIG,espnScoreboardUrl,isSport,mapLimit} from "../sports.ts";
 type Competitor={id?:string;homeAway?:string;score?:string;team?:{id?:string;displayName?:string;abbreviation?:string}};
 type Event={
  id?:string;date?:string;season?:{type?:number|string;year?:number;slug?:string};
@@ -59,7 +59,7 @@ export function monthChunks(yearMonth:string,chunkDays:number):string[]{
  const y=Number(yearMonth.slice(0,4)),m=Number(yearMonth.slice(4,6));
  const last=new Date(Date.UTC(y,m,0)).getUTCDate(),out:string[]=[];
  const d=(n:number)=>yearMonth+String(n).padStart(2,"0");
- for(let a=1;a<=last;a+=chunkDays)out.push(chunkDays>=last?yearMonth:`${d(a)}-${d(Math.min(last,a+chunkDays-1))}`);
+ for(let a=1;a<=last;a+=chunkDays){const b=Math.min(last,a+chunkDays-1);out.push(chunkDays>=last?yearMonth:a===b?d(a):`${d(a)}-${d(b)}`);}
  return out;
 }
 /** `lenient` (deep history only): skip games without a trustworthy phase instead of failing the month. */
@@ -67,15 +67,16 @@ export async function fetchRegularArchiveMonth(sport:string,yearMonth:string,opt
  const key=sport.toUpperCase();
  if(!isSport(key)||!/^(19|20)\d{2}(0[1-9]|1[0-2])$/.test(yearMonth))
   throw new Error("Invalid sport or month");
- // ESPN caps a response at 1000 events, so busy months (college basketball) are fetched in chunks.
- const lists=await Promise.all(monthChunks(yearMonth,SPORT_CONFIG[key].chunkDays).map(async range=>{
+ // ESPN caps events per response (college: 500), so busy months are fetched in chunks, 8 at a time.
+ const limit=SPORT_CONFIG[key].pageLimit;
+ const lists=await mapLimit(monthChunks(yearMonth,SPORT_CONFIG[key].chunkDays),8,async range=>{
   const response=await fetch(espnScoreboardUrl(key,range),{signal:AbortSignal.timeout(12000),next:{revalidate:86400}});
   if(!response.ok)throw new Error("Archive provider HTTP "+response.status);
   const data=await response.json() as {events?:Event[]};
-  if(!Array.isArray(data.events)||data.events.length>=1000)
+  if(!Array.isArray(data.events)||data.events.length>=limit)
    throw new Error("Archive provider missing/truncated event list");
   return data.events;
- }));
+ });
  const parsed=parseArchiveMonth(lists.flat(),yearMonth);
  if(parsed.unknown>0&&!opts.lenient)
   throw new Error(`Archive provider had ${parsed.unknown} completed regular/unknown games without trustworthy phase or identity`);

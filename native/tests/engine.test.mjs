@@ -248,7 +248,7 @@ test("six sports: config, seasons, chunked ESPN ranges, division groups",async()
  assert.equal(seasonFor("NCAAF","2026-11-28T00:00:00Z"),2026);
  assert.equal(seasonEndDate("NFL",2026).toISOString().slice(0,10),"2027-01-12");
  assert.equal(seasonEndDate("NCAAF",2026).toISOString().slice(0,10),"2026-12-14");
- assert.match(espnScoreboardUrl("NCAAM","20261201-20261207"),/mens-college-basketball\/scoreboard\?dates=20261201-20261207&limit=1000&groups=50$/);
+ assert.match(espnScoreboardUrl("NCAAM","20261201-20261201"),/mens-college-basketball\/scoreboard\?dates=20261201&limit=500&groups=50$/);
  assert.doesNotMatch(espnScoreboardUrl("NBA","202612"),/groups/);
  assert.deepEqual(monthChunks("202612",31),["202612"]);
  assert.deepEqual(monthChunks("202602",7),["20260201-20260207","20260208-20260214","20260215-20260221","20260222-20260228"]);

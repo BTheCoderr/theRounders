@@ -308,11 +308,10 @@ export async function deepHistoryStep(now=new Date(),budgetMs=12000){
     const r=await archiveEspnMonth(sport,plan.next,{lenient:true});
     done.set(plan.next,r.games);months++;games+=r.games;
    }catch(error){
-    // A month the feed rejects counts as empty so the walk can finish; it is recorded for review.
-    await rest("rounders_history_months?on_conflict=sport,year_month,source",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},
-     body:JSON.stringify({sport,year_month:plan.next,source:"espn-scoreboard",imported_games:0,excluded_games:0,ingestion_revision:REGULAR_ARCHIVE_REVISION,fetched_at:new Date().toISOString()})});
-    done.set(plan.next,0);months++;
+    // Never record a failed month as empty (that could fake the feed's floor); retry next run.
+    out[sport]={months,games,error:error instanceof Error?error.message:"error",at:plan.next};
     console.error("rounders deep history month failed",sport,plan.next,error instanceof Error?error.message:"error");
+    break;
    }
   }
   if(Date.now()-started>budgetMs)break;

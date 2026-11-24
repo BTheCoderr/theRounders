@@ -1,7 +1,7 @@
 import type {UpcomingGame} from "../engine/predict";
 
 /** Upcoming regular-season games from ESPN's public scoreboard (unofficial; no license implied). */
-import {SPORT_CONFIG,espnScoreboardUrl,type Sport} from "../sports.ts";
+import {SPORT_CONFIG,espnScoreboardUrl,mapLimit,type Sport} from "../sports.ts";
 type Competitor={homeAway?:string;team?:{id?:string;displayName?:string;abbreviation?:string}};
 type Event={
  id?:string;date?:string;season?:{type?:number|string;year?:number};
@@ -33,21 +33,23 @@ export function parseUpcoming(events:Event[],from:Date,to:Date):UpcomingGame[]{
 export function dayRanges(from:Date,to:Date,days:number):string[]{
  const out:string[]=[],DAYMS=86400000;
  for(let t=Date.UTC(from.getUTCFullYear(),from.getUTCMonth(),from.getUTCDate());t<=to.getTime();t+=days*DAYMS)
-  out.push(ymd(new Date(t))+"-"+ymd(new Date(Math.min(to.getTime(),t+(days-1)*DAYMS))));
+  {const a=ymd(new Date(t)),b=ymd(new Date(Math.min(to.getTime(),t+(days-1)*DAYMS)));out.push(a===b?a:a+"-"+b);}
  return out;
 }
-async function scoreboardEvents(sport:Sport,from:Date,to:Date,opts:{revalidate?:number}={}):Promise<Event[]>{
- const lists=await Promise.all(dayRanges(from,to,SPORT_CONFIG[sport].chunkDays).map(async range=>{
+async function scoreboardEvents(sport:Sport,from:Date,to:Date,opts:{revalidate?:number;maxRequests?:number}={}):Promise<Event[]>{
+ const ranges=dayRanges(from,to,SPORT_CONFIG[sport].chunkDays),limit=SPORT_CONFIG[sport].pageLimit;
+ if(opts.maxRequests&&ranges.length>opts.maxRequests)throw new Error("Schedule range too long for this feed");
+ const lists=await mapLimit(ranges,8,async range=>{
   const res=await fetch(espnScoreboardUrl(sport,range),opts.revalidate
    ?{signal:AbortSignal.timeout(10000),next:{revalidate:opts.revalidate}}:{signal:AbortSignal.timeout(10000),cache:"no-store"});
   if(!res.ok)throw new Error("Schedule provider HTTP "+res.status);
   const data=await res.json() as {events?:Event[]};
-  if(!Array.isArray(data.events)||data.events.length>=1000)throw new Error("Schedule provider returned an invalid or truncated event list");
+  if(!Array.isArray(data.events)||data.events.length>=limit)throw new Error("Schedule provider returned an invalid or truncated event list");
   return data.events;
- }));
+ });
  return lists.flat();
 }
-export async function fetchUpcoming(sport:Sport,from:Date,to:Date,opts:{revalidate?:number}={}):Promise<UpcomingGame[]>{
+export async function fetchUpcoming(sport:Sport,from:Date,to:Date,opts:{revalidate?:number;maxRequests?:number}={}):Promise<UpcomingGame[]>{
  // ESPN dates are US calendar days; widen by a day each side and filter by timestamp.
  const a=new Date(from.getTime()-86400000),b=new Date(to.getTime()+86400000);
  return parseUpcoming(await scoreboardEvents(sport,a,b,opts),from,to);
