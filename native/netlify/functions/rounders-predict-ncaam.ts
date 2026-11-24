@@ -1,7 +1,7 @@
 import {runScheduledPredictions} from "../../lib/persistence/scheduleRun";
 
-/** College basketball pregame snapshots for the next day's games (UTC 15:10). */
+/** Hourly: locks the first pregame prediction for each upcoming game in the window (idempotent). */
 export default async function handler(_request:Request):Promise<Response>{
  return runScheduledPredictions("NCAAM");
 }
-export const config={schedule:"10 15 * * *"};
+export const config={schedule:"10 * * * *"};

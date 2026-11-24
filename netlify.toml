@@ -45,9 +45,9 @@
 
 # Prediction engine (all six sports): snapshots before games, grading after, daily backtests.
 [functions."rounders-predict-nba"]
-  schedule = "20 15 * * *"
+  schedule = "20 * * * *"
 [functions."rounders-predict-nfl"]
-  schedule = "25 15 * * *"
+  schedule = "25 * * * *"
 [functions."rounders-grade"]
   schedule = "*/15 * * * *"
 [functions."rounders-backtest-nba"]
@@ -55,13 +55,13 @@
 [functions."rounders-backtest-nfl"]
   schedule = "20 13 * * *"
 [functions."rounders-predict-ncaam"]
-  schedule = "10 15 * * *"
+  schedule = "10 * * * *"
 [functions."rounders-predict-ncaaf"]
-  schedule = "30 15 * * *"
+  schedule = "30 * * * *"
 [functions."rounders-predict-nhl"]
-  schedule = "35 15 * * *"
+  schedule = "35 * * * *"
 [functions."rounders-predict-mlb"]
-  schedule = "40 15 * * *"
+  schedule = "40 * * * *"
 [functions."rounders-backtest-ncaam"]
   schedule = "35 13 * * *"
 [functions."rounders-backtest-ncaaf"]

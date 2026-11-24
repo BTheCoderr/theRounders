@@ -104,7 +104,7 @@ export default function Predictions({sport}:{sport:ProductSport}){
    {data?.modelLabel?<span className="chip">{data.modelLabel}</span>:null}</div>
   {error?<p className="empty">{error}</p>:!data?<div className="pickGrid">{[0,1,2].map(i=><div key={i} className="gameCard2 skeleton"/>)}</div>:
    !data.ready?<p className="empty">{data.reason||"Predictions are not available yet."}</p>:
-   data.predictions.length===0?<p className="empty">No {SPORT_LABEL[sport]} games locked yet. {SLATE[sport]==="weekly"?"The week's slate locks on Tuesday morning.":OFFSEASON[sport]?OFFSEASON[sport]:"Today's slate locks each morning around 10 AM ET."}</p>:
+   data.predictions.length===0?<p className="empty">No {SPORT_LABEL[sport]} games locked yet. {SLATE[sport]==="weekly"?"The week's slate locks on Tuesday morning.":OFFSEASON[sport]?OFFSEASON[sport]:"Picks lock up to a day before each game, checked every hour."}</p>:
    <div className="pickGrid">{data.predictions.map(p=><GameCard key={p.eventId} sport={sport} p={p} live={live.get(p.eventId)}/>)}</div>}
   {locked?<a className="upsell" href="/pricing"><b>See every spread, total and projected score</b><span>Rounders Pro · $19.99/mo ›</span></a>:null}
   <p className="fine">Projections are locked before each game and never edited. Win probabilities are model estimates; see the track record below for how they have held up.</p>

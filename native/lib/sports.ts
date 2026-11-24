@@ -77,7 +77,7 @@ export const SPORT_CONFIG:Record<Sport,SportConfig>={
   power:{ridge:1.25,halfLifeDays:35,marginCap:5},totals:{halfLifeDays:35,ridge:6},
   rpi:{halfLifeDays:35,ridge:1.25,huberDelta:2.5,homeRidge:20},v3:{retention:0.5,restCapDays:3,restRidge:200},
   gateGames:600,calibrationGames:300,minTrainGames:300,backtestWeeks:60,slate:"daily",calendarSeason:true,
-  seasonEnd:{month:9,day:30,nextYear:false},minFranchiseGames:20,chunkDays:20,pageLimit:1000,historyMonths:73,maxArchivePages:22,
+  seasonEnd:{month:9,day:30,nextYear:false},minFranchiseGames:20,chunkDays:31,pageLimit:1000,historyMonths:73,maxArchivePages:22,
   expected:{teams:30,regularSeasonGames:2430}}
 };
 
