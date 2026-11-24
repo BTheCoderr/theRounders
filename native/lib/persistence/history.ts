@@ -290,7 +290,8 @@ export async function readTeamRegistry(sport:Sport):Promise<Map<string,string>>{
 
 
 /**
- * One-time deep history (for the History pages; models only read their recent window).
+ * Deep history (for the History pages; models only read their recent window). Its scheduled job
+ * is switched off for now; history already imported stays. Re-add a scheduled function to resume.
  * Walks each sport backward month by month, before its model window, toward DEEP_HISTORY_FLOOR.
  * Offseason months are skipped without a request. A sport stops when the feed has
  * returned no games for 12 straight in-season months (covers lockouts and strikes).

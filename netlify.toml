@@ -30,9 +30,6 @@
   schedule = "5,25,45 * * * *"
 [functions."rounders-history-ncaaf"]
   schedule = "10,30,50 * * * *"
-# One-time deep history toward 1980 (History pages); idles once every sport hits its feed floor.
-[functions."rounders-deep-history"]
-  schedule = "*/10 * * * *"
 
 [functions."rounders-evaluation-nba"]
   schedule = "0 14 * * *"
