@@ -1,0 +1,14 @@
+import type {Metadata} from "next";
+import Link from "next/link";
+export const metadata:Metadata={title:"FAQ | The Rounders",description:"Ratings, picks, grading, plans and data sources."};
+const questions=[
+["What does a rating mean?","The Power Index estimates scoring margin relative to an average team on a neutral site, adjusted for opponent strength and recency. Higher is stronger. Offense and defense describe scoring contributions; strength of schedule describes opponent quality."],
+["When do picks lock?","The first prediction for a game and model is stored before its scheduled start. The engine normally skips games less than ten minutes away when generating predictions. Publication timing depends on the schedule and available data; not every game is covered."],
+["How are picks graded?","After a verified final score, we compare the stored winner, probability, margin and total with the result. Pending games remain pending until resolved; unresolved games may be voided. Ties do not count toward binary winner accuracy. Market comparisons require a captured pregame line."],
+["What is included in Free?","Projected winners, win probabilities, Power Index ratings and public performance records."],
+["What is included in Pro and Edge?","Pro is proposed at $19.99 per month and adds projected spreads, totals, scores, CSV history and generative matchup analysis when enabled. Edge is proposed at $39.99 per month and adds challenger-model comparisons and captured market-line comparisons where available."],
+["Can I cancel anytime?","Yes. Manage or cancel a test subscription through your account and billing portal. Access normally continues through the current subscription period. Billing is currently in test mode; these are proposed prices, not live charges."],
+["Where does the data come from?","Completed results and schedules are obtained from ESPN public scoreboards, an unofficial feed. Coverage and freshness may vary. The Rounders is independent and is not endorsed by ESPN or any league. Market lines, when available, come from a separate provider."],
+["Can I place a bet here?","No. The Rounders is a research-only analytics service. It does not accept wagers, hold betting funds or promise profitable outcomes. Paper tracking is for research without real money."]
+];
+export default function FAQ(){return <main><section className="hero"><p className="eyebrow">HELP & TRANSPARENCY</p><h1>Frequently asked questions.</h1><p className="heroSub">Understand the numbers, the record and what each plan includes.</p></section><section className="block">{questions.map(([q,a])=><details className="more" key={q}><summary>{q}</summary><p className="heroSub" style={{maxWidth:"76ch"}}>{a}</p></details>)}</section><p className="fine"><Link href="/methodology">Methodology</Link> · <Link href="/pricing">Plans</Link> · <Link href="/terms">Terms</Link> · <Link href="/support">Support</Link></p></main>}
