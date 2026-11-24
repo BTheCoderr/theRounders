@@ -31,5 +31,5 @@ export async function GET(req:Request){
     ...board,dataState,provider,fallback,coverage,medianGames,
     evaluation,notes,
     retrievedAt:now.toISOString(),
-  },{headers:{"Cache-Control":"public, max-age=0, s-maxage=600, stale-while-revalidate=120"}});
+  },{headers:{"Cache-Control":"public, max-age=0, s-maxage=600, stale-while-revalidate=120","Netlify-Vary":"query"}});
 }

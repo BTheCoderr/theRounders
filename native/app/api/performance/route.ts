@@ -34,7 +34,7 @@ export async function GET(req:Request){
     "Backtest results are simulated pregame forecasts on past seasons; they are out-of-sample but were not published at the time.",
     "Against-the-spread and over/under records appear only for games where a live pregame market line was captured.",
     "No result here implies future profitability."
-   ]},{headers:{"Cache-Control":"public, max-age=0, s-maxage=300"}});
+   ]},{headers:{"Cache-Control":"public, max-age=0, s-maxage=300","Netlify-Vary":"query"}});
  }catch{
   return NextResponse.json({sport,champion,ready:false,reason:"Performance data is temporarily unavailable."},{status:503,headers:{"Cache-Control":"no-store"}});
  }

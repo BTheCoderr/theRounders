@@ -24,7 +24,7 @@ export async function GET(req:Request){
   const table=buildRatingsTable(games,sport,end);
   return NextResponse.json({...table,rows:table.rows.map(r=>({...r,change:null})),ready:true,seasons,historical:true,
    notes:["Final regular-season Power Index ratings, computed from that season's results only. Team names as they were at the time."]},
-   {headers:{"Cache-Control":"public, max-age=0, s-maxage=3600, stale-while-revalidate=600"}});
+   {headers:{"Cache-Control":"public, max-age=0, s-maxage=3600, stale-while-revalidate=600","Netlify-Vary":"query"}});
  }catch{
   return NextResponse.json({ready:false,sport,reason:"History is temporarily unavailable."},{status:503,headers:{"Cache-Control":"no-store"}});
  }

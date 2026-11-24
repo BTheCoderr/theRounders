@@ -41,7 +41,7 @@ export async function GET(req:Request){
    winner:p.projected_winner,teamWinProbability:p.home===row.team?p.home_win_probability:1-p.home_win_probability,predictedAt:p.predicted_at}));
   return NextResponse.json({ready:true,sport,season,team:row,teams:table.rows.length,homeAdvantage:table.homeAdvantage,
    model,modelLabel:MODEL_LABELS[model],history:ratingHistory(games,sport,row.team,now),results,upcoming},
-   {headers:{"Cache-Control":"public, max-age=0, s-maxage=900, stale-while-revalidate=300"}});
+   {headers:{"Cache-Control":"public, max-age=0, s-maxage=900, stale-while-revalidate=300","Netlify-Vary":"query"}});
  }catch{
   return NextResponse.json({ready:false,reason:"Team data is temporarily unavailable."},{status:503,headers:{"Cache-Control":"no-store"}});
  }

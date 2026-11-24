@@ -16,7 +16,7 @@ export async function GET(req:Request){
   return NextResponse.json({...table,ready:true,provider,model:"power-v2",
    notes:["Rounders Power Index ratings from verified regular-season results. These are not Kenneth Massey's ratings.",
     "Offense and defense are per game, better than average against an average opponent. Projected records add each remaining game's win probability."]},
-   {headers:{"Cache-Control":"public, max-age=0, s-maxage=900, stale-while-revalidate=300"}});
+   {headers:{"Cache-Control":"public, max-age=0, s-maxage=900, stale-while-revalidate=300","Netlify-Vary":"query"}});
  }catch{
   return NextResponse.json({sport,ready:false,reason:"Ratings are temporarily unavailable."},{status:503,headers:{"Cache-Control":"no-store"}});
  }
