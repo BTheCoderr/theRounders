@@ -8,6 +8,6 @@ export default function RootLayout({children}:{children:React.ReactNode}){
   <TopBar/>
   {children}
   <footer className="siteFooter"><span>© {new Date().getFullYear()} The Rounders · Research only, no wagering</span>
-   <nav aria-label="Legal and support"><Link href="/pricing">Plans</Link><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><a href="mailto:Bferrell514@gmail.com">Contact</a></nav></footer>
+   <nav aria-label="Legal and support"><Link href="/pricing">Plans</Link><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/methodology">Methodology</Link><Link href="/faq">FAQ</Link><Link href="/terms">Terms</Link><a href="mailto:Bferrell514@gmail.com">Contact</a></nav></footer>
  </body></html>;
 }
