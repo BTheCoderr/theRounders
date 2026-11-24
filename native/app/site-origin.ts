@@ -1,0 +1,1 @@
+export function siteOrigin(){try{const url=new URL(process.env.URL||"https://therounders.netlify.app");if(url.protocol==="https:"||url.protocol==="http:")return url.origin}catch{}return "https://therounders.netlify.app"}
