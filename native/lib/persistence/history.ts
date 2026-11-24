@@ -189,8 +189,11 @@ export async function archiveEspnMonth(sport:Sport,yearMonth:string,opts:{lenien
   });
  }
  // Reuse provider-stable IDs; names are presentation metadata, not model identity.
+ // Only recent months may set the display name, so backfilling old seasons never renames a
+ // club to a former name (St. Louis Rams, Oakland Raiders...).
+ const recent=new Set(recentMonthKeys(new Date(),3));
  const registry=new Map<string,{sport:Sport;provider:string;provider_team_id:string;canonical_name:string;updated_at:string}>();
- for(const g of parsed.games)for(const [id,name] of [[g.homeId,g.home],[g.awayId,g.away]]){
+ if(recent.has(yearMonth))for(const g of parsed.games)for(const [id,name] of [[g.homeId,g.home],[g.awayId,g.away]]){
   registry.set(id,{sport,provider:"espn-scoreboard",provider_team_id:id,canonical_name:name,updated_at:new Date().toISOString()});
  }
  const entries=[...registry.values()];
