@@ -26,7 +26,7 @@ export default function SupportPage() {
       <h3>Where are my paper tickets stored?</h3>
       <p>Mobile paper tickets are saved on your device. Website paper tickets are stored in your browser. They are not synced between devices or with the optional website account.</p>
       <h3>How do I delete saved paper tickets?</h3>
-      <p>In the mobile app, open Paper Bets and delete a ticket or clear the list after confirmation. The website currently uses local browser storage, which can be cleared through your browser's site-data controls.</p>
+      <p>In the mobile app, open Paper Bets and delete a ticket or clear the list after confirmation. The website currently uses local browser storage, which can be cleared through your browser&apos;s site-data controls.</p>
       <h3>How do I request account or personal-data deletion?</h3>
       <p>If you signed in on the website, email <a href="mailto:Bferrell514@gmail.com?subject=The%20Rounders%20Data%20Deletion">Bferrell514@gmail.com</a> with a deletion request. We may need to verify ownership. Deleting a website account does not automatically clear locally saved browser or phone entries.</p>
     </section>

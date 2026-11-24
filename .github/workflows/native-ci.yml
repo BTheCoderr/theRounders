@@ -26,5 +26,6 @@ jobs:
           node-version: "22"
       - run: npm install
       - run: npm run typecheck
+      - run: npm run lint
       - run: node --experimental-strip-types --test tests/*.test.mjs
       - run: npm run build

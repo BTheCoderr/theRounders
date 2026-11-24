@@ -1,4 +1,5 @@
 import "./globals.css";
+import StructuredData from "./StructuredData";
 import Link from "next/link";
 import TopBar from "../components/TopBar";
 import type {Metadata} from "next";
@@ -18,6 +19,7 @@ export const metadata:Metadata={
 export const viewport={width:"device-width",initialScale:1,themeColor:"#070F1F"};
 export default function RootLayout({children}:{children:React.ReactNode}){
  return <html lang="en"><body>
+  <StructuredData/>
   <TopBar/>
   {children}
   <footer className="siteFooter"><span>© {new Date().getFullYear()} The Rounders · Research only, no wagering</span>
