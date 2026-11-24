@@ -20,7 +20,7 @@ export async function ratingsWithProjections(sport:EngineSport,now=new Date()):P
  if(!(end.getTime()>now.getTime()))return {table,provider,games};
  try{
   const [schedule,registry,backtest]=await Promise.all([
-   fetchUpcoming(sport,now,end,{revalidate:21600}),readTeamRegistry(sport),latestBacktest(sport).catch(()=>null)]);
+   fetchUpcoming(sport,now,end,{revalidate:21600,maxRequests:45}),readTeamRegistry(sport),latestBacktest(sport).catch(()=>null)]);
   const remaining=schedule.map(g=>({home:registry.get(g.homeId)||g.home,away:registry.get(g.awayId)||g.away,neutral:g.neutral}));
   const power=backtest?.models.find(m=>m.model==="power-v2");
   const sigma=typeof power?.sigma==="number"&&power.sigma>0?power.sigma:sigmaFromSummary(sport,power?.summary);
