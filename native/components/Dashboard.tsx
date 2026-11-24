@@ -5,6 +5,8 @@ import Predictions from "./Predictions";
 import PowerRankings from "./PowerRankings";
 import Performance from "./Performance";
 import MarketBoard from "./MarketBoard";
+import SharpSignals from "./SharpSignals";
+import PaperBankroll from "./PaperBankroll";
 
 /** Sport switch shared by every section; remembered per browser and in the URL. */
 export default function Dashboard(){
@@ -14,6 +16,10 @@ export default function Dashboard(){
   <Predictions sport={sport}/>
   <Performance sport={sport}/>
   <PowerRankings sport={sport}/>
-  <MarketBoard sport={sport}/>
+  <MarketBoard key={sport} sport={sport}/>
+  <section className="tools" aria-label="Tools">
+   <details><summary><span>Price gaps across books</span><small>Same game, same line, different prices</small></summary><SharpSignals key={sport} sport={sport}/></details>
+   <details><summary><span>Paper bankroll</span><small>Track picks without real money · all sports</small></summary><PaperBankroll/></details>
+  </section>
  </>;
 }

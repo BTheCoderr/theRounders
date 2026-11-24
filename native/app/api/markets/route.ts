@@ -1,5 +1,4 @@
 import {NextRequest,NextResponse} from "next/server";
-import {mockProvider} from "../../../lib/providers/mock";
 import {liveProvider} from "../../../lib/providers/live";
 const STALE_MS=120000;
 import {ALL_SPORTS} from "../../../lib/sports";
@@ -15,4 +14,16 @@ export async function GET(req:NextRequest){
  if(res.status===200){try{cache.set(key,{at:Date.now(),body:await res.clone().json()})}catch{/* do not cache */}}
  return res;
 }
-async function compute(req:NextRequest){const sport=(req.nextUrl.searchParams.get("sport")||"NBA").toUpperCase();if(!SPORTS.has(sport))return NextResponse.json({error:"Unsupported sport"},{status:400});let providerName=mockProvider.name,mode=mockProvider.mode,fallback=true;try{const health=await liveProvider.health();let markets=await mockProvider.getMarkets(sport);if(health.healthy){try{const live=await liveProvider.getMarkets(sport);if(live.length){markets=live;providerName=liveProvider.name;mode=liveProvider.mode;fallback=false}}catch{fallback=true}}const newest=markets.reduce((max,q)=>Math.max(max,new Date(q.updatedAt).getTime()),0);const ageMs=newest?Date.now()-newest:null;return NextResponse.json({provider:providerName,mode,fallback,fresh:mode==="live"&&ageMs!==null&&ageMs>=0&&ageMs<=STALE_MS,ageMs,markets},{headers:{"Cache-Control":"public, max-age=0, s-maxage=30","Netlify-Vary":"query"}})}catch{return NextResponse.json({provider:providerName,mode,fallback,fresh:false,ageMs:null,markets:[],error:"Market feed unavailable"},{status:503})}}
+async function compute(req:NextRequest){
+ const sport=(req.nextUrl.searchParams.get("sport")||"NBA").toUpperCase();
+ if(!SPORTS.has(sport))return NextResponse.json({error:"Unsupported sport"},{status:400});
+ const headers={"Cache-Control":"public, max-age=0, s-maxage=30","Netlify-Vary":"query"};
+ const unavailable=()=>NextResponse.json({provider:liveProvider.name,mode:"unavailable",fallback:false,fresh:false,ageMs:null,markets:[],error:"Market feed unavailable"},{status:503,headers:{"Cache-Control":"no-store"}});
+ try{
+  if(!(await liveProvider.health()).healthy)return unavailable();
+  const markets=(await liveProvider.getMarkets(sport)).filter(q=>q.state==="live"&&Date.parse(q.startTime)>Date.now());
+  const newest=markets.reduce((max,q)=>Math.max(max,Date.parse(q.updatedAt)||0),0);
+  const ageMs=newest?Date.now()-newest:null;
+  return NextResponse.json({provider:liveProvider.name,mode:"live",fallback:false,fresh:ageMs!==null&&ageMs>=0&&ageMs<=STALE_MS,ageMs,markets},{headers});
+ }catch{return unavailable()}
+}
