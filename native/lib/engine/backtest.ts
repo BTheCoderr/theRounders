@@ -2,6 +2,7 @@ import {uniqueCompletedGames,type CompletedGame} from "../powerRatings.ts";
 import type {TeamGame} from "../ratings";
 import {ALL_MODELS,ENGINE_REVISION,SPORT_SETTINGS,fitMarginModel,type EngineSport,type MarginPredictor,type ModelId} from "./models.ts";
 import {TOTALS_MODEL,fitTotals,leagueAverageTotal} from "./totals.ts";
+import {buildSchedule} from "./v3.ts";
 import {summarizeForecasts,winProbability,type ForecastSummary,type GradedForecast} from "./metrics.ts";
 
 /**
@@ -33,6 +34,8 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
  const maxWeeks=opts.maxWeeks??104,minTrain=opts.minTrainGames??(sport==="NFL"?120:300);
  if(!(Number.isInteger(maxWeeks)&&maxWeeks>=1&&maxWeeks<=260))throw new Error("Invalid evaluation window");
  const history:CompletedGame[]=uniqueCompletedGames(rows,new Date(asOf.getTime()-1));
+ // Schedule (dates only) for rest features: known before games are played, so not leakage.
+ const schedule=buildSchedule(history);
  const groups=new Map<number,CompletedGame[]>();
  for(const g of history){const k=weekStart(Date.parse(g.date));groups.set(k,[...(groups.get(k)||[]),g]);}
  const weeks=[...groups.keys()].sort((a,b)=>a-b).slice(-maxWeeks);
@@ -48,12 +51,17 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
   const originDate=new Date(origin);
   const train=history.filter(g=>Date.parse(g.date)<origin);
   if(train.length<minTrain){skipped+=upcoming.length;continue;}
-  const predictors=new Map<ModelId,MarginPredictor>(models.map(m=>[m,fitMarginModel(m,train,sport,originDate)]));
+  // Fit each base model once per week; the ensemble reuses these fits.
+  const base=new Map<ModelId,MarginPredictor>();
+  const fitOnce=(m:ModelId)=>{let f=base.get(m);if(!f){f=fitMarginModel(m,train,sport,originDate,schedule);base.set(m,f);}return f;};
+  const predictors=new Map<ModelId,MarginPredictor>(models.map(m=>[m,m==="ensemble"
+   ?((h:string,a:string,n:boolean,d?:string)=>{const parts=(["power-v2","rpi-v2.1","elo-margin","rounders-v3"] as ModelId[]).map(x=>fitOnce(x)(h,a,n,d));return parts.some(v=>v===null)?null:(parts as number[]).reduce((s,v)=>s+v,0)/parts.length;})
+   :fitOnce(m)]));
   const totals=fitTotals(train,sport,originDate);
   const leagueTotal=leagueAverageTotal(train,sport,originDate);
   let used=0;
   for(const g of upcoming){
-   const margins=models.map(m=>predictors.get(m)!(g.home,g.away,g.neutral));
+   const margins=models.map(m=>predictors.get(m)!(g.home,g.away,g.neutral,g.date));
    const total=totals.predict(g.home,g.away,g.neutral);
    if(margins.some(x=>x===null||!Number.isFinite(x))||!total){skipped++;continue;}
    used++;evaluated++;seasons.add(seasonOf(g.date));

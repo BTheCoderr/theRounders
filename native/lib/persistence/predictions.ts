@@ -106,8 +106,9 @@ export function summarizeStored(rows:StoredPrediction[]):ForecastSummary{
 
 /** Daily: walk-forward backtest of every model on verified history, plus the promotion gate. */
 export async function recordBacktest(sport:EngineSport,now=new Date()){
+ const started=Date.now();
  const archive=await getVerifiedResearchGames(sport);
- const report=runBacktest(archive.games,sport,now,{maxWeeks:sport==="NBA"?104:156});
+ const report=runBacktest(archive.games,sport,now,{maxWeeks:sport==="NBA"?80:156});
  const champion=championFor(sport);
  const promotion=CANDIDATE_MODELS.filter(m=>m!==champion).map(m=>evaluatePromotion(report,champion,m));
  await rest("rounders_backtests?on_conflict=sport,engine_revision,run_day",{
@@ -117,7 +118,7 @@ export async function recordBacktest(sport:EngineSport,now=new Date()){
    seasons:report.seasons,from_game:report.from,through_game:report.through,
    models:report.models,totals:report.totals,promotion})
  });
- return {evaluated:report.evaluatedGames,weeks:report.evaluatedWeeks,recommended:promotion.filter(p=>p.recommend).map(p=>p.challenger)};
+ return {ms:Date.now()-started,evaluated:report.evaluatedGames,weeks:report.evaluatedWeeks,recommended:promotion.filter(p=>p.recommend).map(p=>p.challenger)};
 }
 export type StoredBacktest={sport:EngineSport;engine_revision:string;run_day:string;data_source:string;champion:string;
  historical_games:number;evaluated_games:number;evaluated_weeks:number;seasons:number[];from_game:string|null;through_game:string|null;
