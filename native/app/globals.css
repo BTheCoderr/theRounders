@@ -343,3 +343,7 @@ details.more summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--
 .ratingsTable thead th.teamCol{background:var(--card2);z-index:2}
 .seasonPick{display:inline-flex;align-items:center;gap:8px;margin:8px 0 0 10px;color:var(--muted);font-size:.85rem;font-weight:700}
 .seasonPick select{background:var(--card);color:var(--text);border:1px solid var(--line2);border-radius:10px;padding:7px 10px;font:inherit}
+.liveTag{color:var(--loss);font-weight:800;letter-spacing:.04em;display:inline-flex;align-items:center;gap:6px}
+.liveTag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--loss);animation:livePulse 1.4s ease-in-out infinite}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.liveTag::before{animation:none}}

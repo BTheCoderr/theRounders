@@ -5,7 +5,7 @@ import {SPORT_CONFIG,espnScoreboardUrl,mapLimit,type Sport} from "../sports.ts";
 type Competitor={homeAway?:string;team?:{id?:string;displayName?:string;abbreviation?:string}};
 type Event={
  id?:string;date?:string;season?:{type?:number|string;year?:number};
- status?:{type?:{state?:string;completed?:boolean}};
+ status?:{type?:{state?:string;completed?:boolean;shortDetail?:string;detail?:string}};
  competitions?:Array<{neutralSite?:boolean;competitors?:Competitor[]}>;
 };
 const ymd=(d:Date)=>d.toISOString().slice(0,10).replace(/-/g,"");
@@ -72,4 +72,27 @@ export function parseFinals(events:Event[]):Map<string,FinalScore>{
 }
 export async function fetchFinals(sport:Sport,from:Date,to:Date):Promise<Map<string,FinalScore>>{
  return parseFinals(await scoreboardEvents(sport,from,to));
+}
+
+/** Live scoreboard state per event: pre-game, in progress (with clock) or final. */
+export type LiveGame={eventId:string;state:"pre"|"in"|"post";detail:string;homeId:string;awayId:string;homeScore:number|null;awayScore:number|null};
+export function parseLive(events:Event[]):LiveGame[]{
+ const out:LiveGame[]=[];
+ for(const e of events){
+  const st=e?.status?.type?.state,id=String(e?.id||"").trim();
+  if(!id||(st!=="pre"&&st!=="in"&&st!=="post"))continue;
+  const c=e.competitions?.[0];
+  const home=c?.competitors?.find(x=>x.homeAway==="home") as (Competitor&{score?:string})|undefined;
+  const away=c?.competitors?.find(x=>x.homeAway==="away") as (Competitor&{score?:string})|undefined;
+  if(!home?.team?.id||!away?.team?.id)continue;
+  const num=(v?:string)=>{const n=Number(v);return st!=="pre"&&v!==undefined&&v!==""&&Number.isFinite(n)?n:null;};
+  out.push({eventId:id,state:st,detail:String(e.status?.type?.shortDetail||e.status?.type?.detail||"").slice(0,40),
+   homeId:String(home.team.id),awayId:String(away.team.id),homeScore:num(home.score),awayScore:num(away.score)});
+ }
+ return out;
+}
+/** Yesterday through tomorrow (US days), uncached; the API route is cached ~20s at the CDN. */
+export async function fetchLive(sport:Sport,now=new Date()):Promise<LiveGame[]>{
+ const DAYMS=86400000;
+ return parseLive(await scoreboardEvents(sport,new Date(now.getTime()-DAYMS),new Date(now.getTime()+DAYMS)));
 }
