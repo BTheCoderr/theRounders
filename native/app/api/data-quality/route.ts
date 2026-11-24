@@ -13,7 +13,7 @@ export async function GET(request:Request){
   const data=await getVerifiedResearchGames(sport as Sport);
   const audit=auditGameHistory(data.games,sport as Sport,data.provider,data.source);
   return NextResponse.json({...audit,notice:"Uses only provider-ID verified regular-season games; legacy unclassified records are excluded. Approximate audit only, not a league-certified game inventory."},{
-   headers:{"Cache-Control":"public, max-age=0, s-maxage=600"}
+   headers:{"Cache-Control":"public, max-age=0, s-maxage=600","Netlify-Vary":"query"}
   });
  }catch{
   return NextResponse.json({error:"Archive quality check unavailable"},{status:503,

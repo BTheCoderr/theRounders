@@ -12,7 +12,7 @@ export async function GET(request:Request){
   if(!report)return NextResponse.json({ready:false,reason:"No completed historical evaluation has been stored yet.",sport},
    {headers:{"Cache-Control":"no-store"}});
   return NextResponse.json({ready:true,...report,disclaimer:"Research-grade comparison in progress. No independently verified superiority or betting guarantee."},
-   {headers:{"Cache-Control":"public, max-age=0, s-maxage=300"}});
+   {headers:{"Cache-Control":"public, max-age=0, s-maxage=300","Netlify-Vary":"query"}});
  }catch{
   return NextResponse.json({ready:false,error:"Historical model scorecard unavailable",sport},
    {status:503,headers:{"Cache-Control":"no-store"}});

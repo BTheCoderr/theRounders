@@ -20,7 +20,7 @@ export async function GET(req:Request){
     final:{home:r.final_home,away:r.final_away},correct:r.winner_correct,marginError:r.margin_error,modelVersion:r.model_version})),
    notes:["Each pick was stored before its game started and is never edited. Spreads and totals are shown after the final only.",
     "Ties are excluded from accuracy. No result here implies future profitability."]},
-   {headers:{"Cache-Control":"public, max-age=0, s-maxage=300"}});
+   {headers:{"Cache-Control":"public, max-age=0, s-maxage=300","Netlify-Vary":"query"}});
  }catch{
   return NextResponse.json({sport,ready:false,reason:"Track record is temporarily unavailable."},{status:503,headers:{"Cache-Control":"no-store"}});
  }
