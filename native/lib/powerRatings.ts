@@ -77,7 +77,7 @@ export function computePowerBoard(rows:TeamGame[],sport:Sport,asOf=new Date()):P
     return out;
   };
   const x=new Array<number>(n).fill(0);
-  let residue=[...rhs];
+  const residue=[...rhs];
   let z=residue.map((v,i)=>v/diag[i]);
   let p=[...z];
   let rs=dot(residue,z);
