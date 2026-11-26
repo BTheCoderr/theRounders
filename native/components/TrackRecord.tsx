@@ -4,6 +4,7 @@ import {num,pct,type Summary} from "../lib/clientTypes";
 import {nickname} from "../lib/teams";
 import {useSport} from "./useSport";
 import SportBar from "./SportBar";
+import EdgePicks from "./EdgePicks";
 
 type Pick={eventId:string;startsAt:string;predictedAt:string;home:string;away:string;winner:string;probability:number;
  projectedSpreadHome:number;projectedTotal:number;final:{home:number|null;away:number|null};correct:boolean|null;marginError:number|null};
@@ -39,6 +40,7 @@ export default function TrackRecord(){
    </div>
   </section>:null}
   <SportBar sport={sport} onChange={setSport}/>
+  <EdgePicks sport={sport}/>
   <section className="block">
    <div className="blockHead"><h2>{sport} ledger</h2><span className="chip free">FREE</span></div>
    {error?<p className="empty">{error}</p>:!d||!s?<div className="statStrip skeleton"/>:!d.picks.length?

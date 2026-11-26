@@ -182,7 +182,8 @@ export async function archiveEspnMonth(sport:Sport,yearMonth:string,opts:{lenien
    occurred_at:g.date,home:g.home,away:g.away,
    home_team_id:g.homeId,away_team_id:g.awayId,
    home_score:g.homeScore,away_score:g.awayScore,
-   neutral:g.neutral,season_phase:"regular",verified_at:new Date().toISOString()
+   neutral:g.neutral,season_phase:"regular",verified_at:new Date().toISOString(),
+   box:g.box??null
   }));
   await rest("rounders_games?on_conflict=source,sport,source_event_id",{
    method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(payload)

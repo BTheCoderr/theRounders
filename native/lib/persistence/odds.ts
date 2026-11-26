@@ -89,6 +89,16 @@ export async function openCloseLines(sport:Sport,espnIds:string[],provider="the-
  for(let i=0;i<ids.length;i+=100){
   const r=await rest(`rounders_odds_open_close?select=espn_event_id,open_spread_home,close_spread_home,close_home_win_prob,opened_at,closed_at,captures&sport=eq.${sport}&provider=eq.${encodeURIComponent(provider)}&espn_event_id=in.(${ids.slice(i,i+100).join(",")})`);
   for(const x of await r.json() as OpenClose[])if(x.espn_event_id)out.set(x.espn_event_id,x);
+  // ESPN carries the book's own opening line: prefer it to our first capture (which may be hours later).
+  if(provider==="espn"){
+   const f=await rest(`rounders_odds_snapshots?select=espn_event_id,captured_at,open:quotes->0->open&provider=eq.espn&sport=eq.${sport}&espn_event_id=in.(${ids.slice(i,i+100).join(",")})&order=captured_at.asc&limit=2000`);
+   const seen=new Set<string>();
+   for(const x of await f.json() as Array<{espn_event_id:string;open?:{spreadHome?:number|null}|null}>){
+    if(seen.has(x.espn_event_id))continue;seen.add(x.espn_event_id);
+    const o=x.open?.spreadHome,cur=out.get(x.espn_event_id);
+    if(cur&&typeof o==="number"&&Number.isFinite(o))out.set(x.espn_event_id,{...cur,open_spread_home:o});
+   }
+  }
  }
  return out;
 }
