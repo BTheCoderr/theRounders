@@ -45,6 +45,13 @@
   schedule = "20 * * * *"
 [functions."rounders-predict-nfl"]
   schedule = "25 * * * *"
+# Paid data (off until ODDS_INGEST_ENABLED / BALLDONTLIE_ENABLED are set; see docs in lib/providers/spend.ts).
+[functions."rounders-odds"]
+  schedule = "*/15 * * * *"
+[functions."rounders-injuries"]
+  schedule = "45 * * * *"
+[functions."rounders-impacts"]
+  schedule = "15 10 * * *"
 [functions."rounders-grade"]
   schedule = "0 * * * *"
 [functions."rounders-backtest-nba"]

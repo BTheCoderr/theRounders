@@ -1,9 +1,10 @@
 import {uniqueCompletedGames,type CompletedGame} from "../powerRatings.ts";
 import type {TeamGame} from "../ratings";
-import {ALL_MODELS,ENGINE_REVISION,fitMarginModel,type EngineSport,type MarginPredictor,type ModelId} from "./models.ts";
+import {ALL_MODELS,ENGINE_REVISION,ENSEMBLE_MEMBERS,fitMarginModel,type EngineSport,type MarginPredictor,type ModelId} from "./models.ts";
 import {TOTALS_MODEL,fitTotals,leagueAverageTotal} from "./totals.ts";
 import {buildSchedule} from "./v3.ts";
-import {calibratedSigma} from "./calibration.ts";
+import {calibratedSigma,fitPlatt,plattProbability,type Platt} from "./calibration.ts";
+import {fitWeights,weightedMargin,type Forecast} from "../research/weightedEnsemble.ts";
 import {SPORT_CONFIG,seasonFor} from "../sports.ts";
 import {summarizeForecasts,winProbability,type ForecastSummary,type GradedForecast} from "./metrics.ts";
 
@@ -16,7 +17,11 @@ import {summarizeForecasts,winProbability,type ForecastSummary,type GradedForeca
  * errors (weeks before the origin only), exactly as live predictions do.
  * These are simulated pregame forecasts on history, not live recorded predictions.
  */
-export type ModelBacktest={model:ModelId;summary:ForecastSummary;sigma:number};
+export type ModelBacktest={model:ModelId;summary:ForecastSummary;sigma:number;
+ /** Same forecasts mapped through a walk-forward Platt fit (null until enough earlier games). */
+ platt:{games:number;brierScore:number|null;logLoss:number|null};
+ /** ensemble-w only: latest walk-forward weights. */
+ weights?:Record<string,number>};
 export type BacktestReport={
  method:"weekly-walk-forward";engineRevision:string;sport:EngineSport;
  asOf:string;from:string|null;through:string|null;
@@ -46,6 +51,11 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
  // Running out-of-sample squared margin errors per model, updated after each week.
  const sse=new Map<ModelId,number>(models.map(m=>[m,0])),sseN=new Map<ModelId,number>(models.map(m=>[m,0]));
  const forecasts=new Map<ModelId,GradedForecast[]>(models.map(m=>[m,[]]));
+ // Earlier weeks' out-of-sample results: Platt pairs per model and ensemble-member margins.
+ const plattPairs=new Map<ModelId,Array<{margin:number;won:0|1}>>(models.map(m=>[m,[]]));
+ const plattScore=new Map<ModelId,{n:number;brier:number;ll:number}>(models.map(m=>[m,{n:0,brier:0,ll:0}]));
+ const memberRows:Forecast[]=[];
+ let lastWeights:Record<string,number>|undefined;
  const paired=Object.fromEntries(models.map(m=>[m,[] as number[]])) as Record<ModelId,number[]>;
  const pairedBrier=Object.fromEntries(models.map(m=>[m,[] as number[]])) as Record<ModelId,number[]>;
  let totN=0,totAbs=0,totBias=0,baseN=0,baseAbs=0,baseBias=0;
@@ -59,9 +69,17 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
   // Fit each base model once per week; the ensemble reuses these fits.
   const base=new Map<ModelId,MarginPredictor>();
   const fitOnce=(m:ModelId)=>{let f=base.get(m);if(!f){f=fitMarginModel(m,train,sport,originDate,schedule);base.set(m,f);}return f;};
+  // Weighted ensemble: inverse-error weights fit only on games settled before this week (PR #38).
+  const weights=fitWeights(memberRows,ENSEMBLE_MEMBERS,originDate,100).weights;
+  if(models.includes("ensemble-w"))lastWeights=weights;
+  const memberMargins=(h:string,a:string,n:boolean,d?:string)=>Object.fromEntries(ENSEMBLE_MEMBERS.map(x=>[x,fitOnce(x)(h,a,n,d)])) as Record<string,number|null>;
   const predictors=new Map<ModelId,MarginPredictor>(models.map(m=>[m,m==="ensemble"
-   ?((h:string,a:string,n:boolean,d?:string)=>{const parts=(["power-v2","rpi-v2.1","elo-margin","rounders-v3"] as ModelId[]).map(x=>fitOnce(x)(h,a,n,d));return parts.some(v=>v===null)?null:(parts as number[]).reduce((s,v)=>s+v,0)/parts.length;})
+   ?((h:string,a:string,n:boolean,d?:string)=>{const parts=Object.values(memberMargins(h,a,n,d));return parts.some(v=>v===null)?null:(parts as number[]).reduce((s,v)=>s+v,0)/parts.length;})
+   :m==="ensemble-w"?((h:string,a:string,n:boolean,d?:string)=>{const mm=memberMargins(h,a,n,d);return Object.values(mm).some(v=>v===null)?null:weightedMargin(mm as Record<string,number>,weights);})
    :fitOnce(m)]));
+  const platts=new Map<ModelId,Platt|null>(models.map(m=>[m,fitPlatt(plattPairs.get(m)!,SPORT_CONFIG[sport].calibrationGames)]));
+  const weekPairs:Array<[ModelId,number,0|1]>=[];
+  const weekMembers:Forecast[]=[];
   const totals=fitTotals(train,sport,originDate);
   const leagueTotal=leagueAverageTotal(train,sport,originDate);
   const sigmas=new Map<ModelId,number>(models.map(m=>[m,calibratedSigma(sport,sse.get(m)!,sseN.get(m)!)]));
@@ -74,6 +92,9 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
    used++;evaluated++;seasons.add(seasonOf(g.date,sport));
    from??=g.date;through=g.date;
    const actualTotal=g.homeScore+g.awayScore,actualMargin=g.homeScore-g.awayScore;
+   const mm=memberMargins(g.home,g.away,g.neutral,g.date);
+   if(Object.values(mm).every(v=>v!==null&&Number.isFinite(v)))
+    weekMembers.push({eventId:g.date+"|"+g.home+"|"+g.away,startsAt:g.date,settledAt:new Date(Date.parse(g.date)+4*3600000).toISOString(),actualMargin,margins:mm as Record<string,number>});
    totN++;totAbs+=Math.abs(total.total-actualTotal);totBias+=total.total-actualTotal;
    if(leagueTotal!==null){baseN++;baseAbs+=Math.abs(leagueTotal-actualTotal);baseBias+=leagueTotal-actualTotal;}
    models.forEach((m,i)=>{
@@ -82,9 +103,16 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
     forecasts.get(m)!.push({homeWinProbability:p,projectedMargin:margin,projectedTotal:total.total,homeScore:g.homeScore,awayScore:g.awayScore});
     paired[m].push(Math.abs(margin-actualMargin));
     pairedBrier[m].push(actualMargin===0?NaN:(p-(actualMargin>0?1:0))**2);
+    if(actualMargin!==0){
+     const y:0|1=actualMargin>0?1:0;weekPairs.push([m,margin,y]);
+     const pl=platts.get(m);
+     if(pl){const q=plattProbability(pl,margin),s=plattScore.get(m)!;s.n++;s.brier+=(q-y)**2;s.ll-=Math.log(y?q:1-q);}
+    }
    });
   }
   for(const [m,e] of weekErr){sse.set(m,sse.get(m)!+e);sseN.set(m,sseN.get(m)!+1);}
+  for(const [m,x,y] of weekPairs)plattPairs.get(m)!.push({margin:x,won:y});
+  memberRows.push(...weekMembers);
   if(used)evaluatedWeeks++;
  }
  const r=(x:number)=>Number(x.toFixed(4));
@@ -92,7 +120,9 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
   method:"weekly-walk-forward",engineRevision:ENGINE_REVISION,sport,asOf:asOf.toISOString(),from,through,
   historicalGames:history.length,evaluatedGames:evaluated,evaluatedWeeks,skippedColdStart:skipped,
   seasons:[...seasons].sort((a,b)=>a-b),
-  models:models.map(m=>({model:m,summary:summarizeForecasts(forecasts.get(m)!),sigma:r(calibratedSigma(sport,sse.get(m)!,sseN.get(m)!))})),
+  models:models.map(m=>{const s=plattScore.get(m)!;return {model:m,summary:summarizeForecasts(forecasts.get(m)!),sigma:r(calibratedSigma(sport,sse.get(m)!,sseN.get(m)!)),
+   platt:{games:s.n,brierScore:s.n?r(s.brier/s.n):null,logLoss:s.n?r(s.ll/s.n):null},
+   ...(m==="ensemble-w"&&lastWeights?{weights:Object.fromEntries(Object.entries(lastWeights).map(([k,v])=>[k,r(v)]))}:{})};}),
   totals:{model:TOTALS_MODEL,
    summary:{games:totN,mae:totN?r(totAbs/totN):null,bias:totN?r(totBias/totN):null},
    baseline:{games:baseN,mae:baseN?r(baseAbs/baseN):null,bias:baseN?r(baseBias/baseN):null}},

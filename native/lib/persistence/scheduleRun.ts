@@ -57,7 +57,47 @@ export async function runScheduledPredictions(sport:Sport):Promise<Response>{
 }
 export async function runScheduledGrading():Promise<Response>{
  const {gradePendingPredictions}=await import("./predictions");
- return receipt("rounders grading",{},()=>gradePendingPredictions());
+ const {gradeAdjustedForecasts}=await import("./injuries");
+ return receipt("rounders grading",{},async()=>{
+  const picks=await gradePendingPredictions();
+  // v4 tables may not exist before migration 012; the locked picks still grade.
+  const adjusted=await gradeAdjustedForecasts().catch(e=>({error:e instanceof Error?e.message:"failed"}));
+  return {...picks,adjusted};
+ });
+}
+/** Odds capture for every sport, within the polling policy and spend budget. */
+export async function runScheduledOdds():Promise<Response>{
+ const {captureOdds}=await import("./odds");
+ const {ALL_SPORTS}=await import("../sports");
+ return receipt("rounders odds",{},async()=>{
+  const started=Date.now(),out:Record<string,unknown>={};
+  for(const s of ALL_SPORTS){
+   if(Date.now()-started>20000){out[s]="deferred";continue;}
+   try{out[s]=await captureOdds(s);}catch(e){out[s]={error:e instanceof Error?e.message:"failed"};}
+  }
+  return out;
+ });
+}
+/** Hourly: injury reports for NBA and NFL, then injury-adjusted v4 forecasts. */
+export async function runScheduledInjuries():Promise<Response>{
+ const {refreshInjuries,createAdjustedForecasts}=await import("./injuries");
+ return receipt("rounders injuries",{},async()=>{
+  const out:Record<string,unknown>={};
+  for(const s of ["NBA","NFL"] as const){
+   try{out[s]={report:await refreshInjuries(s),forecasts:await createAdjustedForecasts(s)};}
+   catch(e){out[s]={error:e instanceof Error?e.message:"failed"};}
+  }
+  return out;
+ });
+}
+/** Daily: player game logs and impact ratings. */
+export async function runScheduledImpacts():Promise<Response>{
+ const {refreshImpacts}=await import("./injuries");
+ return receipt("rounders impacts",{},async()=>{
+  const out:Record<string,unknown>={};
+  for(const s of ["NBA","NFL"] as const){try{out[s]=await refreshImpacts(s,new Date(),s==="NBA"?18000:8000);}catch(e){out[s]={error:e instanceof Error?e.message:"failed"};}}
+  return out;
+ });
 }
 export async function runScheduledBacktest(sport:Sport):Promise<Response>{
  const {recordBacktest}=await import("./predictions");
