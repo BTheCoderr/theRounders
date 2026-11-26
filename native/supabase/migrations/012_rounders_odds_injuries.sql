@@ -115,6 +115,7 @@ create table if not exists public.rounders_adjusted_forecasts (
   check (forecast_at < starts_at)
 );
 create index if not exists rounders_adjusted_forecasts_event on public.rounders_adjusted_forecasts (sport, provider_event_id, forecast_at);
+create index if not exists rounders_adjusted_forecasts_base on public.rounders_adjusted_forecasts (base_prediction_id);
 alter table public.rounders_adjusted_forecasts enable row level security;
 
 create or replace function public.rounders_adjusted_forecasts_freeze()
@@ -161,3 +162,4 @@ returns void language sql security definer set search_path = '' as $$
     updated_at = now();
 $$;
 revoke all on function public.rounders_record_usage(text, integer, integer, integer) from public, anon, authenticated;
+grant execute on function public.rounders_record_usage(text, integer, integer, integer) to service_role;
