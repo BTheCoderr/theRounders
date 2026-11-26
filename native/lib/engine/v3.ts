@@ -17,7 +17,7 @@ const DAY=86400000;
 export const V3_SETTINGS=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,c.v3])) as Record<EngineSport,{retention:number;restCapDays:number;restRidge:number}>;
 /** Season label: the year the season began; MLB uses the calendar year. */
 export const seasonOf=(t:number,sport?:EngineSport)=>seasonFor(sport,t);
-const seasonStart=(season:number,sport?:EngineSport)=>sport&&SPORT_CONFIG[sport].calendarSeason?Date.UTC(season,0,1):Date.UTC(season,6,1);
+export const seasonStart=(season:number,sport?:EngineSport)=>sport&&SPORT_CONFIG[sport].calendarSeason?Date.UTC(season,0,1):Date.UTC(season,6,1);
 
 /** Team -> sorted game timestamps, from schedule dates only (no results). */
 export type Schedule=Map<string,number[]>;
