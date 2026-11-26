@@ -11,12 +11,12 @@ import {
 } from "../src/markets";
 import {loadPaper,profit,validStake,writePaper,type PaperEntry} from "../src/paper";
 import {theme} from "../src/theme";
-import {PowerRankingsPanel} from "../src/components/PowerRankingsPanel";
-import {PredictionsPanel} from "../src/components/PredictionsPanel";
-import {PerformancePanel} from "../src/components/PerformancePanel";
 
-type Tab="picks"|"board"|"rankings"|"record"|"signals"|"ai"|"paper";
-const TAB_LABELS:Record<Tab,string>={picks:"Predictions",rankings:"Power Index",record:"Track Record",board:"Line Shop",signals:"Price Gaps",ai:"Rounders AI",paper:"Paper Bets"};
+
+import {ParityPanel} from "../src/components/ParityPanel";
+
+type Tab="picks"|"board"|"rankings"|"record"|"signals"|"ai"|"paper"|"history"|"account";
+const TAB_LABELS:Record<Tab,string>={picks:"Predictions",rankings:"Power Index",record:"Track Record",board:"Line Shop",signals:"Price Gaps",ai:"Rounders AI",paper:"Paper Bets",history:"History",account:"Account"};
 const MARKET_NAMES:Record<MarketName,string>={moneyline:"Moneyline",spread:"Spread",total:"Total"};
 const usd=(value:number)=>"$"+(Number.isFinite(value)?value:0).toFixed(2);
 
@@ -189,9 +189,9 @@ export default function Home(){
    </View>
    {!apiOrigin&&<Text style={styles.warning}>A live API is not configured yet. Add EXPO_PUBLIC_ROUNDERS_API_URL to enable backend access.</Text>}
    <View style={styles.tabs}>
-    {(["picks","rankings","record","board","signals","ai","paper"] as const).map(id=><Pill key={id} label={TAB_LABELS[id]} active={tab===id} onPress={()=>setTab(id)}/>)}
+    {(["picks","rankings","record","history","account","board","signals","ai","paper"] as const).map(id=><Pill key={id} label={TAB_LABELS[id]} active={tab===id} onPress={()=>setTab(id)}/>)}
    </View>
-   {tab!=="paper"&&<View style={styles.filterRow}>{SPORTS.map(name=><Pill key={name} label={name} active={sport===name} onPress={()=>changeSport(name)}/>)}</View>}
+   {<View style={styles.filterRow}>{SPORTS.map(name=><Pill key={name} label={name==="NCAAM"?"CBB":name==="NCAAF"?"CFB":name} active={sport===name} onPress={()=>changeSport(name)}/>)}</View>}
    {feedError?<View style={styles.card}><Text style={styles.warning}>{feedError}</Text><Pressable onPress={()=>void refresh()}><Text style={styles.actionText}>Retry →</Text></Pressable></View>:null}
    {tab==="board"&&<>
     <SectionHeader eyebrow="MARKET BOARD" title="Compare every point."/>
@@ -215,9 +215,7 @@ export default function Home(){
      <Pressable onPress={()=>setTicket(null)}><Text style={styles.actionText}>Cancel</Text></Pressable>
     </View>}
    </>}
-   {tab==="picks"&&<PredictionsPanel sport={sport} demo={demo} onAsk={p=>openAi({sport,away:p.away,home:p.home,eventId:p.eventId})}/>}
-   {tab==="rankings"&&<PowerRankingsPanel sport={sport} demo={demo}/>}
-   {tab==="record"&&<PerformancePanel sport={sport} demo={demo}/>}
+   {(tab==="picks"||tab==="rankings"||tab==="record"||tab==="history"||tab==="account")&&<ParityPanel key={sport+":"+tab} sport={sport} tab={tab}/> }
    {tab==="signals"&&<>
     <SectionHeader eyebrow="PRICE GAP SCANNER" title="Evidence, not hype."/>
     <Text style={styles.caption}>These compare distinct books at the same line, event and selection. They do not establish steam or reverse-line movement.</Text>

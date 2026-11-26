@@ -1,6 +1,6 @@
 import {displayTeam,type Quote,type Sport,validQuote} from "./markets";
 export type Feed={quotes:Quote[];provider:string;live:boolean;fresh:boolean;message:string};
-export const apiOrigin=(process.env.EXPO_PUBLIC_ROUNDERS_API_URL||"").trim().replace(/\/+$/,"");
+export const apiOrigin=(process.env.EXPO_PUBLIC_ROUNDERS_API_URL||"https://therounders.netlify.app").trim().replace(/\/+$/,"");
 export async function fetchFeed(sport:Sport):Promise<Feed>{
  if(!apiOrigin||!/^https:\/\//i.test(apiOrigin))throw new Error("No live API configured. Demo mode is available.");
  const abort=new AbortController();
@@ -31,11 +31,11 @@ export type PredictionView={
 export type Predictions={sport:Sport;model:string;modelLabel?:string;ready:boolean;reason?:string;predictions:PredictionView[]};
 const okNum=(v:unknown)=>v===null||typeof v==="number"&&Number.isFinite(v);
 /** Stored, immutable pregame predictions from the champion model. */
-export async function fetchPredictions(sport:Sport):Promise<Predictions>{
+export async function fetchPredictions(sport:Sport,token?:string):Promise<Predictions>{
  if(!apiOrigin||!/^https:\/\//i.test(apiOrigin))throw new Error("Rounders API is not configured");
  const abort=new AbortController();const timeout=setTimeout(()=>abort.abort(),12000);
  try{
-  const r=await fetch(apiOrigin+"/api/predictions?sport="+sport,{signal:abort.signal,headers:{Accept:"application/json"}});
+  const r=await fetch(apiOrigin+"/api/predictions?sport="+sport,{signal:abort.signal,headers:{Accept:"application/json",...(token?{Authorization:"Bearer "+token}:{})}});
   const d=await r.json() as Predictions;
   if(!d||d.sport!==sport||!Array.isArray(d.predictions))throw new Error("Invalid predictions response");
   if(!d.ready)return {...d,predictions:[]};
