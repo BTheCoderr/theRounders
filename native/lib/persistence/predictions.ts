@@ -83,8 +83,13 @@ export async function gradePendingPredictions(now=new Date(),limit=300){
  for(const p of pending){
   const f=finals.get(p.provider_event_id);
   let patch:Record<string,unknown>|null=null;
-  if(f&&f.homeId===p.home_team_id&&f.awayId===p.away_team_id){
-   patch={...gradePrediction(p,f.homeScore,f.awayScore),grade_status:"graded",graded_at:now.toISOString()};graded++;
+  // The archive stores neutral-site games in a canonical team order, which can be the reverse of
+  // the scoreboard's home/away. Same two teams in swapped slots = same game, scores swapped.
+  const same=f&&f.homeId===p.home_team_id&&f.awayId===p.away_team_id;
+  const swapped=f&&f.homeId===p.away_team_id&&f.awayId===p.home_team_id;
+  if(f&&(same||swapped)){
+   const hs=same?f.homeScore:f.awayScore,as=same?f.awayScore:f.homeScore;
+   patch={...gradePrediction(p,hs,as),grade_status:"graded",graded_at:now.toISOString()};graded++;
   }else if(Date.parse(p.starts_at)<now.getTime()-7*DAY){
    patch={grade_status:"void",graded_at:now.toISOString()};voided++;   // postponed, cancelled or never reported
   }

@@ -4,14 +4,25 @@
 export type ArchivedEvent={
  eventId:string;date:string;season:number;
  homeId:string;awayId:string;home:string;away:string;
- homeScore:number;awayScore:number;neutral:boolean
+ homeScore:number;awayScore:number;neutral:boolean;
+ /** Team box totals ESPN's scoreboard carries (e.g. field-goal and free-throw attempts), when present. */
+ box?:{home:Record<string,number>;away:Record<string,number>}|null
 };
 export type ArchiveMonth={
  games:ArchivedEvent[];
  excluded:number;unknown:number;completedSeen:number;
 };
 import {SPORT_CONFIG,espnScoreboardUrl,isSport,mapLimit} from "../sports.ts";
-type Competitor={id?:string;homeAway?:string;score?:string;team?:{id?:string;displayName?:string;abbreviation?:string}};
+type Competitor={id?:string;homeAway?:string;score?:string;team?:{id?:string;displayName?:string;abbreviation?:string};statistics?:Array<{name?:string;displayValue?:string}>};
+/** Numeric team statistics by name; non-numeric values (percent strings, records) are skipped. */
+export function teamStats(c:Competitor|undefined):Record<string,number>|null{
+ const out:Record<string,number>={};
+ for(const s of c?.statistics||[]){
+  if(!s?.name||typeof s.displayValue!=="string"||!/^-?\d+(\.\d+)?$/.test(s.displayValue.trim()))continue;
+  out[s.name]=Number(s.displayValue);
+ }
+ return Object.keys(out).length?out:null;
+}
 type Event={
  id?:string;date?:string;season?:{type?:number|string;year?:number;slug?:string};
  status?:{type?:{completed?:boolean}};
@@ -50,7 +61,8 @@ export function parseArchiveMonth(events:Event[],yearMonth:string):ArchiveMonth{
   seen.add(eventId);
   games.push({eventId,date:new Date(e.date).toISOString(),season,
    homeId,awayId,home:hname,away:aname,homeScore:hs,awayScore:as,
-   neutral:competition?.neutralSite===true});
+   neutral:competition?.neutralSite===true,
+   box:(()=>{const h=teamStats(home),a=teamStats(away);return h&&a?{home:h,away:a}:null;})()});
  }
  return {games,excluded,unknown,completedSeen};
 }
