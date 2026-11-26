@@ -14,7 +14,8 @@ export type MarketReport={
 };
 const r=(x:number,d=3)=>Number(x.toFixed(d));
 export function marketReport(rows:readonly MarketRow[]):MarketReport{
- let clvN=0,clvSum=0,clvPos=0,ats={games:0,wins:0,losses:0,pushes:0},bN=0,bm=0,bk=0,withClose=0;
+ let clvN=0,clvSum=0,clvPos=0,bN=0,bm=0,bk=0,withClose=0;
+ const ats={games:0,wins:0,losses:0,pushes:0};
  for(const g of rows){
   const modelSpread=-g.projectedMargin;
   const final=g.finalHome!==null&&g.finalAway!==null?g.finalHome-g.finalAway:null;
