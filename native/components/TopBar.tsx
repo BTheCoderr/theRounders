@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
+import Link from "next/link";
 import {initSession,isSignedIn} from "../lib/clientAuth";
 
 /** Slim app bar; also picks up magic-link sessions and keeps them refreshed. */
@@ -13,10 +14,10 @@ export default function TopBar(){
   return()=>{window.removeEventListener("rounders:auth",sync);clearInterval(t)};
  },[]);
  return <header className="topBar">
-  <a className="brand" href="/" aria-label="The Rounders home"><span className="brandMark" aria-hidden="true">R</span><span>ROUNDERS</span></a>
+  <Link className="brand" href="/" aria-label="The Rounders home"><span className="brandMark" aria-hidden="true">R</span><span>ROUNDERS</span></Link>
   <nav className="topNav" aria-label="Sections">
-   <a href="/#predictions">Picks</a><a href="/ratings">Ratings</a><a href="/record">Record</a><a href="/history">History</a><a href="/pricing">Plans</a>
+   <Link href="/#predictions">Picks</Link><Link href="/ratings/nba">Ratings</Link><Link href="/record">Record</Link><Link href="/history/nba">History</Link><Link href="/pricing">Plans</Link>
   </nav>
-  <a className="topAction" href="/account">{signedIn?"Account":"Sign in"}</a>
+  <Link className="topAction" href="/account">{signedIn?"Account":"Sign in"}</Link>
  </header>;
 }

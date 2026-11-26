@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import {useEffect,useState} from "react";
 import {PLANS,type PlanId} from "../lib/billing/plans";
 import {authHeaders} from "../lib/clientAuth";
@@ -18,7 +19,7 @@ export default function PlanCards(){
    <div className="planTop"><p className="tag">{p.name.toUpperCase()}</p>{mine?<span className="chip liveChip">YOUR PLAN</span>:id==="pro"?<span className="chip">MOST POPULAR</span>:null}</div>
    <h2>{p.monthlyUsd?`$${p.monthlyUsd.toFixed(2)}`:"$0"}<small>{p.monthlyUsd?" / month":" forever"}</small></h2>
    <ul>{p.pitch.map(x=><li key={x}>{x}</li>)}</ul>
-   {id==="free"?(paid?<span className="planNote">Included in your plan</span>:<a className="btn ghost" href="/">Use for free</a>)
+   {id==="free"?(paid?<span className="planNote">Included in your plan</span>:<Link className="btn ghost" href="/">Use for free</Link>)
     :mine?<PlanButton portal label="Manage your plan"/>
     :paid?<PlanButton portal label={id==="edge"?"Upgrade to Edge":"Switch to Pro"}/>
     :<PlanButton plan={id} label={"Get "+p.name}/>}

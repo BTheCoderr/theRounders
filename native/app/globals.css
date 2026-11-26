@@ -299,7 +299,7 @@ details.more summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--
 .ratingsTable td.strong{font-weight:800}
 .ratingsTable .teamCol{position:sticky;left:0;background:var(--card);z-index:1}
 .ratingsTable tbody tr:nth-child(odd) .teamCol{background:#121F3A}
-.ratingsTable .teamCol a{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:700}
+.ratingsTable .teamCol a,.ratingsTable .teamCol .teamCell{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:700}
 .ratingsTable .teamCol .short{display:none}
 @media (max-width:640px){.ratingsTable .teamCol .full{display:none}.ratingsTable .teamCol .short{display:inline}.ratingsTable{font-size:.8rem}}
 .rankName{color:var(--text)}

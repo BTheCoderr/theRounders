@@ -12,7 +12,7 @@ export default function AccountAccess(){
  if(user)return <section className="panel2 row"><span className="muted">Signed in as {user}</span><button className="btn ghost" onClick={()=>void signOut()}>Sign out</button></section>;
  return <section className="panel2" aria-label="Sign in">
   <h3>Sign in with your email</h3>
-  <p className="muted">We'll email you a one-tap link. No password.</p>
+  <p className="muted">We&apos;ll email you a one-tap link. No password.</p>
   <form className="signin" onSubmit={send}>
    <input id="rounders-email" type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" aria-label="Email"/>
    <button className="btn" type="submit" disabled={busy}>{busy?"Sending…":"Send link"}</button>
