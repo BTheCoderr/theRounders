@@ -14,11 +14,18 @@ export const isEngineSport=isSport;
 /** Bump when the shared engine pipeline (totals, probability mapping, inputs) changes. */
 export const ENGINE_REVISION="engine-2";   // engine-2: win probability σ calibrated from out-of-sample errors
 
-export type ModelId="home-baseline"|"elo-margin"|"massey-ridge"|"rounders-v1"|"power-v2"|"rpi-v2.1"|"rounders-v3"|"ensemble";
+export type ModelId="home-baseline"|"elo-margin"|"massey-ridge"|"rounders-v1"|"power-v2"|"rpi-v2.1"|"rounders-v3"|"ensemble"|"ensemble-w";
 /** Candidates that can be champion. Baselines are benchmarks only. */
 export const CANDIDATE_MODELS:readonly ModelId[]=["rounders-v1","power-v2","rpi-v2.1","rounders-v3","ensemble"];
 export const BENCHMARK_MODELS:readonly ModelId[]=["home-baseline","elo-margin","massey-ridge"];
-export const ALL_MODELS:readonly ModelId[]=[...BENCHMARK_MODELS,...CANDIDATE_MODELS];
+/**
+ * Backtest-only challengers: evaluated walk-forward and through the promotion gate, but not
+ * snapshotted live until wired in (their weights come from earlier out-of-sample errors).
+ */
+export const BACKTEST_CHALLENGERS:readonly ModelId[]=["ensemble-w"];
+export const ALL_MODELS:readonly ModelId[]=[...BENCHMARK_MODELS,...CANDIDATE_MODELS,...BACKTEST_CHALLENGERS];
+/** Members of both ensembles. */
+export const ENSEMBLE_MEMBERS:readonly ModelId[]=["power-v2","rpi-v2.1","elo-margin","rounders-v3"];
 export const MODEL_LABELS:Record<ModelId,string>={
  "home-baseline":"Home-advantage baseline",
  "elo-margin":"Elo (benchmark)",
@@ -27,7 +34,8 @@ export const MODEL_LABELS:Record<ModelId,string>={
  "power-v2":"Rounders Power Index v2",
  "rpi-v2.1":"Research RPI v2.1",
  "rounders-v3":"Rounders v3",
- "ensemble":"Rounders Ensemble"
+ "ensemble":"Rounders Ensemble",
+ "ensemble-w":"Weighted Ensemble (challenger)"
 };
 export const isModelId=(s:string):s is ModelId=>(ALL_MODELS as readonly string[]).includes(s);
 
@@ -94,6 +102,8 @@ export function fitMarginModel(model:ModelId,history:CompletedGame[],sport:Engin
    const v3=fitV3(games,sport,asOf,schedule);
    return (home,away,neutral,date)=>v3.predict(home,away,neutral,date);
   }
+  // Outside the walk-forward loop there are no out-of-sample weights yet: equal weights.
+  case "ensemble-w":
   case "ensemble":{
    // Equal-weight average of the strongest independent fits; null unless every member covers the game.
    const members=(["power-v2","rpi-v2.1","elo-margin","rounders-v3"] as const).map(m=>fitMarginModel(m,games,sport,asOf,schedule));

@@ -4,13 +4,11 @@ import {fetchFinals,fetchUpcoming} from "../results/espnSchedule";
 import {predictUpcoming,gradePrediction,snapshotWindow,type PredictionRecord,type UpcomingGame} from "../engine/predict";
 import {runBacktest} from "../engine/backtest";
 import {evaluatePromotion,championFor} from "../engine/promotion";
-import {CANDIDATE_MODELS,ENGINE_REVISION,ENGINE_SPORTS,type EngineSport,type ModelId} from "../engine/models";
+import {BACKTEST_CHALLENGERS,CANDIDATE_MODELS,ENGINE_REVISION,ENGINE_SPORTS,type EngineSport,type ModelId} from "../engine/models";
 import {SPORT_CONFIG} from "../sports";
-import {consensusLine} from "../engine/market";
-import {liveProvider} from "../providers/live";
 import {summarizeForecasts,type ForecastSummary} from "../engine/metrics";
 import {sigmaFromSummary} from "../engine/calibration";
-import type {MarketQuote} from "../contracts";
+import {latestLines} from "./odds";
 
 const HOUR=3600000,DAY=24*HOUR;
 
@@ -28,9 +26,6 @@ export async function snapshotPredictions(sport:EngineSport,now=new Date()){
  const upcoming:UpcomingGame[]=schedule.map(g=>({...g,home:registry.get(g.homeId)||g.home,away:registry.get(g.awayId)||g.away}));
  const history=uniqueCompletedGames(archive.games,now);
  const rows=predictUpcoming(history,upcoming,sport,now,{dataSource:archive.provider,sigmas});
- // Attach a consensus market line only when the odds provider is genuinely live.
- let quotes:MarketQuote[]=[];
- try{if((await liveProvider.health()).healthy)quotes=await liveProvider.getMarkets(sport);}catch{quotes=[];}
  // One first prediction per game and model, even across engine revisions.
  const ids=[...new Set(rows.map(r=>r.provider_event_id))].filter(x=>/^\d+$/.test(x));
  const taken=new Set<string>();
@@ -39,10 +34,14 @@ export async function snapshotPredictions(sport:EngineSport,now=new Date()){
   for(const x of await r.json() as Array<{provider_event_id:string;model_id:string}>)taken.add(x.provider_event_id+"|"+x.model_id);
  }
  const fresh=rows.filter(r=>!taken.has(r.provider_event_id+"|"+r.model_id));
+ // Attach the latest captured consensus line (stored odds snapshots; no extra provider call).
+ let lines:Awaited<ReturnType<typeof latestLines>>=new Map();
+ try{lines=await latestLines(sport,fresh.map(r=>r.provider_event_id));}catch{/* no stored odds yet: no market line */}
  const withMarket=fresh.map(r=>{
-  const line=quotes.length?consensusLine(quotes,r.home,r.away):null;
-  return {...r,market_spread_home:line?.spreadHome??null,market_total:line?.total??null,
-   market_source:line&&line.books>0&&(line.spreadHome!==null||line.total!==null)?`the-odds-api consensus (${line.books} books)`:null};
+  const line=lines.get(r.provider_event_id);
+  const ok=Boolean(line&&line.books>0&&(line.spread_home!==null||line.total!==null));
+  return {...r,market_spread_home:ok?line!.spread_home:null,market_total:ok?line!.total:null,
+   market_source:ok?`the-odds-api consensus (${line!.books} books, ${line!.captured_at})`:null};
  });
  for(let i=0;i<withMarket.length;i+=200){
   await rest("rounders_predictions?on_conflict=sport,provider,provider_event_id,model_version",{
@@ -123,7 +122,7 @@ export async function recordBacktest(sport:EngineSport,now=new Date()){
  const archive=await getVerifiedResearchGames(sport);
  const report=runBacktest(archive.games,sport,now,{maxWeeks:SPORT_CONFIG[sport].backtestWeeks});
  const champion=championFor(sport);
- const promotion=CANDIDATE_MODELS.filter(m=>m!==champion).map(m=>evaluatePromotion(report,champion,m));
+ const promotion=[...CANDIDATE_MODELS,...BACKTEST_CHALLENGERS].filter(m=>m!==champion).map(m=>evaluatePromotion(report,champion,m));
  await rest("rounders_backtests?on_conflict=sport,engine_revision,run_day",{
   method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},
   body:JSON.stringify({sport,engine_revision:ENGINE_REVISION,run_day:now.toISOString().slice(0,10),data_source:archive.provider,champion,

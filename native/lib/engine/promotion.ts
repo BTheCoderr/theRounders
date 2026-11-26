@@ -1,5 +1,5 @@
 import type {BacktestReport} from "./backtest";
-import {CANDIDATE_MODELS,type EngineSport,type ModelId} from "./models.ts";
+import {BACKTEST_CHALLENGERS,CANDIDATE_MODELS,type EngineSport,type ModelId} from "./models.ts";
 import {SPORT_CONFIG} from "../sports.ts";
 
 /**
@@ -12,7 +12,7 @@ import {SPORT_CONFIG} from "../sports.ts";
  */
 export const MIN_GATE_GAMES=Object.fromEntries(Object.entries(SPORT_CONFIG).map(([s,c])=>[s,c.gateGames])) as Record<EngineSport,number>;
 export type PromotionDecision={
- champion:ModelId;challenger:ModelId;recommend:boolean;
+ champion:ModelId;challenger:ModelId;recommend:boolean;liveReady:boolean;
  games:number;seasons:number;
  maeDifference:number|null;standardError:number|null;brierDifference:number|null;
  reasons:string[];
@@ -32,14 +32,16 @@ export function evaluatePromotion(report:BacktestReport,champion:ModelId,challen
  const brier=paired(report.pairedBrier[challenger]||[],report.pairedBrier[champion]||[]);
  const min=MIN_GATE_GAMES[report.sport];
  if(challenger===champion)reasons.push("Challenger is already the champion.");
- if(!(CANDIDATE_MODELS as readonly string[]).includes(challenger))reasons.push("Benchmarks cannot be promoted.");
+ if(!(CANDIDATE_MODELS as readonly string[]).includes(challenger)&&!(BACKTEST_CHALLENGERS as readonly string[]).includes(challenger))reasons.push("Benchmarks cannot be promoted.");
  if(mae.n<min)reasons.push(`Only ${mae.n} paired games; the gate needs ${min}.`);
  if(report.seasons.length<2)reasons.push("Out-of-sample games cover fewer than two seasons.");
  if(mae.mean===null||mae.se===null)reasons.push("Margin errors unavailable.");
  else if(!(mae.mean< -2*mae.se))reasons.push("Margin error is not lower by more than two standard errors.");
  if(brier.mean===null)reasons.push("Brier scores unavailable.");
  else if(brier.mean>0)reasons.push("Brier score is worse than the champion's.");
- return {champion,challenger,recommend:reasons.length===0,games:mae.n,seasons:report.seasons.length,
+ // A backtest-only challenger can pass the gate, but must be wired into live snapshots before it can go live.
+ const liveReady=(CANDIDATE_MODELS as readonly string[]).includes(challenger);
+ return {champion,challenger,recommend:reasons.length===0,liveReady,games:mae.n,seasons:report.seasons.length,
   maeDifference:r(mae.mean),standardError:r(mae.se),brierDifference:r(brier.mean),
   reasons:reasons.length?reasons:["Passes the out-of-sample gate. Review, then set the champion explicitly."]};
 }

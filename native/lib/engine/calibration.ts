@@ -21,3 +21,30 @@ export function sigmaFromSummary(sport:EngineSport,summary:{games?:number;margin
  const n=summary?.games??0,rmse=summary?.marginRMSE;
  return typeof rmse==="number"&&Number.isFinite(rmse)?calibratedSigma(sport,rmse*rmse*n,n):SPORT_SETTINGS[sport].marginSigma;
 }
+
+/**
+ * Platt scaling, a sport-specific alternative to the normal mapping:
+ *   p(home wins) = 1 / (1 + exp(-(a * margin + b)))
+ * Fitted by Newton's method on out-of-sample (margin, outcome) pairs with a small ridge
+ * penalty. b absorbs any systematic home/away bias the margin model leaves behind.
+ * Ties are excluded. Returns null when there is too little data to fit.
+ */
+export type Platt={a:number;b:number;games:number};
+export function fitPlatt(pairs:ReadonlyArray<{margin:number;won:0|1}>,minGames=200,ridge=1):Platt|null{
+ const xs=pairs.filter(p=>Number.isFinite(p.margin));
+ if(xs.length<minGames)return null;
+ let a=0.1,b=0;
+ for(let it=0;it<50;it++){
+  let ga=-ridge*a,gb=-ridge*b,haa=-ridge,hab=0,hbb=-ridge;
+  for(const {margin:x,won:y} of xs){
+   const p=1/(1+Math.exp(-(a*x+b))),w=p*(1-p);
+   ga+=(y-p)*x;gb+=(y-p);haa-=w*x*x;hab-=w*x;hbb-=w;
+  }
+  const det=haa*hbb-hab*hab;if(!(Math.abs(det)>1e-12))break;
+  const da=(hbb*ga-hab*gb)/det,db=(haa*gb-hab*ga)/det;
+  a-=da;b-=db;
+  if(Math.abs(da)<1e-9&&Math.abs(db)<1e-9)break;
+ }
+ return Number.isFinite(a)&&Number.isFinite(b)&&a>0?{a,b,games:xs.length}:null;
+}
+export const plattProbability=(p:Platt,margin:number)=>Math.min(0.995,Math.max(0.005,1/(1+Math.exp(-(p.a*margin+p.b)))));

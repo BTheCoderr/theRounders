@@ -7,11 +7,18 @@ import SportBar from "./SportBar";
 
 type Pick={eventId:string;startsAt:string;predictedAt:string;home:string;away:string;winner:string;probability:number;
  projectedSpreadHome:number;projectedTotal:number;final:{home:number|null;away:number|null};correct:boolean|null;marginError:number|null};
+type Overall={ready:boolean;wins:number;losses:number;winRate:number|null;bySport:Array<{sport:string;wins:number;losses:number;winRate:number|null}>};
 type Data={ready:boolean;reason?:string;modelLabel:string;summary:Summary;picks:Pick[];notes:string[]};
 const when=(iso:string)=>new Date(iso).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
 
 export default function TrackRecord(){
  const [sport,setSport]=useSport();
+ const [all,setAll]=useState<Overall|null>(null);
+ useEffect(()=>{
+  const c=new AbortController();
+  fetch("/api/track-record?sport=ALL",{signal:c.signal}).then(r=>r.json()).then((x:Overall)=>{if(!c.signal.aborted&&x.ready)setAll(x)}).catch(()=>{});
+  return()=>c.abort();
+ },[]);
  const [d,setD]=useState<Data|null>(null),[error,setError]=useState(""),[filter,setFilter]=useState<"all"|"right"|"wrong">("all");
  useEffect(()=>{
   const c=new AbortController();setD(null);setError("");
@@ -23,6 +30,14 @@ export default function TrackRecord(){
  const s=d?.summary;
  const picks=d?d.picks.filter(p=>filter==="all"||(filter==="right"?p.correct===true:p.correct===false)):[];
  return <>
+  {all&&all.wins+all.losses>0?<section className="block">
+   <div className="blockHead"><h2>All sports</h2></div>
+   <div className="statStrip">
+    <div><small>Overall record</small><strong>{all.wins}-{all.losses}</strong><span>straight up</span></div>
+    <div><small>Win %</small><strong>{pct(all.winRate,1)}</strong><span>{all.wins+all.losses} decided</span></div>
+    {all.bySport.filter(x=>x.wins+x.losses>0).map(x=><div key={x.sport}><small>{x.sport}</small><strong>{x.wins}-{x.losses}</strong><span>{pct(x.winRate,1)}</span></div>)}
+   </div>
+  </section>:null}
   <SportBar sport={sport} onChange={setSport}/>
   <section className="block">
    <div className="blockHead"><h2>{sport} ledger</h2><span className="chip free">FREE</span></div>
