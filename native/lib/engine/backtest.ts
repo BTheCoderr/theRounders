@@ -32,13 +32,16 @@ export type BacktestReport={
  /** Per-game absolute margin errors, aligned across models, for paired comparisons. */
  paired:Record<ModelId,number[]>;
  pairedBrier:Record<ModelId,number[]>;
+ /** True when the time budget stopped the run before the newest weeks were evaluated. */
+ truncated?:boolean;
 };
 const DAY=86400000;
 export const weekStart=(t:number)=>{const d=new Date(t);return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-((d.getUTCDay()+6)%7)*DAY;};
 /** Season label: the year the season began (MLB: the calendar year). */
 export const seasonOf=(date:string,sport?:EngineSport)=>seasonFor(sport,date);
 
-export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{maxWeeks?:number;minTrainGames?:number;models?:readonly ModelId[]}={}):BacktestReport{
+export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{maxWeeks?:number;minTrainGames?:number;models?:readonly ModelId[];budgetMs?:number}={}):BacktestReport{
+ const t0=Date.now();let truncated=false;
  const models=opts.models??ALL_MODELS;
  const maxWeeks=opts.maxWeeks??104,minTrain=opts.minTrainGames??SPORT_CONFIG[sport].minTrainGames;
  if(!(Number.isInteger(maxWeeks)&&maxWeeks>=1&&maxWeeks<=260))throw new Error("Invalid evaluation window");
@@ -62,6 +65,8 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
  let evaluated=0,evaluatedWeeks=0,skipped=0,from:string|null=null,through:string|null=null;
  const seasons=new Set<number>();
  for(const origin of weeks){
+  // Scheduled functions have a hard time limit: stop cleanly and report how far we got.
+  if(opts.budgetMs&&Date.now()-t0>opts.budgetMs){truncated=true;break;}
   const upcoming=groups.get(origin)||[];
   const originDate=new Date(origin);
   const train=history.filter(g=>Date.parse(g.date)<origin);
@@ -126,6 +131,6 @@ export function runBacktest(rows:TeamGame[],sport:EngineSport,asOf:Date,opts:{ma
   totals:{model:TOTALS_MODEL,
    summary:{games:totN,mae:totN?r(totAbs/totN):null,bias:totN?r(totBias/totN):null},
    baseline:{games:baseN,mae:baseN?r(baseAbs/baseN):null,bias:baseN?r(baseBias/baseN):null}},
-  paired,pairedBrier
+  paired,pairedBrier,truncated
  };
 }

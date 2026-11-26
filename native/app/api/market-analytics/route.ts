@@ -19,11 +19,17 @@ export async function GET(req:Request){
  try{
   const model=championFor(sport);
   const picks=await listGradedPredictions(sport,model,2000);
-  const lines=await openCloseLines(sport,picks.map(p=>p.provider_event_id));
-  const rows=picks.flatMap(p=>{const l=lines.get(p.provider_event_id);return l?[{projectedMargin:p.projected_margin,homeWinProbability:p.home_win_probability,
-   openSpread:l.open_spread_home,closeSpread:l.close_spread_home,closeHomeProb:l.close_home_win_prob,finalHome:p.final_home,finalAway:p.final_away}]:[];});
-  return NextResponse.json({sport,ready:true,model,modelLabel:MODEL_LABELS[model],gradedPicks:picks.length,report:marketReport(rows),
-   notes:["Lines are The Odds API consensus captured by our scheduled job; opening = first capture, closing = last capture before start.",
+  const ids=picks.map(p=>p.provider_event_id);
+  const reportFor=async(provider:string)=>{
+   const lines=await openCloseLines(sport,ids,provider);
+   return marketReport(picks.flatMap(p=>{const l=lines.get(p.provider_event_id);return l?[{projectedMargin:p.projected_margin,homeWinProbability:p.home_win_probability,
+    openSpread:l.open_spread_home,closeSpread:l.close_spread_home,closeHomeProb:l.close_home_win_prob,finalHome:p.final_home,finalAway:p.final_away}]:[];}));
+  };
+  const [consensus,espn]=await Promise.all([reportFor("the-odds-api"),reportFor("espn")]);
+  return NextResponse.json({sport,ready:true,model,modelLabel:MODEL_LABELS[model],gradedPicks:picks.length,
+   report:consensus.games?consensus:espn,source:consensus.games?"the-odds-api consensus":"espn single book",
+   byProvider:{"the-odds-api":consensus,espn},
+   notes:["Lines are captured by our scheduled jobs: The Odds API consensus (licensed) or, until that is enabled, the single sportsbook line ESPN's scoreboard carries. Opening = first capture, closing = last capture before start.",
     "Games without captured lines are excluded, never estimated.","Beating the closing line is evidence about price quality, not a guarantee of profit."]},
    {headers:{"Cache-Control":"public, max-age=0, s-maxage=900","Netlify-Vary":"query"}});
  }catch{

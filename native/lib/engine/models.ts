@@ -4,6 +4,7 @@ import {computePowerBoard,type CompletedGame} from "../powerRatings.ts";
 import {fitResearchRpi} from "../researchRpi.ts";
 import {fitElo,fitMasseyRidge} from "../walkForward.ts";
 import {fitV3,type Schedule} from "./v3.ts";
+import {fitPowerV3} from "./powerV3.ts";
 
 /** NBA, NFL, college basketball and football, NHL and MLB (settings in lib/sports.ts). */
 import {ALL_SPORTS,SPORT_CONFIG,isSport,type Sport} from "../sports.ts";
@@ -14,9 +15,9 @@ export const isEngineSport=isSport;
 /** Bump when the shared engine pipeline (totals, probability mapping, inputs) changes. */
 export const ENGINE_REVISION="engine-2";   // engine-2: win probability σ calibrated from out-of-sample errors
 
-export type ModelId="home-baseline"|"elo-margin"|"massey-ridge"|"rounders-v1"|"power-v2"|"rpi-v2.1"|"rounders-v3"|"ensemble"|"ensemble-w";
+export type ModelId="home-baseline"|"elo-margin"|"massey-ridge"|"rounders-v1"|"power-v2"|"rpi-v2.1"|"rounders-v3"|"ensemble"|"ensemble-w"|"power-v3";
 /** Candidates that can be champion. Baselines are benchmarks only. */
-export const CANDIDATE_MODELS:readonly ModelId[]=["rounders-v1","power-v2","rpi-v2.1","rounders-v3","ensemble"];
+export const CANDIDATE_MODELS:readonly ModelId[]=["rounders-v1","power-v2","rpi-v2.1","rounders-v3","ensemble","power-v3"];
 export const BENCHMARK_MODELS:readonly ModelId[]=["home-baseline","elo-margin","massey-ridge"];
 /**
  * Backtest-only challengers: evaluated walk-forward and through the promotion gate, but not
@@ -35,7 +36,8 @@ export const MODEL_LABELS:Record<ModelId,string>={
  "rpi-v2.1":"Research RPI v2.1",
  "rounders-v3":"Rounders v3",
  "ensemble":"Rounders Ensemble",
- "ensemble-w":"Weighted Ensemble (challenger)"
+ "ensemble-w":"Weighted Ensemble (challenger)",
+ "power-v3":"Rounders Power Index v3 (challenger)"
 };
 export const isModelId=(s:string):s is ModelId=>(ALL_MODELS as readonly string[]).includes(s);
 
@@ -97,6 +99,10 @@ export function fitMarginModel(model:ModelId,history:CompletedGame[],sport:Engin
     const h=r.get(home),a=r.get(away);
     return h===undefined||a===undefined?null:h-a+(neutral?0:board.parameters.homeAdvantage);
    };
+  }
+  case "power-v3":{
+   const f=fitPowerV3(games,sport,asOf,schedule);
+   return (home,away,neutral,date)=>f.predict(home,away,neutral,date);
   }
   case "rounders-v3":{
    const v3=fitV3(games,sport,asOf,schedule);

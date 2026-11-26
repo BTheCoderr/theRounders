@@ -1,4 +1,5 @@
 import type {UpcomingGame} from "../engine/predict";
+import {parseEspnLines,type EspnEvent,type EspnLine} from "./espnLines.ts";
 
 /** Upcoming regular-season games from ESPN's public scoreboard (unofficial; no license implied). */
 import {SPORT_CONFIG,espnScoreboardUrl,mapLimit,type Sport} from "../sports.ts";
@@ -67,6 +68,15 @@ export async function fetchUpcoming(sport:Sport,from:Date,to:Date,opts:{revalida
  // ESPN dates are US calendar days; widen by a day each side and filter by timestamp.
  const a=new Date(from.getTime()-86400000),b=new Date(to.getTime()+86400000);
  return parseUpcoming(await scoreboardEvents(sport,a,b,opts),from,to);
+}
+/** Same request as fetchUpcoming, plus the pregame lines ESPN carries for those games (internal use only). */
+export async function fetchUpcomingWithLines(sport:Sport,from:Date,to:Date):Promise<{games:UpcomingGame[];lines:EspnLine[]}>{
+ const a=new Date(from.getTime()-86400000),b=new Date(to.getTime()+86400000);
+ const events=await scoreboardEvents(sport,a,b);
+ const games=parseUpcoming(events,from,to),ids=new Set(games.map(g=>g.eventId));
+ let lines:EspnLine[]=[];
+ try{lines=parseEspnLines(events as EspnEvent[],sport).filter(l=>ids.has(l.eventId));}catch{/* lines are optional */}
+ return {games,lines};
 }
 
 export type FinalScore={eventId:string;homeId:string;awayId:string;homeScore:number;awayScore:number};

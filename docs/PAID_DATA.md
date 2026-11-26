@@ -27,6 +27,10 @@ BALLDONTLIE_MONTHLY_REQUESTS=60000 # optional ceiling
 
 Apply `native/supabase/migrations/012_rounders_odds_injuries.sql` before enabling either provider.
 
+## Free market lines (no key needed)
+
+The hourly prediction job also stores the pregame line ESPN's scoreboard carries (usually one sportsbook) as provider `espn` snapshots. ESPN's API is unofficial and unlicensed, so these lines are **internal only**: they power closing-line value and market Brier in `/api/market-analytics` and the market line recorded next to each locked pick. They never appear in the public line shop, which shows only licensed The Odds API data. A spread is stored only when its sign is confirmed by ESPN's favorite flags or details string.
+
 ## What runs
 
 - `rounders-odds`, every 15 min: the free `/events` call decides; `/odds` runs only for openers/updates (6h) or the closing window (≤45 min before start), within budget. Visitors read stored snapshots (`/api/markets`), so traffic never spends credits.

@@ -51,7 +51,12 @@ export function uniqueCompletedGames(rows:TeamGame[],asOf=new Date()):CompletedG
  * λ>0 makes the sparse schedule graph solvable even when disconnected.
  * We use recency weights and bounded score margins, not fabricated certainty.
  */
-export function computePowerBoard(rows:TeamGame[],sport:Sport,asOf=new Date()):PowerBoard{
+/**
+ * Optional prior (power-v3 only): each listed team's rating is pulled toward `ratings` with
+ * the strength of `weight` full-weight games, instead of toward 0. Omitted = power-v2, unchanged.
+ */
+export type PowerPrior={ratings:ReadonlyMap<string,number>;weight:number};
+export function computePowerBoard(rows:TeamGame[],sport:Sport,asOf=new Date(),prior?:PowerPrior):PowerBoard{
   const config=parameters[sport];
   if(!config)throw new Error("Unsupported sport");
   const games=uniqueCompletedGames(rows,asOf);
@@ -62,6 +67,7 @@ export function computePowerBoard(rows:TeamGame[],sport:Sport,asOf=new Date()):P
   const rhs=new Array<number>(n).fill(0);
   type Edge={h:number;a:number;w:number;target:number};
   const edges:Edge[]=[];
+  if(prior&&prior.weight>0)for(const [team,r] of prior.ratings){const i=index.get(team);if(i!==undefined&&Number.isFinite(r)){diag[i]+=prior.weight;rhs[i]+=prior.weight*r;}}
   for(const game of games){
     const h=index.get(game.home)!,a=index.get(game.away)!;
     const age=Math.max(0,(asOf.getTime()-Date.parse(game.date))/day);

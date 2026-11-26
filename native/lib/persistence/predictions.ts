@@ -1,6 +1,6 @@
 import {uniqueCompletedGames} from "../powerRatings";
 import {archiveConfigured,getVerifiedResearchGames,readTeamRegistry,rest} from "./history";
-import {fetchFinals,fetchUpcoming} from "../results/espnSchedule";
+import {fetchFinals,fetchUpcomingWithLines} from "../results/espnSchedule";
 import {predictUpcoming,gradePrediction,snapshotWindow,type PredictionRecord,type UpcomingGame} from "../engine/predict";
 import {runBacktest} from "../engine/backtest";
 import {evaluatePromotion,championFor} from "../engine/promotion";
@@ -8,7 +8,7 @@ import {BACKTEST_CHALLENGERS,CANDIDATE_MODELS,ENGINE_REVISION,ENGINE_SPORTS,type
 import {SPORT_CONFIG} from "../sports";
 import {summarizeForecasts,type ForecastSummary} from "../engine/metrics";
 import {sigmaFromSummary} from "../engine/calibration";
-import {latestLines} from "./odds";
+import {latestLines,saveEspnLines} from "./odds";
 
 const HOUR=3600000,DAY=24*HOUR;
 
@@ -16,9 +16,13 @@ const HOUR=3600000,DAY=24*HOUR;
 export async function snapshotPredictions(sport:EngineSport,now=new Date()){
  if(!archiveConfigured())throw new Error("Prediction storage is not configured");
  const {from,to}=snapshotWindow(sport,now);
- const [archive,registry,schedule,backtest]=await Promise.all([
-  getVerifiedResearchGames(sport),readTeamRegistry(sport),fetchUpcoming(sport,from,to),latestBacktest(sport).catch(()=>null)
+ const [archive,registry,feed,backtest]=await Promise.all([
+  getVerifiedResearchGames(sport),readTeamRegistry(sport),fetchUpcomingWithLines(sport,from,to),latestBacktest(sport).catch(()=>null)
  ]);
+ const schedule=feed.games;
+ // Free ESPN lines (internal): stored before locking so the pick records the line it was made against.
+ let espnLines=0;
+ try{espnLines=await saveEspnLines(sport,feed.lines,now);}catch{/* lines are optional */}
  // Per-model σ from the latest out-of-sample backtest (stored σ, else its margin RMSE).
  const sigmas:Partial<Record<ModelId,number>>={};
  for(const m of backtest?.models||[])sigmas[m.model]=typeof m.sigma==="number"&&m.sigma>0?m.sigma:sigmaFromSummary(sport,m.summary);
@@ -41,14 +45,14 @@ export async function snapshotPredictions(sport:EngineSport,now=new Date()){
   const line=lines.get(r.provider_event_id);
   const ok=Boolean(line&&line.books>0&&(line.spread_home!==null||line.total!==null));
   return {...r,market_spread_home:ok?line!.spread_home:null,market_total:ok?line!.total:null,
-   market_source:ok?`the-odds-api consensus (${line!.books} books, ${line!.captured_at})`:null};
+   market_source:ok?(line!.provider==="espn"?`espn single-book line (${line!.captured_at})`:`the-odds-api consensus (${line!.books} books, ${line!.captured_at})`):null};
  });
  for(let i=0;i<withMarket.length;i+=200){
   await rest("rounders_predictions?on_conflict=sport,provider,provider_event_id,model_version",{
    method:"POST",headers:{Prefer:"resolution=ignore-duplicates,return=minimal"},body:JSON.stringify(withMarket.slice(i,i+200))
   });
  }
- return {games:upcoming.length,predictions:withMarket.length,withMarket:withMarket.filter(r=>r.market_source).length};
+ return {games:upcoming.length,predictions:withMarket.length,withMarket:withMarket.filter(r=>r.market_source).length,espnLines};
 }
 
 type PendingRow={id:number;sport:EngineSport;provider_event_id:string;starts_at:string;home_team_id:string;away_team_id:string;
@@ -120,7 +124,12 @@ export function summarizeStored(rows:StoredPrediction[]):ForecastSummary{
 export async function recordBacktest(sport:EngineSport,now=new Date()){
  const started=Date.now();
  const archive=await getVerifiedResearchGames(sport);
- const report=runBacktest(archive.games,sport,now,{maxWeeks:SPORT_CONFIG[sport].backtestWeeks});
+ // Train on the evaluation window plus two seasons of warm-up. Older games carry ~0 weight in the
+ // recency-weighted models, and the full deep archive would not fit the scheduled function's time limit.
+ const weeks=SPORT_CONFIG[sport].backtestWeeks;
+ const since=now.getTime()-(weeks*7+730)*86400000;
+ const recent=archive.games.filter(g=>Date.parse(g.date)>=since);
+ const report=runBacktest(recent,sport,now,{maxWeeks:weeks,budgetMs:Math.max(5000,22000-(Date.now()-started))});
  const champion=championFor(sport);
  const promotion=[...CANDIDATE_MODELS,...BACKTEST_CHALLENGERS].filter(m=>m!==champion).map(m=>evaluatePromotion(report,champion,m));
  await rest("rounders_backtests?on_conflict=sport,engine_revision,run_day",{
@@ -130,7 +139,7 @@ export async function recordBacktest(sport:EngineSport,now=new Date()){
    seasons:report.seasons,from_game:report.from,through_game:report.through,
    models:report.models,totals:report.totals,promotion})
  });
- return {ms:Date.now()-started,evaluated:report.evaluatedGames,weeks:report.evaluatedWeeks,recommended:promotion.filter(p=>p.recommend).map(p=>p.challenger)};
+ return {ms:Date.now()-started,trainingGames:recent.length,evaluated:report.evaluatedGames,weeks:report.evaluatedWeeks,truncated:report.truncated===true,recommended:promotion.filter(p=>p.recommend).map(p=>p.challenger)};
 }
 export type StoredBacktest={sport:EngineSport;engine_revision:string;run_day:string;data_source:string;champion:string;
  historical_games:number;evaluated_games:number;evaluated_weeks:number;seasons:number[];from_game:string|null;through_game:string|null;
