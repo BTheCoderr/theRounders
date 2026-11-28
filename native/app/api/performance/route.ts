@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 import {archiveConfigured} from "../../../lib/persistence/history";
 import {latestBacktest,listGradedPredictions,summarizeStored} from "../../../lib/persistence/predictions";
 import {championFor} from "../../../lib/engine/promotion";
-import {CANDIDATE_MODELS,MODEL_LABELS,isEngineSport} from "../../../lib/engine/models";
+import {LIVE_MODELS,MODEL_LABELS,isEngineSport} from "../../../lib/engine/models";
 import {forwardInjuryReport,isInjurySport} from "../../../lib/persistence/forward";
 
 export const dynamic="force-dynamic";
@@ -21,7 +21,7 @@ export async function GET(req:Request){
  try{
   const [graded,backtest,forward]=await Promise.all([listGradedPredictions(sport,null,5000),latestBacktest(sport),
   isInjurySport(sport)?forwardInjuryReport(sport).catch(()=>null):Promise.resolve(null)]);
-  const live=CANDIDATE_MODELS.map(model=>{
+  const live=LIVE_MODELS.map(model=>{
    const rows=graded.filter(r=>r.model_id===model);
    return {model,label:MODEL_LABELS[model],champion:model===champion,
     from:rows.length?rows[rows.length-1].starts_at:null,through:rows.length?rows[0].starts_at:null,

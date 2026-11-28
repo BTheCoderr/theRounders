@@ -6,6 +6,8 @@ import {archiveConfigured} from "../../../lib/persistence/history";
 import {ALL_SPORTS} from "../../../lib/sports";
 
 export const dynamic="force-dynamic";
+/** "Strong pick" = the model gives the side at least this win probability. Fixed in advance. */
+const STRONG=0.7;
 /** Public ledger: every graded pick the live model stored before its game, newest first. */
 export async function GET(req:Request){
  const sport=(new URL(req.url).searchParams.get("sport")||"NBA").toUpperCase();
@@ -35,11 +37,15 @@ async function overall(){
   const bySport=await Promise.all(ALL_SPORTS.filter(isEngineSport).map(async s=>{
    const model=championFor(s);const rows=await listGradedPredictions(s,model,5000);
    const wins=rows.filter(r=>r.winner_correct===true).length,losses=rows.filter(r=>r.winner_correct===false).length;
-   return {sport:s,model,wins,losses,winRate:wins+losses?Number((wins/(wins+losses)).toFixed(4)):null};
+   const strong=rows.filter(r=>Math.max(r.home_win_probability,1-r.home_win_probability)>=STRONG);
+   return {sport:s,model,wins,losses,winRate:wins+losses?Number((wins/(wins+losses)).toFixed(4)):null,
+    strongWins:strong.filter(r=>r.winner_correct===true).length,strongLosses:strong.filter(r=>r.winner_correct===false).length};
   }));
   const wins=bySport.reduce((a,x)=>a+x.wins,0),losses=bySport.reduce((a,x)=>a+x.losses,0);
-  return NextResponse.json({sport:"ALL",ready:true,wins,losses,winRate:wins+losses?Number((wins/(wins+losses)).toFixed(4)):null,bySport,
-   notes:["Straight-up winners of locked pregame picks from each sport's live model. Ties excluded.","No result here implies future profitability."]},
+  const sw=bySport.reduce((a,x)=>a+x.strongWins,0),sl=bySport.reduce((a,x)=>a+x.strongLosses,0);
+  return NextResponse.json({sport:"ALL",ready:true,wins,losses,winRate:wins+losses?Number((wins/(wins+losses)).toFixed(4)):null,
+   strong:{threshold:STRONG,wins:sw,losses:sl,winRate:sw+sl?Number((sw/(sw+sl)).toFixed(4)):null},bySport,
+   notes:["Straight-up winners of locked pregame picks from each sport's live model. Ties excluded.","Strong picks are the subset where the model gave the side 70% or more; every pick is still shown in the full record.","No result here implies future profitability."]},
    {headers:{"Cache-Control":"public, max-age=0, s-maxage=300","Netlify-Vary":"query"}});
  }catch{
   return NextResponse.json({sport:"ALL",ready:false,reason:"Track record is temporarily unavailable."},{status:503,headers:{"Cache-Control":"no-store"}});

@@ -1,14 +1,15 @@
 import {uniqueCompletedGames} from "../powerRatings";
 import {archiveConfigured,getVerifiedResearchGames,readTeamRegistry,rest} from "./history";
 import {fetchFinals,fetchUpcomingWithLines} from "../results/espnSchedule";
-import {predictUpcoming,gradePrediction,snapshotWindow,type PredictionRecord,type UpcomingGame} from "../engine/predict";
+import {predictUpcoming,gradePrediction,modelVersion,snapshotWindow,type PredictionRecord,type UpcomingGame} from "../engine/predict";
 import {runBacktest} from "../engine/backtest";
 import {evaluatePromotion,championFor} from "../engine/promotion";
-import {BACKTEST_CHALLENGERS,CANDIDATE_MODELS,ENGINE_REVISION,ENGINE_SPORTS,type EngineSport,type ModelId} from "../engine/models";
+import {BACKTEST_CHALLENGERS,CANDIDATE_MODELS,ENGINE_REVISION,ENGINE_SPORTS,SPORT_SETTINGS,type EngineSport,type ModelId} from "../engine/models";
 import {SPORT_CONFIG} from "../sports";
 import {summarizeForecasts,type ForecastSummary} from "../engine/metrics";
 import {sigmaFromSummary} from "../engine/calibration";
 import {latestLines,saveEspnLines} from "./odds";
+import {blendGame,learnWeight,type BlendTraining} from "../engine/blend";
 
 const HOUR=3600000,DAY=24*HOUR;
 
@@ -37,10 +38,28 @@ export async function snapshotPredictions(sport:EngineSport,now=new Date()){
   const r=await rest("rounders_predictions?select=provider_event_id,model_id&sport=eq."+sport+"&provider_event_id=in.("+ids.slice(i,i+100).join(",")+")");
   for(const x of await r.json() as Array<{provider_event_id:string;model_id:string}>)taken.add(x.provider_event_id+"|"+x.model_id);
  }
- const fresh=rows.filter(r=>!taken.has(r.provider_event_id+"|"+r.model_id));
- // Attach the latest captured consensus line (stored odds snapshots; no extra provider call).
+ // Latest captured line per game (stored odds snapshots; no extra provider call).
  let lines:Awaited<ReturnType<typeof latestLines>>=new Map();
- try{lines=await latestLines(sport,fresh.map(r=>r.provider_event_id));}catch{/* no stored odds yet: no market line */}
+ try{lines=await latestLines(sport,ids);}catch{/* no stored odds yet: no market line */}
+ // Market Blend v1: power-v2 combined with the line, weight learned from our graded games.
+ let blend:{weight:number;games:number;rows:number}|null=null;
+ try{
+  const w=await blendWeight(sport);
+  const sigma=sigmas["power-v2"]??SPORT_SETTINGS[sport].marginSigma;
+  const extra=rows.filter(r=>r.model_id==="power-v2").flatMap(r=>{
+   const l=lines.get(r.provider_event_id);if(!l)return [];
+   const b=blendGame(sport,{margin:r.projected_margin,total:r.projected_total,prob:r.home_win_probability},
+    {spreadHome:num(l.spread_home),total:num(l.total),homeProb:num(l.home_win_prob)},w.weight,sigma);
+   if(!b||!Number.isFinite(b.margin))return [];
+   const r2=(x:number)=>Number(x.toFixed(2));
+   return [{...r,model_id:"blend-v1" as ModelId,model_version:modelVersion("blend-v1"),
+    projected_margin:r2(b.margin),projected_total:r2(b.total),projected_home:r2((b.total+b.margin)/2),projected_away:r2((b.total-b.margin)/2),
+    home_win_probability:Number(b.prob.toFixed(4)),projected_winner:b.margin>=0?r.home:r.away,
+    data_source:`${r.data_source}; blend w=${w.weight} (learned on ${w.games} graded games) with ${l.provider==="espn"?"ESPN single-book":"consensus"} line ${l.captured_at}`.slice(0,200)}];
+  });
+  rows.push(...extra);blend={weight:w.weight,games:w.games,rows:extra.length};
+ }catch{/* blend is optional */}
+ const fresh=rows.filter(r=>!taken.has(r.provider_event_id+"|"+r.model_id));
  const withMarket=fresh.map(r=>{
   const line=lines.get(r.provider_event_id);
   const ok=Boolean(line&&line.books>0&&(line.spread_home!==null||line.total!==null));
@@ -52,7 +71,7 @@ export async function snapshotPredictions(sport:EngineSport,now=new Date()){
    method:"POST",headers:{Prefer:"resolution=ignore-duplicates,return=minimal"},body:JSON.stringify(withMarket.slice(i,i+200))
   });
  }
- return {games:upcoming.length,predictions:withMarket.length,withMarket:withMarket.filter(r=>r.market_source).length,espnLines};
+ return {games:upcoming.length,predictions:withMarket.length,withMarket:withMarket.filter(r=>r.market_source).length,espnLines,blend};
 }
 
 type PendingRow={id:number;sport:EngineSport;provider_event_id:string;starts_at:string;home_team_id:string;away_team_id:string;
@@ -171,4 +190,15 @@ export async function listTeamPredictions(sport:EngineSport,model:ModelId,team:s
  const r=await rest("rounders_predictions?select="+COLUMNS+"&sport=eq."+sport+"&model_id=eq."+encodeURIComponent(model)+
   "&or="+encodeURIComponent(`(home.eq.${q},away.eq.${q})`)+"&grade_status=neq.void&order=starts_at.asc&limit=300");
  return await r.json() as StoredPrediction[];
+}
+
+const num=(v:unknown)=>v===null||v===undefined||v===""?null:Number.isFinite(Number(v))?Number(v):null;
+/** Model weight for the market blend, learned on graded power-v2 picks vs the last pre-start line. */
+export async function blendWeight(sport:EngineSport){
+ const graded=await listGradedPredictions(sport,"power-v2",2000);
+ const lines=await latestLines(sport,graded.map(g=>g.provider_event_id));
+ const training:BlendTraining[]=graded.flatMap(g=>{const l=lines.get(g.provider_event_id);
+  if(!l||g.final_home===null||g.final_away===null)return [];
+  return [{modelMargin:g.projected_margin,modelProb:g.home_win_probability,marketSpreadHome:num(l.spread_home),marketProb:num(l.home_win_prob),finalMargin:g.final_home-g.final_away}];});
+ return learnWeight(sport,training);
 }

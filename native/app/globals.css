@@ -99,7 +99,7 @@ main{max-width:1120px;margin:0 auto;padding:0 16px 64px}
 .upsell span{color:var(--gold);font-weight:800;font-size:.88rem}
 
 /* Track record */
-.statStrip{display:grid;grid-template-columns:repeat(4,1fr);background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.statStrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
 .statStrip.skeleton{min-height:86px;opacity:.5}
 .statStrip>div{padding:14px 16px;display:flex;flex-direction:column;gap:2px;border-right:1px solid var(--line)}
 .statStrip>div:last-child{border-right:0}

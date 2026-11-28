@@ -1,5 +1,5 @@
 import type {BacktestReport} from "./backtest";
-import {BACKTEST_CHALLENGERS,CANDIDATE_MODELS,type EngineSport,type ModelId} from "./models.ts";
+import {BACKTEST_CHALLENGERS,CANDIDATE_MODELS,LIVE_MODELS,type EngineSport,type ModelId} from "./models.ts";
 import {SPORT_CONFIG} from "../sports.ts";
 
 /**
@@ -55,5 +55,5 @@ export function evaluatePromotion(report:BacktestReport,champion:ModelId,challen
 export const DEFAULT_CHAMPION:Record<EngineSport,ModelId>={NBA:"power-v2",NFL:"power-v2",NCAAM:"power-v2",NCAAF:"power-v2",NHL:"power-v2",MLB:"power-v2"};
 export function championFor(sport:EngineSport,env:Record<string,string|undefined>=typeof process!=="undefined"?process.env:{}):ModelId{
  const configured=env["ROUNDERS_CHAMPION_"+sport];
- return configured&&(CANDIDATE_MODELS as readonly string[]).includes(configured)?configured as ModelId:DEFAULT_CHAMPION[sport];
+ return configured&&(LIVE_MODELS as readonly string[]).includes(configured)?configured as ModelId:DEFAULT_CHAMPION[sport];
 }

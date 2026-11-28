@@ -8,7 +8,7 @@ import EdgePicks from "./EdgePicks";
 
 type Pick={eventId:string;startsAt:string;predictedAt:string;home:string;away:string;winner:string;probability:number;
  projectedSpreadHome:number;projectedTotal:number;final:{home:number|null;away:number|null};correct:boolean|null;marginError:number|null};
-type Overall={ready:boolean;wins:number;losses:number;winRate:number|null;bySport:Array<{sport:string;wins:number;losses:number;winRate:number|null}>};
+type Overall={ready:boolean;wins:number;losses:number;winRate:number|null;strong?:{wins:number;losses:number;winRate:number|null};bySport:Array<{sport:string;wins:number;losses:number;winRate:number|null}>};
 type Data={ready:boolean;reason?:string;modelLabel:string;summary:Summary;picks:Pick[];notes:string[]};
 const when=(iso:string)=>new Date(iso).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
 
@@ -36,6 +36,7 @@ export default function TrackRecord(){
    <div className="statStrip">
     <div><small>Overall record</small><strong>{all.wins}-{all.losses}</strong><span>straight up</span></div>
     <div><small>Win %</small><strong>{pct(all.winRate,1)}</strong><span>{all.wins+all.losses} decided</span></div>
+    {all.strong&&all.strong.wins+all.strong.losses>0?<div><small>Strong picks (70%+)</small><strong>{all.strong.wins}-{all.strong.losses}</strong><span>{pct(all.strong.winRate,1)}</span></div>:null}
     {all.bySport.filter(x=>x.wins+x.losses>0).map(x=><div key={x.sport}><small>{x.sport}</small><strong>{x.wins}-{x.losses}</strong><span>{pct(x.winRate,1)}</span></div>)}
    </div>
   </section>:null}
@@ -48,6 +49,8 @@ export default function TrackRecord(){
     <div className="statStrip">
      <div><small>Record</small><strong>{d.picks.filter(p=>p.correct).length}-{d.picks.filter(p=>p.correct===false).length}</strong><span>straight up</span></div>
      <div><small>Accuracy</small><strong>{pct(s.winnerAccuracy,1)}</strong><span>{s.decided} decided</span></div>
+     {(()=>{const st=d.picks.filter(p=>p.probability>=0.7&&p.correct!==null);const w=st.filter(p=>p.correct).length;
+      return st.length?<div><small>Strong picks (70%+)</small><strong>{w}-{st.length-w}</strong><span>{pct(w/st.length,1)}</span></div>:null;})()}
      <div><small>Brier</small><strong>{num(s.brierScore,3)}</strong><span>0.250 = coin flip</span></div>
      <div><small>Spread error</small><strong>{num(s.marginMAE,1)}</strong><span>points</span></div>
     </div>

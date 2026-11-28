@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 import {archiveConfigured} from "../../../lib/persistence/history";
 import {listUpcomingPredictions} from "../../../lib/persistence/predictions";
 import {championFor} from "../../../lib/engine/promotion";
-import {CANDIDATE_MODELS,MODEL_LABELS,isEngineSport} from "../../../lib/engine/models";
+import {LIVE_MODELS,MODEL_LABELS,isEngineSport} from "../../../lib/engine/models";
 import {planForRequest} from "../../../lib/billing/server";
 import {gatePrediction} from "../../../lib/billing/gating";
 import {hasFeature} from "../../../lib/billing/plans";
@@ -30,7 +30,7 @@ export async function GET(req:Request){
   const rows=await listUpcomingPredictions(sport,model);
   // Edge: every candidate model's stored prediction for the same games, labeled as challengers.
   const challengers=hasFeature(plan,"predictions.challengers")
-    ?await Promise.all(CANDIDATE_MODELS.filter(m=>m!==model).map(async m=>({model:m,label:MODEL_LABELS[m],predictions:(await listUpcomingPredictions(sport,m)).map(view)})))
+    ?await Promise.all(LIVE_MODELS.filter(m=>m!==model).map(async m=>({model:m,label:MODEL_LABELS[m],predictions:(await listUpcomingPredictions(sport,m)).map(view)})))
     :null;
   return NextResponse.json({sport,model,modelLabel:MODEL_LABELS[model],ready:true,dataState:"model",plan,
    upgrade:plan==="free"?"/pricing":null,
