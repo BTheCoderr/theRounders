@@ -347,3 +347,8 @@ details.more summary{cursor:pointer;font-weight:700;font-size:.9rem;color:var(--
 .liveTag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--loss);animation:livePulse 1.4s ease-in-out infinite}
 @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.3}}
 @media (prefers-reduced-motion:reduce){.liveTag::before{animation:none}}
+.tableWrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--radius)}
+.scoreTable{width:100%;border-collapse:collapse;font-size:14px}
+.scoreTable th,.scoreTable td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.scoreTable tr:last-child td{border-bottom:0;opacity:.8}
+.scoreTable small{opacity:.65;margin-left:4px}
