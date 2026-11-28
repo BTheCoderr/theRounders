@@ -15,7 +15,7 @@ export const isEngineSport=isSport;
 /** Bump when the shared engine pipeline (totals, probability mapping, inputs) changes. */
 export const ENGINE_REVISION="engine-2";   // engine-2: win probability σ calibrated from out-of-sample errors
 
-export type ModelId="home-baseline"|"elo-margin"|"massey-ridge"|"rounders-v1"|"power-v2"|"rpi-v2.1"|"rounders-v3"|"ensemble"|"ensemble-w"|"power-v3";
+export type ModelId="home-baseline"|"elo-margin"|"massey-ridge"|"rounders-v1"|"power-v2"|"rpi-v2.1"|"rounders-v3"|"ensemble"|"ensemble-w"|"power-v3"|"blend-v1";
 /** Candidates that can be champion. Baselines are benchmarks only. */
 export const CANDIDATE_MODELS:readonly ModelId[]=["rounders-v1","power-v2","rpi-v2.1","rounders-v3","ensemble","power-v3"];
 export const BENCHMARK_MODELS:readonly ModelId[]=["home-baseline","elo-margin","massey-ridge"];
@@ -25,6 +25,14 @@ export const BENCHMARK_MODELS:readonly ModelId[]=["home-baseline","elo-margin","
  */
 export const BACKTEST_CHALLENGERS:readonly ModelId[]=["ensemble-w"];
 export const ALL_MODELS:readonly ModelId[]=[...BENCHMARK_MODELS,...CANDIDATE_MODELS,...BACKTEST_CHALLENGERS];
+/**
+ * Market models need a sportsbook line, so they cannot be fitted on history alone and are not
+ * part of the historical backtest (no historical lines are stored). They lock live picks and are
+ * judged forward, on the same games as the champion.
+ */
+export const MARKET_MODELS:readonly ModelId[]=["blend-v1"];
+/** Every model that stores locked live picks. */
+export const LIVE_MODELS:readonly ModelId[]=[...CANDIDATE_MODELS,...MARKET_MODELS];
 /** Members of both ensembles. */
 export const ENSEMBLE_MEMBERS:readonly ModelId[]=["power-v2","rpi-v2.1","elo-margin","rounders-v3"];
 export const MODEL_LABELS:Record<ModelId,string>={
@@ -37,7 +45,8 @@ export const MODEL_LABELS:Record<ModelId,string>={
  "rounders-v3":"Rounders v3",
  "ensemble":"Rounders Ensemble",
  "ensemble-w":"Weighted Ensemble (challenger)",
- "power-v3":"Rounders Power Index v3 (challenger)"
+ "power-v3":"Rounders Power Index v3 (challenger)",
+ "blend-v1":"Rounders Market Blend v1 (challenger)"
 };
 export const isModelId=(s:string):s is ModelId=>(ALL_MODELS as readonly string[]).includes(s);
 
@@ -100,6 +109,8 @@ export function fitMarginModel(model:ModelId,history:CompletedGame[],sport:Engin
     return h===undefined||a===undefined?null:h-a+(neutral?0:board.parameters.homeAdvantage);
    };
   }
+  case "blend-v1":
+   return ()=>null;   // needs a market line; built in the prediction job, not from history
   case "power-v3":{
    const f=fitPowerV3(games,sport,asOf,schedule);
    return (home,away,neutral,date)=>f.predict(home,away,neutral,date);
